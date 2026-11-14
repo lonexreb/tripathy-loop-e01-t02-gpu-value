@@ -5,8 +5,8 @@ status: awaiting-idea
 owner: Claude session 01
 systems:
   github: https://github.com/lonexreb/tripathy-experiment-01
-  linear_project: pending
-  slack_channel: "#tripathy-exp-01"
+  linear_project: https://linear.app/tripathy/project/tripathy-experiment-01-awaiting-idea-4a9aac262fa8/overview
+  slack_channel: https://app.slack.com/client/T0CHM33JRDH/C0CHNFW0DB7
   vercel_project: not-linked
   modal_app: tripathy-experiment-01
 controls:

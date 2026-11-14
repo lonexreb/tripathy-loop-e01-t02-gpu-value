@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "experiment_id": "01",
+  "status": "awaiting-idea",
+  "question": "",
+  "hypothesis": "",
+  "primary_metric": "",
+  "baseline": "",
+  "budget_usd": 0,
+  "stop_condition": "",
+  "dataset": {
+    "name": "",
+    "version": "",
+    "cutoff": "",
+    "license": ""
+  },
+  "reproducibility": {
+    "command": "python -m tripathy_experiment.cli run --dry-run",
+    "random_seeds": [],
+    "artifact_directory": "artifacts/runs"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "experiment_id": "01",
+  "status": "awaiting-idea",
+  "active_linear_issue": null,
+  "git_sha": null,
+  "objective": "Await idea assignment",
+  "subagents": [],
+  "runs": [],
+  "result": null,
+  "cost_usd": 0,
+  "latency_seconds": null,
+  "blockers": [],
+  "next_decision": "Define the idea and pass the start gate",
+  "updated_at": "2026-11-14T00:00:00Z"
+}

@@ -1,0 +1,16 @@
+schema_version: 1
+experiment_id: 01
+name: Tripathy Experiment 01
+status: awaiting-idea
+owner: Claude session 01
+systems:
+  github: https://github.com/lonexreb/tripathy-experiment-01
+  linear_project: pending
+  slack_channel: "#tripathy-exp-01"
+  vercel_project: not-linked
+  modal_app: tripathy-experiment-01
+controls:
+  primary_branch: main
+  protected_artifacts: true
+  secrets_in_repo: forbidden
+  human_readability_required: true

@@ -1,14 +1,14 @@
 schema_version: 1
 experiment_id: 01
-name: Tripathy Experiment 01
-status: awaiting-idea
+name: Tripathy Loop E01 - Track 02 Kalshi GPU Forecaster
+status: planning
 owner: Claude session 01
 systems:
-  github: https://github.com/lonexreb/tripathy-experiment-01
-  linear_project: https://linear.app/tripathy/project/tripathy-experiment-01-awaiting-idea-4a9aac262fa8/overview
+  github: https://github.com/lonexreb/tripathy-loop-e01-t02-kalshi
+  linear_project: https://linear.app/tripathy/project/tripathy-loop-e01-track-02-kalshi-gpu-forecaster-4a9aac262fa8/overview
   slack_channel: https://app.slack.com/client/T0CHM33JRDH/C0CHNFW0DB7
   vercel_project: not-linked
-  modal_app: tripathy-experiment-01
+  modal_app: tripathy-loop-e01-t02-kalshi
 controls:
   primary_branch: main
   protected_artifacts: true

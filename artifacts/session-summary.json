@@ -1,16 +1,20 @@
 {
   "schema_version": 1,
   "experiment_id": "01",
-  "status": "awaiting-idea",
+  "status": "planning",
   "active_linear_issue": null,
   "git_sha": null,
-  "objective": "Await idea assignment",
+  "objective": "Validate the Track 02 Kalshi/H100 thesis before implementation",
   "subagents": [],
   "runs": [],
   "result": null,
   "cost_usd": 0,
   "latency_seconds": null,
-  "blockers": [],
-  "next_decision": "Define the idea and pass the start gate",
-  "updated_at": "2026-11-14T00:00:00Z"
+  "blockers": [
+    "Settled Kalshi H100 market inventory and historical probability access are unverified",
+    "Forecast timestamp and market-baseline timing are not fixed",
+    "Budget and stop condition await independent review"
+  ],
+  "next_decision": "Compare Claude and ChatGPT reviews, then accept, revise or kill the provisional start-gate fields",
+  "updated_at": "2026-11-14T15:45:00-08:00"
 }

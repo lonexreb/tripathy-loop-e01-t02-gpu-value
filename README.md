@@ -23,7 +23,7 @@ python -m tripathy_experiment.cli run --dry-run
 
 - GitHub records code, review, test results and artifacts.
 - Linear records work, ownership and decisions.
-- Slack broadcasts linked updates to `#tl-e01-t02-kalshi`.
+- Slack broadcasts linked updates to the existing channel ID currently displayed as `#tripathy-exp-01`; the standard target name is `#tl-e01-t02-kalshi`.
 - Claude Code owns this lane and delegates bounded subagent tasks.
 - Modal runs isolated compute when the selected idea requires it.
 - Vercel hosts only an idea-specific UI, if needed.

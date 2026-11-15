@@ -126,22 +126,83 @@ uv run python -m tripathy_arch3.wsp_gate gate
 
 Rules were fixed in `config/wsp_preregistration_2026-11-15.json` before any checkpoint score. Sources: [Sparks of Weight-Space Programming](https://rikiyat.github.io/blog/weight-space-programming/), [released checkpoint](https://huggingface.co/RikiyaT/Qwen3.5-0.8B-weight-space-programming), [Nusrat and Nusrat, arXiv 2611.05341](https://arxiv.org/abs/2611.05341).
 
-## 6. What a lessor, lender or capacity buyer can take from this
+## 6. An autonomous weight-programming loop, and the recursion test
+
+Section 5 was one edit made by hand that wrote a constant. This section is the unattended version: one command runs several cycles in which an LLM editor decides each edit, a deterministic kernel writes it, and the frozen gate decides. No human input during a run.
+
+```
+brief (development results, actor's choices, notebook)
+   → EDITOR   headless Claude (Sonnet), no tools, structured reply:
+              {hypothesis, class of series, band to promote}
+   → KERNEL   closed-form conditional edit, dose-response, random-direction control
+   → GATE     official scorer → paired bootstrap → acceptance rule vs the current actor
+   → accept: stack the edit / reject: revert → lineage entry + notebook
+```
+
+**The actor was redesigned so an edit can install a rule.** It decides per (origin, series) from that series' own as-of summary: a `narrow`, `medium` or `wide` band (width scale 0.5, 1.0, 2.0). An edit promotes one band for a class of series only, keyed on what distinguishes that class's activations from the others.
+
+**Can a rule be programmed into the weights? Sometimes.**
+
+| Class the editor asked for | Class on target | Other series moved | Programmable |
+|---|---:|---:|---|
+| Marketplace ask → narrow | 100% | 0% | Yes |
+| Hyperscaler spot → wide | 100% | 0% | Yes |
+| Daily move ≥ 15% of price → narrow | 100% | 6% | Yes |
+| Unchanged days < 50% → narrow | 100% | 60% | No |
+| GPU model H100 80GB → narrow | 100% | 60% | No |
+| GPU model A100 SXM 80GB → wide | 81% | 21% | No |
+| GPU model A100 40GB → wide | 100% | 32% | No |
+
+Rates are at the chosen strength for programmable edits and at the strongest strength tried otherwise. Classes that follow the instrument type are cleanly addressable in the last MLP, with the same rates on six held-out origins. Classes that cut across instrument types (a GPU model sold as both spot and rate card) are not: the edit spills onto other series. On the real weights each programmable edit changes about 32,700 weights and reproduces the predicted logits to 0.00001; agreement with the unedited model on unrelated prompts is 97.6–100%.
+
+**The loop ran twice from the same unedited actor, three cycles each** (rules fixed beforehand in `config/wsp_loop_preregistration_2026-11-15.json`). I_0 started with an empty notebook; I_1 started with the notebook I_0 produced. All nine editor proposals came from the headless editor; the scripted fallback was never used.
+
+| Run | Cycle | Proposal | Development vs parent (90% CI) | Checkpoint vs parent (90% CI) | Outcome |
+|---|---:|---|---|---|---|
+| I_0 | 1 | Marketplace ask → narrow | −0.000795 [−0.001266, −0.000297] | −0.000099 [−0.001086, +0.001173] | Rejected |
+| I_0 | 2 | Hyperscaler spot → wide | −0.000438 [−0.000744, −0.000167] | +0.000258 [+0.000050, +0.000472] | Rejected |
+| I_0 | 3 | Unchanged < 50% → narrow; then H100 80GB → narrow | — | — | Not programmable (both) |
+| I_1 | 1 | A100 SXM 80GB → wide; then A100 40GB → wide | — | — | Not programmable (both) |
+| I_1 | 2 | Daily move ≥ 10% of price → narrow | −0.000795 [−0.001266, −0.000297] | −0.000099 [−0.001086, +0.001173] | Rejected |
+| I_1 | 3 | Daily move ≥ 0.1% → narrow (not programmable); then ≥ 15% → narrow | −0.000795 [−0.001266, −0.000297] | −0.000143 [−0.001145, +0.001139] | Rejected |
+
+**No edit was admitted in either run.** Every edit that could be programmed improved the development block with the interval excluding zero, and none carried to checkpoint.
+
+**Recursion test: not supported.** Both runs ended on the same unedited actor, so the protected-block difference between I_1's and I_0's final actors is exactly zero. That final actor against drift on the protected block: −0.000610 [−0.001891, +0.000607], coverage 0.663.
+
+**What the loop learned.**
+- *The method works; the forecasting gain does not transfer.* Programming a class rule into the weights is reliable for instrument-level classes. What fails is the same thing that failed for the text-space arm: a development gain that is not there on later origins. Two weeks of development data is too little to tell which band a series needs next.
+- *The notebook changed the editor's behaviour but did not make it better.* I_1 avoided repeating I_0's exact proposals and tried new classes. But in cycle 2 it re-proposed I_0's rejected marketplace edit under a different feature test (daily move ≥ 10% selects exactly the marketplace series), producing the identical forecast and the identical rejection. The notebook recorded proposals by their wording, not by the decisions they select. That is a concrete defect in the improver, and the next version should key the notebook on the selected decision set.
+- *Descriptive, not an admission:* the redesigned actor's unedited default (medium band everywhere) was the loop's starting point, not a gated candidate. On checkpoint it is −0.001109 [−0.001826, −0.000424] against drift with coverage 0.755, and ties F_1 (−0.000152 [−0.000995, +0.000618]). The submission stays F_1.
+- *For someone pricing these instruments:* on development, the volatile marketplace ask wanted a **narrower** band than one typical daily move and the near-constant hyperscaler spot series wanted a **wider** one — rare jumps in quiet series cost more than routine churn in noisy ones. Neither held on the following two weeks, so treat both as hypotheses, not rules.
+
+**Cost and replay.** Each run took a few minutes on a laptop: no GPU rental, nine editor calls costing $0.51 in total. Re-running an arm replays the stored editor replies, so the numbers reproduce with no LLM call:
+
+```bash
+cd architecture3_weight_space
+.venv-wsp/bin/python -m tripathy_arch3.wsp_loop run --arm i0 --cycles 3
+.venv-wsp/bin/python -m tripathy_arch3.wsp_loop run --arm i1 --cycles 3
+.venv-wsp/bin/python -m tripathy_arch3.wsp_loop protected
+```
+
+**Disclosures.** The 15 checkpoint origins had already been scored for at least seven earlier candidates (the pre-registration file says six; it undercounts the text-and-weight arm); the loop scored five more forecasts on them (the unedited start and four candidates, one of them a duplicate). All edits sit in the last MLP, close to the readout. The actor's decision is read as the highest of three band-token logits, not free-form text.
+
+## 7. What a lessor, lender or capacity buyer can take from this
 
 - **Rate cards move in steps.** In the 60 days to 30 September, five of the six neocloud and hyperscaler-spot medians were unchanged on 75–93% of days. The sixth, the H100 80GB rate card, moved on 68% of days but by under one cent at the 80th percentile, on a $3.25 price. For a one-day horizon the best point forecast is today's price; the forecasting value is entirely in how wide a band to hold around it.
 - **Marketplace asks are a different instrument.** The H100 marketplace ask changed on 88% of days, with an 80th-percentile daily move of $0.27 on a $1.57 price. Its official 7-day band is $1.47–$2.39 around $1.875, against $3.26–$3.87 around $3.55 for the H100 SXM rate card. Anyone marking collateral or pricing short leases off marketplace asks needs roughly three times the relative margin.
 - **Uncertainty grows faster than the starter baseline assumes.** On the development block, drift's seven-day intervals cover 44% of outcomes. A reserve or haircut sized from full-history volatility is too thin; size it from the last six weeks.
 - **Stale intervals are the cheap fix.** The accepted improvement changed nothing about the median and came entirely from recalibrating width on recent data.
 
-## 7. Limits
+## 8. Limits
 
 - Seven series, 45 development and checkpoint origins, daily origins that overlap: intervals are block-bootstrapped over origins and are wide.
 - All prices are posted, not paid.
-- **No recursive-self-improvement claim.** The protocol requires an improved improver to beat the original improver from a common start on the protected block. That comparison was not run.
+- **No recursive-self-improvement claim.** The common-start comparison of an improver with and without its own history was run for the weight-programming loop (section 6) and came out at exactly zero: neither improver produced an admitted change.
 - Official truth for 7–13 November is withheld, so nothing here is a claim about the scored window.
 - The 2–3 year resale and rental view is not addressed.
 
-## 8. Reproduce
+## 9. Reproduce
 
 ```bash
 bash research/reproduce.sh
@@ -149,4 +210,4 @@ bash research/reproduce.sh
 
 Rebuilds the baseline and Cycle 1 from the unchanged pack, validates the submission with the official scorer, runs the leakage refusal check, and prints SHA-256 hashes. The submission file is `submission/submission_head_2026-11-06.csv` (111 rows: 37 headline series × 3 horizons; the 7 adapted series from F_1, the rest from drift). The pack's `ATTRIBUTION.md` travels with this repository.
 
-The weight-space arm lives in `architecture3_weight_space/` and replays locally with no remote calls: see section 5 for commands.
+The weight-space arms live in `architecture3_weight_space/` and replay locally with no remote calls: see sections 5 and 6 for commands.

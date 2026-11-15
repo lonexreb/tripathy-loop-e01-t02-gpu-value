@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "H100_80GB series (marketplace ask and neocloud rate card) both do better with narrow bands than medium: 0.0560 vs 0.0616 and 0.01261 vs 0.01362. The marketplace-only edit gained on development but was flat at checkpoint. A gpu_model test also covers the neocloud H100_80GB series, which adds a second gain of the same sign. It is also a cleaner single-class test than unchanged_fraction<0.5, which was not programmable. Promote narrow for gpu_model H100_80GB.",
+  "feature": "gpu_model",
+  "op": "==",
+  "value": "H100_80GB",
+  "promote": "narrow"
+ }
+}

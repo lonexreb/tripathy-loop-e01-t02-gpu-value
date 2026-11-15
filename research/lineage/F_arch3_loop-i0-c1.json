@@ -1,0 +1,104 @@
+{
+  "id": "F_arch3_loop-i0-c1",
+  "generation": 1,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "rejected",
+  "improver": "I_wsp0",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Marketplace ask H100 has very low unchanged fraction and high relative_q80, but always-narrow gets 0.0560 versus 0.0616 for medium, which is the largest single-class gain. Promote narrow for marketplace_ask.",
+        "feature": "instrument_class",
+        "op": "==",
+        "value": "marketplace_ask",
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "programmed",
+        "class_size_choosing": 24,
+        "other_size_choosing": 144,
+        "class_margin_before": -0.6329,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.542,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.0
+          }
+        ],
+        "held_out": {
+          "class_on_target": 1.0,
+          "others_moved": 0.0
+        }
+      },
+      "random_direction_control_dose_response": [
+        {
+          "multiple": 0.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 2.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 3.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 4.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 6.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        }
+      ],
+      "development_vs_parent": {
+        "diff": -0.000795,
+        "ci90": [
+          -0.001266,
+          -0.000297
+        ],
+        "coverage": 0.779553
+      },
+      "checkpoint_vs_parent": {
+        "diff": -9.9e-05,
+        "ci90": [
+          -0.001086,
+          0.001173
+        ]
+      },
+      "outcome": "rejected"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T18:21:42.925267+00:00"
+}

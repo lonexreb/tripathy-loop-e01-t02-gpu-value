@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "A100_SXM_80GB is the largest remaining gain. Always-wide beats medium on the hyperscaler spot series (0.01238 vs 0.01466, gain 0.0023). It loses a little on the neocloud rate card series (0.00759 vs 0.00676, loss 0.0008). The net gain is about 0.0015 per pair. The test is a single gpu_model class, unlike the unprogrammable H100_80GB test, so I expect it to program. Promote wide.",
+  "feature": "gpu_model",
+  "op": "==",
+  "value": "A100_SXM_80GB",
+  "promote": "wide"
+ }
+}

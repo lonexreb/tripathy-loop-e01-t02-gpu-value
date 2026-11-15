@@ -133,7 +133,7 @@ def compile_forecast(
     patch: ForecasterPatch,
     origin_date: date,
     horizons: tuple[int, ...] = (1, 3, 7),
-    actor_generation: Literal["g0", "g1", "wsp1"] = "g0",
+    actor_generation: Literal["g0", "g1", "wsp1", "loop"] = "g0",
 ) -> tuple[ForecastRow, ...]:
     if origin_date > bundle.manifest.cutoff_date:
         raise ValueError("origin_date exceeds actor bundle cutoff")

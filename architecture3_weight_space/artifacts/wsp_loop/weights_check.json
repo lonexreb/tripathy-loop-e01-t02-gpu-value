@@ -1,0 +1,23 @@
+{
+ "i0-c1a1 instrument_class==marketplace_ask->narrow": {
+  "edited_tensor_sha256": "0da1178cb6735f070ef4dce889e803bdc862380e4341d623f7fc5b4030f71740",
+  "changed_weights": 32768,
+  "relative_change_frobenius": 0.008737682364881039,
+  "algebra_vs_real_weights_max_gap_error": 7.62939453125e-06,
+  "unrelated_top1_agreement": 0.9760587215423584
+ },
+ "i0-c2a1 instrument_class==hyperscaler_spot->wide": {
+  "edited_tensor_sha256": "652dbf00336f282615a10b8be7767563532becb2d15239d98854b845276d4550",
+  "changed_weights": 32736,
+  "relative_change_frobenius": 0.004955549258738756,
+  "algebra_vs_real_weights_max_gap_error": 7.62939453125e-06,
+  "unrelated_top1_agreement": 1.0
+ },
+ "i1-c3a2 relative_q80>=0.15->narrow": {
+  "edited_tensor_sha256": "752f83d9ff96f570b37a6046c8dfa836656c845d9bde8bffeea499a67df64a4b",
+  "changed_weights": 32768,
+  "relative_change_frobenius": 0.008927484974265099,
+  "algebra_vs_real_weights_max_gap_error": 9.5367431640625e-06,
+  "unrelated_top1_agreement": 0.985311970114708
+ }
+}

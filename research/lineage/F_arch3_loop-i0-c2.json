@@ -1,0 +1,104 @@
+{
+  "id": "F_arch3_loop-i0-c2",
+  "generation": 2,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "rejected",
+  "improver": "I_wsp0",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Hyperscaler spot series are almost always unchanged (unchanged_fraction 0.81-0.97, relative_q80 = 0), but rare jumps cost more than the medium band covers. Always-wide beats medium on both series: A100_40GB 0.01122 vs 0.01206, and A100_SXM_80GB 0.01238 vs 0.01466. That is the largest summed gain left after the rejected marketplace-narrow edit. Promote wide for hyperscaler_spot.",
+        "feature": "instrument_class",
+        "op": "==",
+        "value": "hyperscaler_spot",
+        "promote": "wide"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "programmed",
+        "class_size_choosing": 48,
+        "other_size_choosing": 120,
+        "class_margin_before": -0.4262,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.542,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.0
+          }
+        ],
+        "held_out": {
+          "class_on_target": 1.0,
+          "others_moved": 0.0
+        }
+      },
+      "random_direction_control_dose_response": [
+        {
+          "multiple": 0.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 2.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 3.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 4.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 6.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        }
+      ],
+      "development_vs_parent": {
+        "diff": -0.000438,
+        "ci90": [
+          -0.000744,
+          -0.000167
+        ],
+        "coverage": 0.859425
+      },
+      "checkpoint_vs_parent": {
+        "diff": 0.000258,
+        "ci90": [
+          5e-05,
+          0.000472
+        ]
+      },
+      "outcome": "rejected"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T18:21:55.280766+00:00"
+}

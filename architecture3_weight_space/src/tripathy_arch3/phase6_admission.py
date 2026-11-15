@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import tempfile
+from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -27,6 +28,7 @@ from .forecaster import (
 )
 from .official_scorer import OfficialScorerAdapter, ProtectedTruth
 
+PatchLookup = Callable[[date, str], ForecasterPatch]
 REPO_ROOT = WORKSPACE_ROOT.parent
 RUN_ROOT = WORKSPACE_ROOT / "artifacts" / "phase6"
 PROPOSAL_ORIGIN = date(2026, 9, 30)
@@ -134,9 +136,9 @@ def _dates(start: date, end: date) -> tuple[date, ...]:
 def _compile_block(
     *,
     block: str,
-    patch: ForecasterPatch,
+    patch: ForecasterPatch | PatchLookup,
     run_id: str,
-    actor_generation: Literal["g1", "wsp1"] = "g1",
+    actor_generation: Literal["g1", "wsp1", "loop"] = "g1",
 ) -> tuple[Path, ActorInputBundle]:
     start, end = BLOCKS[block]
     target_ids = read_frozen_target_ids(REPO_ROOT / "research" / "adapted_series.txt")
@@ -149,14 +151,25 @@ def _compile_block(
             cutoff_date=origin,
             target_ids=target_ids,
         )
-        rows.extend(
-            compile_forecast(
-                final_bundle,
-                patch=patch,
-                origin_date=origin,
-                actor_generation=actor_generation,
+        if isinstance(patch, ForecasterPatch):
+            rows.extend(
+                compile_forecast(
+                    final_bundle, patch=patch, origin_date=origin, actor_generation=actor_generation
+                )
             )
-        )
+        else:  # one patch per series: compile each distinct patch, keep that series' rows
+            chosen = {series_id: patch(origin, series_id) for series_id in target_ids}
+            for distinct in sorted(set(chosen.values()), key=lambda item: item.width_scale):
+                rows.extend(
+                    row
+                    for row in compile_forecast(
+                        final_bundle,
+                        patch=distinct,
+                        origin_date=origin,
+                        actor_generation=actor_generation,
+                    )
+                    if chosen[row.series_id] == distinct
+                )
     if final_bundle is None:
         raise RuntimeError("forecast block unexpectedly contains no origins")
     forecast_path = RUN_ROOT / run_id / "forecasts" / f"{block}.csv"
@@ -205,12 +218,19 @@ def _score_block(
     return _load_object(result.report_path), result.cells_path
 
 
-def _run_paired(*, block: str, candidate_cells: Path, run_id: str) -> dict[str, object]:
-    output_path = RUN_ROOT / run_id / "paired" / f"{block}_vs_F0_drift.json"
+def _run_paired(
+    *,
+    block: str,
+    candidate_cells: Path,
+    run_id: str,
+    parent_cells: Path | None = None,
+    label: str = "F0_drift",
+) -> dict[str, object]:
+    output_path = RUN_ROOT / run_id / "paired" / f"{block}_vs_{label}.json"
     if output_path.is_file():
         return _load_object(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    parent_cells = REPO_ROOT / "research" / "out" / f"cells_{block}_drift.csv"
+    parent_cells = parent_cells or REPO_ROOT / "research" / "out" / f"cells_{block}_drift.csv"
     completed = subprocess.run(
         [
             str(REPO_ROOT / ".venv" / "bin" / "python"),

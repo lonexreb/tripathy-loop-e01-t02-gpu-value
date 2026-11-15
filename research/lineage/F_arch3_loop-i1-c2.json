@@ -1,0 +1,104 @@
+{
+  "id": "F_arch3_loop-i1-c2",
+  "generation": 2,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "rejected",
+  "improver": "I_wsp1",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Only the marketplace H100 series has high relative_q80 (0.125-0.189). It is the only high-volatility regime, and always-narrow beats medium there (0.0560 vs 0.0616), the largest single gain left. The gpu_model tests and the low-unchanged_fraction test could not be programmed. A per-decision relative_q80 >= 0.1 test hits this regime without crossing instrument classes. It differs from the earlier instrument_class edit, which was rejected at checkpoint, because it is a volatility-regime rule rather than a label. Promote narrow.",
+        "feature": "relative_q80",
+        "op": ">=",
+        "value": 0.1,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "programmed",
+        "class_size_choosing": 24,
+        "other_size_choosing": 144,
+        "class_margin_before": -0.6329,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.542,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.0
+          }
+        ],
+        "held_out": {
+          "class_on_target": 1.0,
+          "others_moved": 0.0
+        }
+      },
+      "random_direction_control_dose_response": [
+        {
+          "multiple": 0.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 2.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 3.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 4.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 6.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        }
+      ],
+      "development_vs_parent": {
+        "diff": -0.000795,
+        "ci90": [
+          -0.001266,
+          -0.000297
+        ],
+        "coverage": 0.779553
+      },
+      "checkpoint_vs_parent": {
+        "diff": -9.9e-05,
+        "ci90": [
+          -0.001086,
+          0.001173
+        ]
+      },
+      "outcome": "rejected"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T18:23:05.725893+00:00"
+}

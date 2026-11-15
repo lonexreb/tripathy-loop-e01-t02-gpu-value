@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Only the marketplace H100 series has high relative_q80 (0.125-0.189). It is the only high-volatility regime, and always-narrow beats medium there (0.0560 vs 0.0616), the largest single gain left. The gpu_model tests and the low-unchanged_fraction test could not be programmed. A per-decision relative_q80 >= 0.1 test hits this regime without crossing instrument classes. It differs from the earlier instrument_class edit, which was rejected at checkpoint, because it is a volatility-regime rule rather than a label. Promote narrow.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.1,
+  "promote": "narrow"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Every series with nonzero relative_q80 (>=0.001) is an H100 series, and these are the volatile, frequently repricing ones. Always-narrow beats medium on marketplace H100 (0.0560 vs 0.0616) and on neocloud H100_80GB (0.01261 vs 0.01362). It loses a little on H100_SXM, which only partly meets the threshold. The marketplace-only edit and the relative_q80>=0.1 edit passed development but were flat at checkpoint. This wider threshold adds the second H100 gain of the same sign. It is a per-decision volatility test on one numeric feature, so it should be programmable, unlike the multi-class gpu_model and unchanged_fraction tests. Promote narrow.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.001,
+  "promote": "narrow"
+ }
+}

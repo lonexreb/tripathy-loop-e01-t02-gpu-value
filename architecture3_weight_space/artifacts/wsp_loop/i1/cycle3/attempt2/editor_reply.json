@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Only marketplace H100 has relative_q80 in the 0.12-0.19 range. Narrow beats medium there (0.0560 vs 0.0616), which is the largest per-class gain available. The earlier narrow edits on this class reached 0.125 or lower and were flat at checkpoint. A higher per-decision threshold of 0.15 targets only the most volatile origins, where the medium band is most too wide. Promote narrow.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.15,
+  "promote": "narrow"
+ }
+}

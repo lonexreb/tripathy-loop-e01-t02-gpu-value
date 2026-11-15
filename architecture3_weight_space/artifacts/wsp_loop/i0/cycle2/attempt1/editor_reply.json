@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Hyperscaler spot series are almost always unchanged (unchanged_fraction 0.81-0.97, relative_q80 = 0), but rare jumps cost more than the medium band covers. Always-wide beats medium on both series: A100_40GB 0.01122 vs 0.01206, and A100_SXM_80GB 0.01238 vs 0.01466. That is the largest summed gain left after the rejected marketplace-narrow edit. Promote wide for hyperscaler_spot.",
+  "feature": "instrument_class",
+  "op": "==",
+  "value": "hyperscaler_spot",
+  "promote": "wide"
+ }
+}

@@ -1,0 +1,122 @@
+{
+  "id": "F_arch3_loop-i0-c3",
+  "generation": 3,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "not_programmable",
+  "improver": "I_wsp0",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Series with low unchanged_fraction (<0.5: marketplace H100 and neocloud H100_80GB) are in a high-churn regime where the medium band is too wide. Always-narrow beats medium on both: 0.0560 vs 0.0616 and 0.01261 vs 0.01362. The earlier instrument_class edit for marketplace alone was rejected at checkpoint. This feature test is per-decision and regime-based, and it also covers the neocloud H100 series. Promote narrow.",
+        "feature": "unchanged_fraction",
+        "op": "<",
+        "value": 0.5,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 48,
+        "other_size_choosing": 120,
+        "class_margin_before": -0.6348,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.458,
+            "others_moved": 0.008
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.2
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.2
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.592
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.6
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.6
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    },
+    {
+      "spec": {
+        "hypothesis": "H100_80GB series (marketplace ask and neocloud rate card) both do better with narrow bands than medium: 0.0560 vs 0.0616 and 0.01261 vs 0.01362. The marketplace-only edit gained on development but was flat at checkpoint. A gpu_model test also covers the neocloud H100_80GB series, which adds a second gain of the same sign. It is also a cleaner single-class test than unchanged_fraction<0.5, which was not programmable. Promote narrow for gpu_model H100_80GB.",
+        "feature": "gpu_model",
+        "op": "==",
+        "value": "H100_80GB",
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 48,
+        "other_size_choosing": 120,
+        "class_margin_before": -0.6348,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.458,
+            "others_moved": 0.008
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.2
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.2
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.592
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.6
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.6
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T18:22:09.845512+00:00"
+}

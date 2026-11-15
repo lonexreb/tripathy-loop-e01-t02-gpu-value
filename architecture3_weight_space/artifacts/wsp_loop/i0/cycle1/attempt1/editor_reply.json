@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Marketplace ask H100 has very low unchanged fraction and high relative_q80, but always-narrow gets 0.0560 versus 0.0616 for medium, which is the largest single-class gain. Promote narrow for marketplace_ask.",
+  "feature": "instrument_class",
+  "op": "==",
+  "value": "marketplace_ask",
+  "promote": "narrow"
+ }
+}

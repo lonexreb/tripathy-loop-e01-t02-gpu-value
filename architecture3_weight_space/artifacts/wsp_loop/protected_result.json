@@ -1,0 +1,28 @@
+{
+ "same_edits": true,
+ "i0_head_vs_F0_drift": {
+  "diff": -0.00061,
+  "ci90": [
+   -0.001891,
+   0.000607
+  ],
+  "coverage": 0.662745
+ },
+ "i1_head_vs_F0_drift": {
+  "diff": -0.00061,
+  "ci90": [
+   -0.001891,
+   0.000607
+  ],
+  "coverage": 0.662745
+ },
+ "i1_head_vs_i0_head": {
+  "diff": 0.0,
+  "ci90": [
+   0.0,
+   0.0
+  ],
+  "coverage": 0.662745
+ },
+ "recursion_claim_supported": false
+}

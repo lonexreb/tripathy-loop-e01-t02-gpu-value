@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Series with low unchanged_fraction (<0.5: marketplace H100 and neocloud H100_80GB) are in a high-churn regime where the medium band is too wide. Always-narrow beats medium on both: 0.0560 vs 0.0616 and 0.01261 vs 0.01362. The earlier instrument_class edit for marketplace alone was rejected at checkpoint. This feature test is per-decision and regime-based, and it also covers the neocloud H100 series. Promote narrow.",
+  "feature": "unchanged_fraction",
+  "op": "<",
+  "value": 0.5,
+  "promote": "narrow"
+ }
+}

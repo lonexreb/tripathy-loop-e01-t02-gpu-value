@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "A100_40GB is a single gpu_model class (hyperscaler spot and neocloud rate card, both almost always unchanged). Always-wide beats medium on the spot series, 0.01122 vs 0.01206, a gain of 0.00084. It is slightly worse on the rate card, 0.02663 vs 0.02614, a loss of 0.0005. The net gain is small but positive. Earlier edits on the hyperscaler spot class and on marketplace narrow were rejected at checkpoint, and the multi-series H100 tests could not be programmed. This test is a narrower single-value class, so it should program. Promote wide.",
+  "feature": "gpu_model",
+  "op": "==",
+  "value": "A100_40GB",
+  "promote": "wide"
+ }
+}

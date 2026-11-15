@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "preregistration_id": "arch3-wsp-loop-2026-11-15",
+  "written_before": "any score of the band actor on any block",
+  "purpose": "Autonomous multi-cycle weight-space programming of the forecasting actor, and a common-start test of whether an editor with its own history (I_1) beats one without (I_0).",
+  "base_model": "Qwen/Qwen3.5-0.8B@2fc06364715b967f1860aea9cf38778875588b17",
+  "editor": {
+    "call": "claude -p --model sonnet --strict-mcp-config --tools \"\" --output-format json --json-schema <spec schema> --no-session-persistence",
+    "tools": "none",
+    "fallback": "scripted editor (largest development gain); recorded as such if used"
+  },
+  "actor": {
+    "decision_unit": "(origin, series_id), from that series' as-of summary",
+    "bands": {"narrow": 0.5, "medium": 1.0, "wide": 2.0},
+    "forecaster": "repricing_interval, window 60, width_scale = band",
+    "decision_rule": "highest of the three band-token logits after the fixed answer prefix",
+    "start": "unedited base model for every arm; the cycle-1 edit is not carried over"
+  },
+  "cycles_per_arm": 3,
+  "edit_specs_per_cycle": 2,
+  "editor_visibility": [
+    "development-block results",
+    "accept/reject and aggregate checkpoint difference of past cycles",
+    "never checkpoint or protected cells"
+  ],
+  "edit_rules": {
+    "tensor": "model.layers.23.mlp.down_proj.weight",
+    "form": "W' = W + s * unit(d) r^T on at most 32 columns; r is the least-norm row with unit response on the class mean key and zero response on the other mean key",
+    "forbidden": ["embeddings / output layer", "final norm", "whole-tensor scaling", "any optimizer or backward pass"],
+    "programming_test": "choosing origins 2026-09-01..2026-09-24: smallest strength on the grid with at least 90% of class decisions on the promoted band and at most 10% of other decisions changed; otherwise not_programmable and no checkpoint score is spent",
+    "held_out": "development origins 2026-09-25..2026-09-30",
+    "control": "random direction orthogonal to d, same columns, row and strength"
+  },
+  "development_screen": "candidate development paired difference vs parent must be non-positive, else reject without scoring checkpoint",
+  "admission": "research/PROTOCOL.md section 4 against the parent (current accepted actor); checkpoint scored once per candidate",
+  "stop_rules": [
+    "3 cycles completed",
+    "edited tensor hash mismatch",
+    "unrelated-prompt top-1 agreement with the base model below 0.97",
+    "editor returns invalid output twice in one cycle"
+  ],
+  "recursion_test": {
+    "I_0": "editor that starts with an empty notebook",
+    "I_1": "the same editor given the notebook I_0's run produced",
+    "common_start": "same base actor, model, cycles, budget and rules",
+    "decision": "each arm's final actor scored once on the protected block (2026-10-16..2026-10-30); supported only if I_1's actor minus I_0's actor is negative, paired, with the 90% block-bootstrap CI excluding zero",
+    "otherwise": "reported as not supported"
+  },
+  "submission_rule": "stays F_1 unless a final actor is admitted and is paired-better than F_1 on checkpoint with the 90% CI excluding zero",
+  "disclosures": [
+    "the 15 checkpoint origins were already scored for six earlier candidates; this adds up to six more",
+    "band widths 0.5/1.0/2.0 were fixed after the cycle-1 development sweep",
+    "edits are confined to the last MLP, close to the readout"
+  ]
+}

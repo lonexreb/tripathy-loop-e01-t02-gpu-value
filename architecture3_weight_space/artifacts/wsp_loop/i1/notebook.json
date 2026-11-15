@@ -1,0 +1,362 @@
+[
+ {
+  "cycle": 1,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "A100_SXM_80GB is the largest remaining gain. Always-wide beats medium on the hyperscaler spot series (0.01238 vs 0.01466, gain 0.0023). It loses a little on the neocloud rate card series (0.00759 vs 0.00676, loss 0.0008). The net gain is about 0.0015 per pair. The test is a single gpu_model class, unlike the unprogrammable H100_80GB test, so I expect it to program. Promote wide.",
+     "feature": "gpu_model",
+     "op": "==",
+     "value": "A100_SXM_80GB",
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.4118,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.354,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.583,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.688,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 0.812,
+       "others_moved": 0.208
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "A100_40GB is a single gpu_model class (hyperscaler spot and neocloud rate card, both almost always unchanged). Always-wide beats medium on the spot series, 0.01122 vs 0.01206, a gain of 0.00084. It is slightly worse on the rate card, 0.02663 vs 0.02614, a loss of 0.0005. The net gain is small but positive. Earlier edits on the hyperscaler spot class and on marketplace narrow were rejected at checkpoint, and the multi-series H100 tests could not be programmed. This test is a narrower single-value class, so it should program. Promote wide.",
+     "feature": "gpu_model",
+     "op": "==",
+     "value": "A100_40GB",
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.4898,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.771,
+       "others_moved": 0.208
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.917,
+       "others_moved": 0.308
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.317
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   }
+  ],
+  "outcome": "not_programmable"
+ },
+ {
+  "cycle": 2,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Only the marketplace H100 series has high relative_q80 (0.125-0.189). It is the only high-volatility regime, and always-narrow beats medium there (0.0560 vs 0.0616), the largest single gain left. The gpu_model tests and the low-unchanged_fraction test could not be programmed. A per-decision relative_q80 >= 0.1 test hits this regime without crossing instrument classes. It differs from the earlier instrument_class edit, which was rejected at checkpoint, because it is a volatility-regime rule rather than a label. Promote narrow.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.1,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 24,
+     "other_size_choosing": 144,
+     "class_margin_before": -0.6329,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.542,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.0
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.000795,
+     "ci90": [
+      -0.001266,
+      -0.000297
+     ],
+     "coverage": 0.779553
+    },
+    "checkpoint_vs_parent": {
+     "diff": -9.9e-05,
+     "ci90": [
+      -0.001086,
+      0.001173
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 3,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Every series with nonzero relative_q80 (>=0.001) is an H100 series, and these are the volatile, frequently repricing ones. Always-narrow beats medium on marketplace H100 (0.0560 vs 0.0616) and on neocloud H100_80GB (0.01261 vs 0.01362). It loses a little on H100_SXM, which only partly meets the threshold. The marketplace-only edit and the relative_q80>=0.1 edit passed development but were flat at checkpoint. This wider threshold adds the second H100 gain of the same sign. It is a per-decision volatility test on one numeric feature, so it should be programmable, unlike the multi-class gpu_model and unchanged_fraction tests. Promote narrow.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.001,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.6348,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.458,
+       "others_moved": 0.008
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.592
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "Only marketplace H100 has relative_q80 in the 0.12-0.19 range. Narrow beats medium there (0.0560 vs 0.0616), which is the largest per-class gain available. The earlier narrow edits on this class reached 0.125 or lower and were flat at checkpoint. A higher per-decision threshold of 0.15 targets only the most volatile origins, where the medium band is most too wide. Promote narrow.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.15,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 15,
+     "other_size_choosing": 153,
+     "class_margin_before": -0.6143,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.667,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.059
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.077
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.000795,
+     "ci90": [
+      -0.001266,
+      -0.000297
+     ],
+     "coverage": 0.779553
+    },
+    "checkpoint_vs_parent": {
+     "diff": -0.000143,
+     "ci90": [
+      -0.001145,
+      0.001139
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ }
+]

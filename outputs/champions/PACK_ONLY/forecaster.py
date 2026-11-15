@@ -1,26 +1,26 @@
-"""Multi-regime first-principles forecaster (deterministic Task-4 candidate).
+"""MODEL-CLASS EXPLORATION (PACK_ONLY iter 10): model_combination (GBM x pooled-linear-momentum).
 
-Regime A, AWS hyperscaler_spot (administered, smoothed spot price; ~96% of the pooled loss):
-  H0 momentum: AWS spot moves in trends, so the h-day log change is regressed (pooled OLS over every
-     benchmark AZ series, trailing 540 days) on the trailing 1/3/7-day log changes.
-  H1 stickiness: residuals are scaled by local volatility (14-day mean |1-day log change|), so the
-     interval collapses toward the last value on zones whose price has stopped moving.
-  H3 conformal: q10/q50/q90 = forecast + local vol x empirical quantiles of the pooled standardised
-     in-sample residuals (split-conformal calibration of the 80% band).
-Regime B, daily-statistics rate cards (neocloud_rate_card / hyperscaler_list; menu-cost pricing):
-  empirical h-day log-change quantiles (drift); H1: q50 pinned to the last value when >= 50% of the
-  trailing 60 one-day changes are zero; H3: band width scaled by the IQR dispersion (p75 - p25) / median
-  relative to its trailing 60-day median (clipped to [0.6, 1.6]).
-Regime C, daily-statistics marketplace_ask / spot series:
-  drift. H2 cross-collector error correction (q50 pulled, ramped by h/7, toward the median of the other
-  collectors' same-family, same-tier, same-class daily medians over the last 7 days) is kept as a switch
-  but disabled (kappa = 0): on Discovery a pull of 0.25 cut the non-AWS pooled skill from +0.06 to -0.32,
-  and a cross-AZ consensus term cut the AWS skill from +0.44 to +0.33 (falsified, see theory_of_market.md).
+Regime A (AWS hyperscaler_spot, ~95% of pooled loss) is a from-scratch QUANTILE AVERAGE of two
+forecasters from DIFFERENT classes, both fit point-in-time on the pooled AWS benchmark series
+(trailing 540 days):
+  1. gradient_boosting: sklearn HistGradientBoostingRegressor(loss='quantile') per quantile,
+     features = trailing 1/3/7-day log changes + 7/14/28-day local vol. Nonlinear state->
+     quantile map; alone it is +0.039 Discovery pooled vs the champion but -0.039 median
+     (tree q50 drifts on calm sticky zones -> Gate-2 risk).
+  2. pooled_linear_momentum (the champion's class, embedded): pooled OLS of the h-day log
+     change on trailing 1/3/7-day log changes, vol-window ensemble {7,14,28} at h3/h7,
+     single 14-day window + 0.95 tail narrowing at h1, vol-scaled conformal z bands.
+The two quantile sets are averaged 50/50 in LOG space (q10/q50/q90 each), then clipped to
+log(last) +/- 1.0. Mechanism: the tree carries the nonlinear/pooled gain (h1 +0.070, h3/h7
++0.036 Discovery skill), the linear member anchors the calm-zone center (median) and the
+calibrated band; quantile averaging is the one width lever with a confirmed-positive record
+(iters 8/9). Regimes B (rate cards) and C (marketplace / non-AWS spot) are the champion's.
 """
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import HistGradientBoostingRegressor
 
 QS = np.array([0.1, 0.5, 0.9])
 EPOCH_ORDINAL = 719163
@@ -43,84 +43,124 @@ def _shift(days: np.ndarray, x: np.ndarray, k: int) -> np.ndarray:
 class Forecaster:
     lags = (1, 3, 7)
     train_days = 540
-    vol_wins = (7, 14, 28)  # ensemble (iter 8): average quantiles across vol-window members;
-    vol_win = 14  # single-window fallback if a member has no valid rows
-    ens_horizons = (3, 7)  # ensemble only where the champion under-covers (h3 0.783, h7 0.751);
-    # h1 keeps the confirmed single-window + 0.95 narrowing (h1 at 0.803 coverage already)
-    min_samples = 20
-    rec_win = 60  # regime-C recent-window change quantiles (regime_change): provider repricing
-    rec_min = 30  # is non-stationary; full-history quantiles under-cover (Discovery cov 0.58-0.63)
-    tail_scale = {1: 0.95, 3: 1.0, 7: 1.0}  # h1 tail narrowing around q50 (confirmed, iter 5)
-    sticky_share = 0.5
-    kappa = 0.0
+    clip = 1.0            # log-band clip around the last value
+    w_gbm = 0.5           # blend weight on the GBM quantile set (1-w on the linear member)
+    # GBM hyperparameters (fixed seed, deterministic)
+    gb = dict(max_iter=200, learning_rate=0.06, max_leaf_nodes=31,
+              min_samples_leaf=40, random_state=0, early_stopping=False)
+    gbm_min_rows = 500    # pooled rows needed to trust a GBM fit
+    per_series_min = 20   # per-series empirical fallback threshold
+    # linear member (champion class) parameters
+    vol_wins = (7, 14, 28)
+    vol_win = 14
+    ens_horizons = (3, 7)
+    tail_scale = {1: 0.95, 3: 1.0, 7: 1.0}
 
-    # ---------------------------------------------------------------- regime A: AWS spot ----
-    def _aws_features(self, days, lv):
-        X = np.column_stack([lv - _shift(days, lv, -k) for k in self.lags])
+    # ------------------------------------------------- regime A member 1: gradient boosting ----
+    def _gbm_features(self, days, lv):
+        ch = [lv - _shift(days, lv, -k) for k in self.lags]
         vols = [pd.Series(np.abs(lv - _shift(days, lv, -1))).rolling(vw, min_periods=3).mean().to_numpy() + 1e-4
                 for vw in self.vol_wins]
-        return X, vols
+        return np.column_stack(ch + vols)
 
-    def _aws(self, series, origin, od, horizons):
-        feats = {sid: (days, lv, *self._aws_features(days, lv)) for sid, (days, lv) in series.items()}
-        rows = []
-        for h in horizons:
-            # One pooled-OLS member per vol window (ensemble, iter 8): the local-vol scale is
-            # the only window-sensitive part of the machinery, and the pseudo-origin OOS
-            # analysis (fit at origin-28d, score the next 28 days, 5 Discovery origins) shows
-            # averaging the three quantile sets across vol_wins beats the single 14-day
-            # member at every horizon (h3/h7 5/5 origins, +0.006/+0.006 avg skill) while
-            # moving coverage toward 0.80. train_days stays 540 (the 270-day member is
-            # mixed-to-negative at h7: beta270 over-weights the 1-day lag).
-            members = []
-            for vw in self.vol_wins:
-                Xs, ys, ss = [], [], []
-                for days, lv, X, vols in feats.values():
-                    vol = vols[self.vol_wins.index(vw)]
-                    y = _shift(days, lv, h) - lv
-                    m = (days + h <= od) & (days > od - self.train_days) & np.isfinite(y) & np.isfinite(X).all(1) & np.isfinite(vol)
-                    Xs.append(X[m]); ys.append(y[m]); ss.append(vol[m])
-                if not Xs or not np.concatenate(ss).size:
-                    continue
-                X, y, s = np.vstack(Xs), np.concatenate(ys), np.concatenate(ss)
-                beta = np.linalg.lstsq(X, y, rcond=None)[0]
-                z = np.quantile((y - X @ beta) / s, QS)
-                # h1 tail narrowing (horizon_structure, confirmed in iteration 5): the in-sample
-                # standardized tails at h=1 are too wide relative to the true 1-day-ahead
-                # distribution (Discovery h1 coverage 0.840 vs 0.80 target); scale both tails
-                # around the unchanged q50 by 0.95 at h=1 only. q50, h3 and h7 unchanged.
-                f = self.tail_scale.get(h, 1.0)
-                z = z[1] + f * (z - z[1])
-                members.append((beta, z, vw))
-            if not members or h not in self.ens_horizons:
-                # h1 (and any horizon outside ens_horizons): single-window champion machinery
-                beta, z = self._aws_single(h, feats, od)
-                members = [(beta, z, self.vol_win)]
-            for sid, (days, lv, Xa, vols) in feats.items():
-                qs = []
-                for beta, z, vw in members:
-                    v = vols[self.vol_wins.index(vw)][-1]
-                    v = v if np.isfinite(v) else 1e-4
-                    qs.append(lv[-1] + np.nan_to_num(Xa[-1]) @ beta + v * z)
-                q = np.mean(qs, axis=0)
-                rows.append((sid, origin, h, *np.exp(np.sort(q))))
-        return rows
+    def _gbm_quantiles(self, feats, od, h):
+        """{sid: q3} from pooled quantile-loss gradient boosting, plus fallback info."""
+        Xs, ys, per = [], [], {}
+        for sid, (days, lv, X, _vols) in feats.items():
+            y = _shift(days, lv, h) - lv
+            m = (days + h <= od) & (days > od - self.train_days) & np.isfinite(y) & np.isfinite(X).all(1)
+            if m.any():
+                Xs.append(X[m]); ys.append(y[m])
+            per[sid] = (X, y, (days + h <= od) & np.isfinite(y))
+        models = None
+        if Xs and int(sum(len(a) for a in ys)) >= self.gbm_min_rows:
+            Xtr, ytr = np.vstack(Xs), np.concatenate(ys)
+            models = []
+            for q in QS:
+                g = HistGradientBoostingRegressor(loss="quantile", quantile=float(q), **self.gb)
+                g.fit(Xtr, ytr)
+                models.append(g)
+        out = {}
+        for sid, (X, y, m2) in per.items():
+            x0 = X[-1] if len(X) else np.full(len(self.lags) + len(self.vol_wins), np.nan)
+            if models is not None and np.isfinite(x0).all():
+                q = np.array([float(g.predict(x0.reshape(1, -1))[0]) for g in models])
+            elif int(m2.sum()) >= self.per_series_min:
+                q = np.quantile(y[m2], QS)
+            else:
+                q = np.zeros(3)
+            out[sid] = np.sort(np.clip(q, -self.clip, self.clip))
+        return out
 
-    def _aws_single(self, h, feats, od):
+    # ------------------------------- regime A member 2: pooled linear momentum (champion) ----
+    def _lin_quantiles(self, feats, od, h):
+        """{sid: q3} replicating the champion's regime-A machinery for horizon h."""
         Xs, ys, ss = [], [], []
         for days, lv, X, vols in feats.values():
             vol = vols[self.vol_wins.index(self.vol_win)]
             y = _shift(days, lv, h) - lv
             m = (days + h <= od) & (days > od - self.train_days) & np.isfinite(y) & np.isfinite(X).all(1) & np.isfinite(vol)
             Xs.append(X[m]); ys.append(y[m]); ss.append(vol[m])
+        out = {}
+        if not Xs or not np.concatenate(ss).size:
+            return {sid: np.zeros(3) for sid in feats}
         X, y, s = np.vstack(Xs), np.concatenate(ys), np.concatenate(ss)
         beta = np.linalg.lstsq(X, y, rcond=None)[0]
         z = np.quantile((y - X @ beta) / s, QS)
         f = self.tail_scale.get(h, 1.0)
         z = z[1] + f * (z - z[1])
-        return beta, z
+        members = [(beta, z, self.vol_win)]
+        if h in self.ens_horizons:
+            members = []
+            for vw in self.vol_wins:
+                Xs2, ys2, ss2 = [], [], []
+                for days, lv, Xa, vols in feats.values():
+                    vol = vols[self.vol_wins.index(vw)]
+                    y2 = _shift(days, lv, h) - lv
+                    m = (days + h <= od) & (days > od - self.train_days) & np.isfinite(y2) & np.isfinite(Xa).all(1) & np.isfinite(vol)
+                    Xs2.append(Xa[m]); ys2.append(y2[m]); ss2.append(vol[m])
+                if not Xs2 or not np.concatenate(ss2).size:
+                    continue
+                X2, y2, s2 = np.vstack(Xs2), np.concatenate(ys2), np.concatenate(ss2)
+                b2 = np.linalg.lstsq(X2, y2, rcond=None)[0]
+                z2 = np.quantile((y2 - X2 @ b2) / s2, QS)
+                z2 = z2[1] + f * (z2 - z2[1])
+                members.append((b2, z2, vw))
+        for sid, (days, lv, X, vols) in feats.items():
+            qs = []
+            for beta, z, vw in members:
+                v = vols[self.vol_wins.index(vw)][-1]
+                v = v if np.isfinite(v) else 1e-4
+                qs.append(np.nan_to_num(X[-1]) @ beta + v * z)
+            out[sid] = np.mean(qs, axis=0)
+        return out
+
+    # ---------------------------------------------------------------- regime A: blend ----
+    def _aws(self, series, origin, od, horizons):
+        feats = {sid: (days, lv, self._gbm_features(days, lv),
+                       [pd.Series(np.abs(lv - _shift(days, lv, -1))).rolling(vw, min_periods=3).mean().to_numpy() + 1e-4
+                        for vw in self.vol_wins])
+                 for sid, (days, lv) in series.items()}
+        lin_feats = {sid: (days, lv, np.column_stack([lv - _shift(days, lv, -k) for k in self.lags]), vols)
+                     for sid, (days, lv, _, vols) in feats.items()}
+        rows = []
+        for h in horizons:
+            qg = self._gbm_quantiles(feats, od, h)
+            ql = self._lin_quantiles(lin_feats, od, h)
+            for sid, (days, lv, _, _) in feats.items():
+                q = self.w_gbm * qg[sid] + (1.0 - self.w_gbm) * ql[sid]
+                q = lv[-1] + np.sort(q)
+                q = np.clip(q, lv[-1] - self.clip, lv[-1] + self.clip)
+                rows.append((sid, origin, h, *np.exp(q)))
+        return rows
 
     # ------------------------------------------------------- regimes B and C: daily statistics ----
+    rec_win = 60
+    rec_min = 30
+    min_samples = 20
+    sticky_share = 0.5
+    kappa = 0.0
+
     def _daily(self, sid, meta, days, lv, ds, origin, od, horizons):
         sub = ds[(ds["source_id"] == meta.source_id) & (ds["gpu_model"] == meta.gpu_model)
                  & (ds["pricing_tier"] == meta.pricing_tier) & (ds["instrument_class"] == meta.instrument_class)]
@@ -132,22 +172,10 @@ class Forecaster:
             rel = ((sub["p75_usd_per_gpu_hour"] - sub["p25_usd_per_gpu_hour"]) / sub["median_usd_per_gpu_hour"]).to_numpy()
             width = float(np.clip(rel[-1] / max(np.median(rel[-60:]), 1e-6), 0.6, 1.6))
         pull = 0.0
-        if not card and self.kappa:
-            fam = str(meta.gpu_model).split(" ")[0]
-            c = ds[(ds["source_id"] != meta.source_id) & ds["gpu_model"].str.startswith(fam)
-                   & (ds["pricing_tier"] == meta.pricing_tier) & (ds["instrument_class"] == meta.instrument_class)]
-            c = c[c["date"] > (pd.Timestamp(origin) - pd.Timedelta(days=7)).strftime("%Y-%m-%d")]
-            if len(c):
-                pull = float(np.log(c["median_usd_per_gpu_hour"].median()) - lv[-1])
         rows = []
         for h in horizons:
             ch = _shift(days, lv, h) - lv
             ch = ch[np.isfinite(ch)]
-            # Regime-C recent-window change quantiles (regime_change): the marketplace_ask /
-            # non-card spot series reprice in bursts (provider entries/exits), so the
-            # full-history h-day change distribution under-covers the forward window
-            # (Discovery coverage 0.58-0.63, q90 breach 25%). Use a trailing rec_win-day
-            # window when it has enough samples; fall back to the full history otherwise.
             if not card and len(ch) >= self.rec_min:
                 ch_r = ch[-self.rec_win:]
                 q = np.quantile(ch_r, QS) if len(ch_r) >= self.min_samples else np.quantile(ch, QS)

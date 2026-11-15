@@ -308,3 +308,15 @@ def test_devin_propose_tolerates_transient_poll_errors():
 def test_devin_propose_gives_up_after_repeated_poll_errors():
     with pytest.raises(ConnectionError):
         _devin([ConnectionError("down")] * 5).propose("p", "t")
+
+
+def test_playbook_updates_are_budgeted_and_family_is_inferred(ctrl):
+    tb = AgentToolbox(ctrl)
+    pb = "playbook " * 60
+    assert json.loads(tb.update_scientist_prompt(pb, "a"))["playbook_updates_left"] == tb.max_playbook_updates - 1
+    for _ in range(tb.max_playbook_updates - 1):
+        tb.update_scientist_prompt(pb, "b")
+    assert json.loads(tb.update_scientist_prompt(pb, "c"))["status"] == "PLAYBOOK_BUDGET_EXHAUSTED"
+    tb.wb.write(CAND)
+    r = json.loads(tb.submit_candidate_for_holdout("Per-horizon conformal widening of the q90 tail", ""))
+    assert r["hypothesis_family"] == "interval_calibration"

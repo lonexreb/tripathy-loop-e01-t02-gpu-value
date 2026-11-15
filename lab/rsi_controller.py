@@ -26,7 +26,7 @@ from pathlib import Path
 
 from lab.config import (DISCOVERY_ORIGINS, HOLDOUT_ORIGINS, STAGE_PACK_ONLY, STAGE_PACK_PLUS_EXA,
                         LabConfig, load_config)
-from lab.memory import (HYPOTHESIS_FAMILIES, NOVELTY_LEVELS, PROTECTED_BLOCK, archive_candidate, collapse_warnings,
+from lab.memory import (HYPOTHESIS_FAMILIES, infer_family, NOVELTY_LEVELS, PROTECTED_BLOCK, archive_candidate, collapse_warnings,
                         demote_headings, diff_stats, dropped_guardrails, enforce_protected, exploration_directive,
                         family_stats, fit_json, gate_margins, is_no_op, metric_delta, near_misses, normalize_family,
                         normalize_novelty, notebook_index, registry_row, unified_diff)
@@ -382,7 +382,10 @@ class RSIController:
         code_sha = sha256_text(new_forecaster_code)
         champion_code = self.backup_path.read_text()
         cand_dir = self.candidates_dir / f"iter_{it:03d}"
-        base = {"iteration": it, "hypothesis": hypothesis[:2000], "hypothesis_family": normalize_family(hypothesis_family),
+        family = normalize_family(hypothesis_family)
+        if family == "unspecified" and infer_family(hypothesis) != "unspecified":
+            family = infer_family(hypothesis)
+        base = {"iteration": it, "hypothesis": hypothesis[:2000], "hypothesis_family": family,
                 "novelty": normalize_novelty(novelty), "code_sha256": code_sha, "parent_code_sha256": champ["code_sha256"],
                 "candidate_dir": str(cand_dir.relative_to(self.root)),
                 "diff_vs_champion_lines": diff_stats(unified_diff(champion_code, new_forecaster_code))}
@@ -964,7 +967,8 @@ class AgentToolbox:
                              else int(os.environ.get("RSI_MAX_DRY_RUNS", ctrl.cfg.max_discovery_probes)))
         self.max_analyses = max_analyses if max_analyses is not None else int(os.environ.get("RSI_MAX_ANALYSES", "6"))
         self.max_submissions = max_submissions
-        self.n_dry_runs = self.n_analyses = 0
+        self.n_dry_runs = self.n_analyses = self.n_playbook_updates = 0
+        self.max_playbook_updates = int(os.environ.get("RSI_MAX_PLAYBOOK_UPDATES", "2"))
         self.builds_on: int | None = None
         self.results: list[dict] = []
 
@@ -1055,8 +1059,15 @@ class AgentToolbox:
         return fit_json(r, 30000, [("discovery_diagnostics", "head"), ("champion_holdout_before", "head")])
 
     def update_scientist_prompt(self, new_playbook_md: str, rationale: str) -> str:
-        """Replace workspace/scientist_prompt.md (your research playbook) with a revised version."""
-        return json.dumps(self.ctrl.update_scientist_prompt(new_playbook_md, rationale, iteration=self.iteration), default=str)
+        """Replace workspace/scientist_prompt.md (your research playbook) with a revised version. Limited per
+        iteration: fold everything (including any guardrails the lab reports as dropped) into one rewrite."""
+        if self.n_playbook_updates >= self.max_playbook_updates:
+            return json.dumps({"status": "PLAYBOOK_BUDGET_EXHAUSTED",
+                               "error": f"{self.max_playbook_updates} playbook updates used this iteration; stop now"})
+        self.n_playbook_updates += 1
+        r = self.ctrl.update_scientist_prompt(new_playbook_md, rationale, iteration=self.iteration)
+        r["playbook_updates_left"] = self.max_playbook_updates - self.n_playbook_updates
+        return json.dumps(r, default=str)
 
     def search_exa_signals(self, query: str, origin_date: str) -> str:
         """Point-in-time web search (results published on or before origin_date <= the last Discovery origin)."""

@@ -31,6 +31,26 @@ HYPOTHESIS_FAMILIES: dict[str, str] = {
 }
 NOVELTY_LEVELS = ("incremental", "bold")
 
+# What model produces the regime-A (AWS spot, ~95% of the loss) quantiles. Families say WHICH PART of a forecaster a
+# change touches; model classes say WHAT the forecaster is, so the lab can see when every experiment is a tweak of
+# one model and force the search out of it.
+MODEL_CLASSES: dict[str, str] = {
+    "pooled_linear_momentum": "pooled OLS on trailing log changes + vol-scaled empirical-residual (conformal) bands "
+                              "(the seed champion's class; tweaks of its windows/tails/members stay in this class)",
+    "quantile_regression": "direct linear/spline quantile regression per horizon (pinball loss), e.g. scipy.optimize",
+    "gradient_boosting": "tree ensembles with quantile loss (sklearn HistGradientBoostingRegressor(loss='quantile'))",
+    "state_space": "local-level/trend Kalman filters, exponential smoothing, structural time-series models",
+    "volatility_model": "GARCH/EWMA/realised-vol models for the band, with any simple center",
+    "analog_nonparametric": "nearest-neighbour / analog forecasting, kernel or bootstrap path resampling",
+    "regime_switching": "change-point / step / Markov-switching models of administered price moves",
+    "hierarchical_pooling": "partial pooling across AZ/instance/GPU hierarchies (empirical Bayes, shrinkage)",
+    "model_combination": "weighted combination of forecasters from DIFFERENT classes (stacking, quantile averaging)",
+    "other": "anything else (explain in the hypothesis)",
+}
+SEED_MODEL_CLASS = "pooled_linear_momentum"
+MIN_BOLD_DIFF_LINES = 40          # a "bold" claim on a smaller same-class diff is recorded as incremental
+MODEL_CLASS_STREAK_LIMIT = 3      # experiments in the champion's class before the lab demands a different class
+
 PROTECTED_BEGIN = "<!-- LAB-PROTECTED:BEGIN (owned by the lab; rewrites cannot remove or edit this block) -->"
 PROTECTED_END = "<!-- LAB-PROTECTED:END -->"
 PROTECTED_BODY = """## Lab rules (protected)
@@ -39,8 +59,14 @@ PROTECTED_BODY = """## Lab rules (protected)
   not that the problem is solved; move to an untried family (see the experiment registry) or make a bolder change.
 - Every hypothesis is tagged with one family and a novelty (incremental | bold). Do not spend more than two
   consecutive experiments in one family without a promotion; after two reverts in a row, the next one is bold.
-- Near-misses are assets: reverted candidates are archived with their code, diff and diagnostics
-  (inspect_candidate). Prefer building on the closest near-miss over restarting from the champion.
+- Near-misses are archived with their code, diff and diagnostics (inspect_candidate) and can be built on, but a
+  near-miss of the same model class is a local move. A small Holdout gain is not "confirmed": Holdout has 5 origins
+  and per-candidate deltas of +-0.002 are noise. Do not stack levers by their Holdout deltas.
+- Every candidate is tagged with a model_class (see the lab's list). When the lab directive says MODEL-CLASS
+  EXPLORATION, write a forecaster of a different class for the AWS regime from scratch (write_candidate), compare
+  several classes on Discovery (save_variant / load_variant) and submit the best one.
+- One failed implementation falsifies that implementation, not the idea. Only mark a lever or class "dead" after
+  two independent implementations fail (an implementation bug, e.g. an exploding quantile, falsifies nothing).
 - A candidate whose Holdout aggregates equal the champion's (NO_OP) changed nothing that is scored: its
   selection rule never fired. Make changes that act unconditionally or show on Discovery that they fire.
 - Guardrails are only removed with evidence: cite the iteration that falsified them in the rationale.
@@ -92,6 +118,28 @@ def infer_family(hypothesis: str | None) -> str:
 def normalize_novelty(novelty: str | None) -> str:
     n = (novelty or "").strip().lower()
     return n if n in NOVELTY_LEVELS else "unspecified"
+
+
+def normalize_model_class(model_class: str | None) -> str:
+    m = re.sub(r"[^a-z0-9]+", "_", (model_class or "").strip().lower()).strip("_")
+    if not m:
+        return "unspecified"
+    if m in MODEL_CLASSES:
+        return m
+    for k in MODEL_CLASSES:
+        if m.startswith(k) or k.startswith(m):
+            return k
+    return f"other:{m[:40]}"
+
+
+def verified_novelty(novelty: str, diff_lines: dict | None, model_class: str, champion_class: str) -> str:
+    """The lab's novelty verdict: 'bold' needs a new model class or a diff of at least MIN_BOLD_DIFF_LINES lines."""
+    n = normalize_novelty(novelty)
+    if n != "bold":
+        return n
+    changed = sum((diff_lines or {}).get(k, 0) for k in ("added", "removed"))
+    new_class = model_class not in ("unspecified", champion_class)
+    return "bold" if new_class or changed >= MIN_BOLD_DIFF_LINES else "incremental"
 
 
 # ------------------------------------------------------------------------------ verdicts ----
@@ -188,6 +236,13 @@ def registry_row(r: dict) -> dict:
             row["family"], row["family_inferred"] = inferred, True
     if r.get("builds_on_iteration") is not None:
         row["builds_on"] = r["builds_on_iteration"]
+    if r.get("status") not in ("SEED", "FORK"):
+        mc = r.get("model_class") or "unspecified"
+        if mc == "unspecified":   # legacy rows predate the tag: every one of them edited the seed class in place
+            mc, row["model_class_inferred"] = SEED_MODEL_CLASS, True
+        row["model_class"] = mc
+        if r.get("novelty_claimed") and r.get("novelty_claimed") != row["novelty"]:
+            row["novelty_claimed"] = r["novelty_claimed"]
     if h:
         row["holdout"] = {"pooled": _r(h.get("pooled_skill")), "median": _r(h.get("median_skill")),
                           "cov": _r(h.get("coverage_80")),
@@ -221,6 +276,39 @@ def family_stats(rows: list[dict]) -> dict:
     return out
 
 
+def model_class_stats(rows: list[dict]) -> dict:
+    out: dict[str, dict] = {}
+    for r in rows:
+        if r.get("status") in ("SEED", "FORK") or not r.get("model_class"):
+            continue
+        m = out.setdefault(r["model_class"], {"tried": 0, "promoted": 0, "last_iteration": None})
+        m["tried"] += 1
+        m["promoted"] += r.get("status") == "PROMOTED"
+        m["last_iteration"] = r.get("it")
+    return out
+
+
+def champion_model_class(rows: list[dict]) -> str:
+    for r in reversed(rows):
+        if r.get("status") == "PROMOTED" and r.get("model_class"):
+            return r["model_class"]
+    return SEED_MODEL_CLASS
+
+
+def model_class_streak(rows: list[dict]) -> int:
+    """Consecutive most recent experiments (any status) in the champion's model class."""
+    champ, n = champion_model_class(rows), 0
+    for r in reversed([r for r in rows if r.get("status") not in ("SEED", "FORK")]):
+        if r.get("model_class", champ) != champ:
+            break
+        n += 1
+    return n
+
+
+def model_class_exploration_required(rows: list[dict], limit: int = MODEL_CLASS_STREAK_LIMIT) -> bool:
+    return model_class_streak(rows) >= limit
+
+
 def near_misses(rows: list[dict], k: int = 3) -> list[dict]:
     """Reverted candidates closest to promotion (smallest total gate shortfall), excluding no-ops."""
     cands = [r for r in rows if r.get("status") == "REVERTED" and r.get("margins") and not r.get("no_op")]
@@ -246,7 +334,17 @@ def exploration_directive(rows: list[dict], budget: dict | None = None) -> str:
                     "and should come from a family you have not exhausted.")
     if len(recent) >= 2 and len(set(recent)) == 1 and recent[0] not in (None, "unspecified"):
         msgs.append(f"The last {len(recent)} experiments were all in family '{recent[0]}': switch family this time.")
-    nm = near_misses(rows, 1)
+    explore = model_class_exploration_required(rows)
+    if explore:
+        champ = champion_model_class(rows)
+        tried = model_class_stats(rows)
+        untried_cls = [m for m in MODEL_CLASSES if m not in tried and m not in ("other", champ)]
+        msgs.append(f"MODEL-CLASS EXPLORATION: the last {model_class_streak(rows)} experiments all tweaked the champion's "
+                    f"model class '{champ}'. This iteration's candidate must use a DIFFERENT model_class for the AWS "
+                    "regime, written from scratch (write_candidate; the rate-card/marketplace regimes may be kept). "
+                    "Build at least two classes, save_variant each, dry-run them and submit the best (Discovery decides, "
+                    "not your prior). Untried model classes: " + ", ".join(untried_cls) + ".")
+    nm = [] if explore else near_misses(rows, 1)
     if nm:
         how = ("read it with inspect_candidate before deciding whether to build on it" if nm[0].get("archived", True)
                else "its code predates the candidate archive; its hypothesis and margins are in the registry")

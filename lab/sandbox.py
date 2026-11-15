@@ -270,63 +270,86 @@ def assert_point_in_time(slice_: dict[str, pd.DataFrame], origin_date: str) -> N
 
 
 # ------------------------------------------------------------------- forecaster source audit ----
-ALLOWED_IMPORTS = {"numpy", "pandas", "math", "statistics", "dataclasses", "typing", "collections", "functools",
-                   "itertools", "re", "datetime", "warnings", "__future__", "bisect", "heapq", "operator", "enum"}
+# Deny-list firewall: candidates may import any installed computational library (numpy, pandas, scipy, sklearn,
+# lightgbm, torch, ...) and design any architecture. Blocked is only what breaks the experiment: file / network I/O,
+# process and interpreter escape hatches, dynamic code execution, and dataset downloads (point-in-time leakage).
+FORBIDDEN_MODULES = {
+    "os", "sys", "subprocess", "socket", "ssl", "shutil", "pathlib", "io", "glob", "tempfile", "pickle", "marshal",
+    "shelve", "dbm", "sqlite3", "zipfile", "tarfile", "gzip", "bz2", "lzma", "zlib", "ctypes", "cffi", "importlib",
+    "pkgutil", "runpy", "builtins", "inspect", "gc", "code", "codeop", "pty", "fcntl", "mmap", "signal", "resource",
+    "multiprocessing", "concurrent", "asyncio", "selectors", "threading", "_thread", "urllib", "urllib3", "http",
+    "httpx", "requests", "aiohttp", "ftplib", "smtplib", "poplib", "imaplib", "telnetlib", "xmlrpc", "webbrowser",
+    "site", "sysconfig", "platform", "atexit", "faulthandler", "tracemalloc", "linecache", "fileinput", "csv",
+    "joblib", "dill", "cloudpickle", "fsspec", "h5py", "pyarrow", "duckdb", "polars", "exa_py", "openai", "strands",
+    "lab", "tests", "workspace", "datasets", "huggingface_hub", "transformers", "torchvision", "torchaudio",
+    "torchtext", "kagglehub", "yfinance", "pandas_datareader",
+}
+FORBIDDEN_SUBMODULES = ("scipy.io", "scipy.datasets", "scipy.misc", "sklearn.datasets", "sklearn.externals",
+                        "pandas.io", "numpy.lib.npyio", "numpy.ctypeslib", "torch.hub", "torch.utils.data.datapipes",
+                        "torch.utils.cpp_extension", "torch.package", "torch.distributed", "torch.multiprocessing",
+                        "torch.serialization", "torch.utils.tensorboard", "torch.onnx")
+
+
+def _import_forbidden(module: str) -> bool:
+    return module.split(".")[0] in FORBIDDEN_MODULES or any(module == m or module.startswith(m + ".")
+                                                             for m in FORBIDDEN_SUBMODULES)
+
+
 FORBIDDEN_NAMES = {"open", "eval", "exec", "compile", "__import__", "input", "breakpoint", "globals", "locals",
-                   "vars", "memoryview"}
+                   "vars", "memoryview", "getattr", "setattr", "delattr"}
 FORBIDDEN_ATTRS = {"load", "save", "savez", "savez_compressed", "fromregex", "memmap", "DataSource", "HDFStore",
-                   "ExcelFile", "ExcelWriter"}  # numpy/pandas file readers/writers not covered by the prefixes below
+                   "ExcelFile", "ExcelWriter", "io", "datasets", "hub", "externals", "serialization", "package",
+                   "load_state_dict_from_url", "download_url_to_file", "from_file", "system", "popen"}
 FORBIDDEN_ATTR_PREFIXES = ("read_", "to_csv", "to_parquet", "to_pickle", "to_json", "to_sql", "to_excel",
-                           "to_feather", "to_hdf", "to_stata", "loadtxt", "savetxt", "fromfile", "tofile", "genfromtxt")
-# Opt-in (LAB_ALLOW_ML_IMPORTS=1) model-class libraries, minus their dataset-download / file I/O surfaces.
-ML_IMPORTS = {"scipy", "sklearn", "lightgbm"}
-ML_FORBIDDEN_MODULES = ("sklearn.datasets", "sklearn.externals", "scipy.io", "scipy.datasets", "scipy.misc")
-ML_FORBIDDEN_ATTR_PREFIXES = ("fetch_", "load_", "save_", "dump", "savemat", "loadmat", "mmread", "mmwrite")
-ML_FORBIDDEN_KEYWORDS = {"model_file", "filename", "fname", "file", "data_home", "path"}
-ML_FORBIDDEN_LGB = {"Dataset", "Booster", "train", "cv"}  # lightgbm's native API can read files; use the sklearn API
+                           "to_feather", "to_hdf", "to_stata", "loadtxt", "savetxt", "fromfile", "tofile", "genfromtxt",
+                           "fetch_", "load_", "save_", "dump", "savemat", "loadmat", "mmread", "mmwrite")
+FORBIDDEN_KEYWORDS = {"model_file", "filename", "fname", "file", "data_home", "path", "init_model"}
+FORBIDDEN_LGB = {"Dataset", "Booster", "train", "cv"}  # lightgbm's native API reads files; use LGBMRegressor
 
 
-def ml_imports_enabled() -> bool:
-    return os.environ.get("LAB_ALLOW_ML_IMPORTS", "").strip().lower() in ("1", "true", "yes", "on")
-
-
-def allowed_imports(ml: bool | None = None) -> set[str]:
-    return ALLOWED_IMPORTS | (ML_IMPORTS if (ml_imports_enabled() if ml is None else ml) else set())
+def import_policy_text() -> str:
+    return ("Any installed computational library may be imported (numpy, pandas, scipy, sklearn, lightgbm, torch, ...); "
+            "design whatever architecture you want. Forbidden: file/network/process/interpreter modules ("
+            + ", ".join(sorted(m for m in FORBIDDEN_MODULES if m in {"os", "sys", "subprocess", "socket", "pathlib",
+                                                                    "pickle", "importlib", "urllib", "requests"}))
+            + ", ...), dataset/download/serialisation submodules (" + ", ".join(FORBIDDEN_SUBMODULES[:5]) + ", ...), "
+            "save/load/read_/to_* file APIs, and eval/exec/getattr-style dynamic access")
 
 
 def audit_forecaster_source(code: str, allow_ml: bool | None = None) -> list[str]:
-    """Information firewall for candidate code: no I/O, no network, no dynamic imports. Returns problems."""
+    """Information firewall for candidate code (deny-list): no I/O, no network, no dynamic execution."""
+    del allow_ml  # kept for call-site compatibility; every non-forbidden library is allowed
     try:
         tree = ast.parse(code)
     except SyntaxError as e:
         return [f"SyntaxError: {e}"]
-    allowed, problems = allowed_imports(allow_ml), []
-    attr_prefixes = FORBIDDEN_ATTR_PREFIXES + (ML_FORBIDDEN_ATTR_PREFIXES if ML_IMPORTS & allowed else ())
+    problems: list[str] = []
     lgb_aliases = {a.asname or a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names
                    if a.name.split(".")[0] == "lightgbm"}
     for node in ast.walk(tree):
         if (isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] == "lightgbm"
-                and any(a.name in ML_FORBIDDEN_LGB for a in node.names)) or (
+                and any(a.name in FORBIDDEN_LGB for a in node.names)) or (
                 isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in lgb_aliases
-                and node.attr in ML_FORBIDDEN_LGB):
+                and node.attr in FORBIDDEN_LGB):
             problems.append("lightgbm's native Dataset/Booster/train/cv API is not allowed (use LGBMRegressor)")
         if isinstance(node, ast.Import):
             full = [a.name for a in node.names]
         elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                problems.append("relative imports are not allowed")
             full = [node.module or ""] + [f"{node.module}.{a.name}" for a in node.names]
         else:
             full = []
-        problems += [f"import of '{m.split('.')[0]}' is not allowed (allowed: {sorted(allowed)})" for m in full
-                     if m.split(".")[0] not in allowed]
-        problems += [f"import of '{m}' is not allowed (dataset download / file I/O)" for m in full
-                     if any(m == b or m.startswith(b + ".") for b in ML_FORBIDDEN_MODULES)]
+        problems += [f"import of '{m}' is not allowed (file/network/process I/O or data download)" for m in full
+                     if _import_forbidden(m)]
         if isinstance(node, ast.Name) and node.id in FORBIDDEN_NAMES:
             problems.append(f"use of '{node.id}' is not allowed")
-        if isinstance(node, ast.Attribute) and (node.attr.startswith(attr_prefixes) or node.attr in FORBIDDEN_ATTRS
+        if isinstance(node, ast.Attribute) and (node.attr.startswith(FORBIDDEN_ATTR_PREFIXES)
+                                                or node.attr in FORBIDDEN_ATTRS
                                                 or node.attr.startswith("__")
                                                 and node.attr not in ("__init__", "__name__")):
             problems.append(f"attribute '.{node.attr}' is not allowed (no file I/O or dunder access)")
-        if (isinstance(node, ast.keyword) and node.arg in ML_FORBIDDEN_KEYWORDS and ML_IMPORTS & allowed):
+        if isinstance(node, ast.keyword) and node.arg in FORBIDDEN_KEYWORDS:
             problems.append(f"keyword argument '{node.arg}=' is not allowed (no file I/O)")
     has_cls = any(isinstance(n, ast.ClassDef) and n.name == "Forecaster" for n in tree.body)
     if not has_cls:

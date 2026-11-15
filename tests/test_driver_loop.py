@@ -365,15 +365,13 @@ def test_toolbox_backtest_budget_reference_and_profile(ctrl, monkeypatch):
     assert {"backtest_candidate", "profile_pack"} <= set(AgentToolbox.TOOL_NAMES)
 
 
-def test_ml_imports_are_opt_in_and_keep_the_io_firewall(monkeypatch):
+def test_ml_imports_are_allowed_and_keep_the_io_firewall(monkeypatch):
     from lab.sandbox import audit_forecaster_source as audit
 
     cls = "\nclass Forecaster:\n    pass\n"
     ok = "import lightgbm as lgb\nfrom sklearn.linear_model import QuantileRegressor\nm = lgb.LGBMRegressor()" + cls
-    monkeypatch.delenv("LAB_ALLOW_ML_IMPORTS", raising=False)
-    assert any("lightgbm" in p for p in audit(ok))
-    monkeypatch.setenv("LAB_ALLOW_ML_IMPORTS", "1")
     assert audit(ok) == []
+    assert audit("import torch\nimport torch.nn as nn\nfrom scipy import stats\nimport scipy" + cls) == []
     for bad in ("from sklearn.datasets import fetch_openml", "import scipy.io", "import lightgbm as lgb\nlgb.train({}, 0)",
                 "from lightgbm import Dataset", "m.booster_.save_model('x')", "lgb.LGBMRegressor().fit(X, y, filename='f')"):
         assert audit(bad + cls), bad

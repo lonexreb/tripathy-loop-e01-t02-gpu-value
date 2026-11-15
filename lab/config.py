@@ -49,7 +49,7 @@ class LabConfig:
     enable_exa: bool = False
     exa_cache_only: bool = False          # True: never call the network, read outputs/exa_cache.jsonl only
     cache_dir: Path | None = None         # derived series cache (defaults to <root>/outputs/cache)
-    eval_timeout_s: int = 900
+    eval_timeout_s: int = 3600
     max_discovery_probes: int = 4         # Discovery-only probes the agent may run per iteration
     gates: GateThresholds = field(default_factory=GateThresholds)
     discovery_origins: tuple[str, ...] = DISCOVERY_ORIGINS

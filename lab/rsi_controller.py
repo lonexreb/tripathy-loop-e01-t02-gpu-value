@@ -25,11 +25,14 @@ from pathlib import Path
 from lab.config import (BENCHMARK_ORIGIN, DISCOVERY_ORIGINS, HOLDOUT_ORIGINS, STAGE_PACK_ONLY, STAGE_PACK_PLUS_EXA,
                         LabConfig, load_config)
 from lab.sandbox import audit_forecaster_source
+from lab.workbench import CandidateWorkbench, audit_analysis_source, clip_json
 
 WORKSPACE_FILES = ("workspace/forecaster.py", "workspace/scientist_prompt.md", "workspace/theory_of_market.md")
 EXPERIMENT_STATUSES = ("PROMOTED", "REVERTED", "RUNTIME_ERROR", "REJECTED_FIREWALL", "REJECTED_SANITY",
                        "REJECTED_DISCOVERY", "REJECTED_DUPLICATE")
 SCREEN_STATUSES = ("REVERTED", "REJECTED_SANITY", "REJECTED_DISCOVERY")  # deterministic verdicts: never re-test
+DRY_RUN_STATUSES = ("DRY_RUN_OK", "DRY_RUN_ERROR", "DRY_RUN_REJECTED")  # Discovery-only; never counted as experiments
+ANALYSIS_TIMEOUT_S = 300
 GIT_IDENTITY = ["-c", "user.name=AI Scientist Lab", "-c", "user.email=ai-scientist-lab@localhost"]
 MAX_PLAYBOOK_CHARS = 24_000
 MAX_THEORY_UPDATE_CHARS = 6_000
@@ -221,10 +224,13 @@ class RSIController:
     # -------------------------------------------------------------------------- evaluation ----
     def run_evaluation(self, forecaster_path: Path, phase: str = "full") -> dict:
         """Evaluate in a child process (timeout; the controller only ever receives the firewalled JSON)."""
+        return self._run_lab_child(["lab.evaluator", "--forecaster", str(forecaster_path), "--phase", phase],
+                                   self.cfg.eval_timeout_s)
+
+    def _run_lab_child(self, module_args: list[str], timeout_s: int) -> dict:
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "result.json"
-            cmd = [sys.executable, "-B", "-m", "lab.evaluator", "--forecaster", str(forecaster_path), "--out", str(out),
-                   "--phase", phase]
+            cmd = [sys.executable, "-B", "-m", *module_args, "--out", str(out)]
             if self.cfg.enable_exa:
                 cmd.append("--enable-exa")
             if self.cfg.exa_cache_only:
@@ -233,11 +239,12 @@ class RSIController:
             if self.cfg.cache_dir:
                 env["LAB_CACHE_DIR"] = str(self.cfg.cache_dir)
             try:
-                subprocess.run(cmd, cwd=self.root, env=env, capture_output=True, text=True, timeout=self.cfg.eval_timeout_s)
+                proc = subprocess.run(cmd, cwd=self.root, env=env, capture_output=True, text=True, timeout=timeout_s)
             except subprocess.TimeoutExpired:
-                return {"ok": False, "error": f"evaluation timed out after {self.cfg.eval_timeout_s}s"}
+                return {"ok": False, "error": f"evaluation timed out after {timeout_s}s"}
             if not out.exists():
-                return {"ok": False, "error": "evaluator produced no result (crashed before reporting)"}
+                return {"ok": False, "error": "evaluator produced no result (crashed before reporting)",
+                        "traceback_tail": (proc.stderr or "")[-3000:]}
             return json.loads(out.read_text())
 
     @staticmethod
@@ -282,50 +289,11 @@ class RSIController:
             "champion_discovery_diagnostics": champ["discovery"],
             "champion_holdout_aggregates": champ["holdout"],
             "promotion_gates": gate_descriptions(self.cfg),
-            "discovery_probes_left": self.probes_left(),
             "ledger_tail": ledger[-ledger_tail:],
         }
 
     def _tested_shas(self) -> set[str]:
         return {r.get("code_sha256") for r in self.ledger_entries(self.cfg.stage) if r.get("status") in SCREEN_STATUSES}
-
-    def probes_left(self) -> int:
-        used = 0
-        for r in reversed(self.ledger_entries(self.cfg.stage)):
-            if r.get("status") in EXPERIMENT_STATUSES + ("SEED", "FORK"):
-                break
-            used += r.get("status") == "DISCOVERY_PROBE"
-        return max(0, self.cfg.max_discovery_probes - used)
-
-    def probe_discovery(self, hypothesis: str, new_forecaster_code: str) -> dict:
-        """Discovery-only dry run of a candidate: diagnostics, screen verdict and paired deltas vs the champion.
-
-        Never touches Holdout, never writes workspace/forecaster.py, never promotes; budgeted per iteration.
-        """
-        champ = self.bootstrap()
-        self._check_lab_intact()
-        if self.probes_left() <= 0:
-            return {"status": "PROBE_BUDGET_EXHAUSTED",
-                    "error": f"at most {self.cfg.max_discovery_probes} Discovery probes per iteration; submit a candidate"}
-        code_sha = sha256_text(new_forecaster_code)
-        base = {"iteration": self.next_iteration(), "hypothesis": hypothesis[:2000], "code_sha256": code_sha}
-        problems = audit_forecaster_source(new_forecaster_code)
-        if problems:
-            return {**base, "status": "PROBE_REJECTED", "error": "; ".join(problems)[:2000]}
-        with tempfile.TemporaryDirectory() as td:
-            path = Path(td) / "forecaster.py"
-            path.write_text(new_forecaster_code)
-            res = self.run_evaluation(path, phase="discovery")
-        if not res.get("ok"):
-            self._ledger({**base, "status": "DISCOVERY_PROBE", "error": res.get("error")})
-            return {**base, "status": "PROBE_RUNTIME_ERROR", "error": res.get("error"),
-                    "traceback_tail": res.get("traceback_tail")}
-        screen = screen_candidate(res["discovery"], champ.get("discovery"), self.cfg)
-        vs = compare_discovery(res["discovery"], champ.get("discovery"))
-        self._ledger({**base, "status": "DISCOVERY_PROBE", "discovery": self._discovery_summary(res["discovery"]),
-                      "screen": screen, "vs_champion_discovery": {k: vs[k] for k in vs if k != "slice_deltas_best_first"}})
-        return {**base, "status": "PROBED", "would_reach_holdout": screen["pass"], "screen": screen,
-                "vs_champion_discovery": vs, "discovery_diagnostics": res["discovery"], "probes_left": self.probes_left()}
 
     def propose_and_test_forecaster(self, hypothesis: str, theory_update_md: str, new_forecaster_code: str) -> dict:
         """Two-stage test: audit -> duplicate check -> Discovery (sanity + improvement screen) -> Holdout gates."""
@@ -414,14 +382,68 @@ class RSIController:
         with open(self.cfg.theory_path, "a", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
 
-    def update_scientist_prompt(self, new_playbook_md: str, rationale: str) -> dict:
+    def update_scientist_prompt(self, new_playbook_md: str, rationale: str, iteration: int | None = None) -> dict:
+        """Replace the playbook. `iteration` labels the ledger row; by default the last finished experiment."""
         self._check_lab_intact()
         text = (new_playbook_md or "").strip()
         if len(text) < 200 or len(text) > MAX_PLAYBOOK_CHARS:
             return {"status": "PROMPT_REJECTED", "error": f"playbook must be 200..{MAX_PLAYBOOK_CHARS} characters"}
         self.cfg.prompt_path.write_text(text + "\n")
-        return self._ledger({"status": "PROMPT_UPDATED", "iteration": self.next_iteration() - 1,
-                             "rationale": rationale[:1500], "prompt_sha256": sha256_text(text)})
+        it = self.next_iteration() - 1 if iteration is None else iteration
+        return self._ledger({"status": "PROMPT_UPDATED", "iteration": it,
+                             "rationale": (rationale or "")[:1500], "prompt_sha256": sha256_text(text)})
+
+    def _agent_file(self, kind: str, code: str) -> Path:
+        d = self.cfg.outputs_dir / "runs"
+        d.mkdir(parents=True, exist_ok=True)
+        p = d / f"{kind}_{sha256_text(code)[:12]}.py"
+        p.write_text(code)
+        return p
+
+    def dry_run_discovery(self, code: str, iteration: int | None = None) -> dict:
+        """Discovery-only evaluation of a candidate: pre-Holdout screen verdict, paired deltas vs the champion and full
+        diagnostics. Never touches Holdout, never writes workspace/forecaster.py, never promotes; not an experiment."""
+        t0 = time.time()
+        self._check_lab_intact()
+        champ = self.bootstrap()
+        it = self.next_iteration() if iteration is None else iteration
+        base = {"iteration": it, "code_sha256": sha256_text(code)}
+        problems = audit_forecaster_source(code)
+        if problems:
+            return self._ledger({**base, "status": "DRY_RUN_REJECTED", "error": "; ".join(problems)[:2000]})
+        res = self.run_evaluation(self._agent_file("dryrun", code), phase="discovery")
+        if not res.get("ok"):
+            return self._ledger({**base, "status": "DRY_RUN_ERROR", "error": res.get("error"),
+                                 "traceback_tail": res.get("traceback_tail"), "seconds": round(time.time() - t0, 1)})
+        d, cd = res["discovery"], champ.get("discovery") or {}
+        screen = screen_candidate(d, cd, self.cfg)
+        vs = compare_discovery(d, cd)
+        same = all(d.get(k) == cd.get(k) for k in ("pooled_skill", "median_skill", "coverage_80"))
+        rec = self._ledger({**base, "status": "DRY_RUN_OK", "discovery": self._discovery_summary(d), "screen": screen,
+                            "would_reach_holdout": screen["pass"], "identical_to_champion_on_discovery": same,
+                            "vs_champion_discovery": {k: vs[k] for k in vs if k != "slice_deltas_best_first"},
+                            "seconds": round(time.time() - t0, 1)})
+        return {**rec, "vs_champion_discovery": vs, "discovery_diagnostics": d}
+
+    def run_discovery_analysis(self, code: str, origins: list[str], iteration: int | None = None) -> dict:
+        """Run agent analysis code `analyze(pack_slice, origin_date)` on point-in-time Discovery slices (firewalled)."""
+        self._check_lab_intact()
+        origins = list(origins or [])
+        bad = [o for o in origins if o not in self.cfg.discovery_origins]
+        if not origins or bad:
+            return {"status": "ANALYSIS_REJECTED", "error": f"origins must be a non-empty subset of the Discovery origins "
+                                                            f"{list(self.cfg.discovery_origins)}; bad: {bad}"}
+        problems = audit_analysis_source(code)
+        if problems:
+            return {"status": "ANALYSIS_REJECTED", "error": "; ".join(problems)[:2000]}
+        res = self._run_lab_child(["lab.workbench", "analyze", "--code", str(self._agent_file("analysis", code)),
+                                   "--origins", ",".join(origins)], ANALYSIS_TIMEOUT_S)
+        it = self.next_iteration() if iteration is None else iteration
+        self._ledger({"status": "ANALYSIS", "iteration": it, "code_sha256": sha256_text(code), "origins": origins,
+                      "ok": bool(res.get("ok")), "error": res.get("error")})
+        if not res.get("ok"):
+            return {"status": "ANALYSIS_ERROR", "error": res.get("error"), "traceback_tail": res.get("traceback_tail")}
+        return {"status": "ANALYSIS_OK", "results": res["results"]}
 
     def search_exa_signals(self, query: str, origin_date: str) -> list[dict]:
         """Agent-side research search; pinned at or before the last Discovery origin so Holdout news never leaks."""
@@ -539,7 +561,7 @@ class ScriptedDriver:
             doc = code.split('"""')[1].strip() if code.startswith('"""') else Path(p).stem
             p = {"hypothesis": doc.splitlines()[0], "theory_update_md": doc, "new_forecaster_code": code}
         if p.get("new_playbook_md"):
-            ctrl.update_scientist_prompt(p["new_playbook_md"], p.get("playbook_rationale", ""))
+            ctrl.update_scientist_prompt(p["new_playbook_md"], p.get("playbook_rationale", ""), iteration=ctrl.next_iteration())
         return ctrl.propose_and_test_forecaster(p["hypothesis"], p["theory_update_md"], p["new_forecaster_code"])
 
 
@@ -581,37 +603,88 @@ class DevinAPIDriver:
         r.raise_for_status()
         return r.json()
 
+    def _sleep(self, s: float) -> None:
+        time.sleep(s)
+
     def propose(self, prompt: str, title: str) -> dict:
         api, sid = self._create(prompt, title)
         rec = {"api": api, "session_id": sid, "created": utc_now()}
         self.sessions.append(rec)
         print(f"[devin] session {sid} ({api}) created", file=sys.stderr)
-        t0, last = time.time(), None
+        t0, last, prev_so, http_failures, idle_since = time.time(), None, None, 0, None
         while time.time() - t0 < self.timeout_s:
-            time.sleep(self.poll_s)
-            s = self._get(api, sid)
+            self._sleep(self.poll_s)
+            try:
+                s = self._get(api, sid)
+                http_failures = 0
+            except Exception as e:  # transient API errors must not kill a 45-minute session
+                http_failures += 1
+                print(f"[devin] {sid}: poll failed ({type(e).__name__}: {e}); retry {http_failures}", file=sys.stderr)
+                if http_failures >= DEVIN_MAX_POLL_FAILURES:
+                    raise
+                continue
             so = s.get("structured_output")
-            status = (s.get("status"), s.get("status_detail") or s.get("status_enum"))
+            status = devin_status(s)
             if status != last:
                 print(f"[devin] {sid}: {status}", file=sys.stderr)
                 last = status
-            done = {"exit", "error", "finished", "blocked", "stopped", "waiting_for_user", "suspended", "expired"}
-            if isinstance(so, dict) and all(so.get(k) for k in ("hypothesis", "new_forecaster_code")):
-                if done & {str(x) for x in status} or time.time() - t0 > 120:
-                    rec.update(acus=s.get("acus_consumed"), finished=utc_now())
-                    return so
-            elif done & {str(x) for x in status} - {"waiting_for_user"} and "error" in str(status):
-                raise RuntimeError(f"Devin session {sid} ended without structured output: {status}")
+            idle = devin_is_idle(status)
+            idle_since = (idle_since or time.time()) if idle else None
+            action = devin_poll_action(status, so, prev_so, 0.0 if idle_since is None else time.time() - idle_since)
+            prev_so = so
+            if action == "return":
+                rec.update(acus=s.get("acus_consumed"), finished=utc_now(), status=list(status))
+                return so
+            if action == "fail":
+                rec.update(acus=s.get("acus_consumed"), finished=utc_now(), status=list(status))
+                raise RuntimeError(f"Devin session {sid} ended without a complete structured output: {status}")
         raise TimeoutError(f"Devin session {sid} produced no structured output within {self.timeout_s}s")
 
     def run_iteration(self, ctrl: RSIController, i: int) -> dict:
         state = ctrl.inspect_current_state()
         so = self.propose(build_iteration_prompt(state), f"AI Scientist {state['stage']} iteration {state['next_iteration']}")
         if so.get("new_playbook_md"):
-            ctrl.update_scientist_prompt(so["new_playbook_md"], so.get("playbook_rationale", ""))
+            ctrl.update_scientist_prompt(so["new_playbook_md"], so.get("playbook_rationale", ""), iteration=ctrl.next_iteration())
         res = ctrl.propose_and_test_forecaster(so["hypothesis"], so.get("theory_update_md", ""), so["new_forecaster_code"])
         res["devin_session"] = self.sessions[-1]
         return res
+
+
+DEVIN_MAX_POLL_FAILURES = 5
+DEVIN_IDLE_GRACE_S = 600
+# v3: status in new/claimed/running/resuming/suspended/exit/error, status_detail e.g. working/waiting_for_user/
+# waiting_for_approval/finished; v1: status_enum in working/blocked/finished/expired/suspend_requested/... .
+DEVIN_TERMINAL = {"exit", "error", "finished", "expired", "stopped", "suspended"}
+DEVIN_IDLE = {"blocked", "waiting_for_user", "waiting_for_approval"}
+
+
+def devin_status(s: dict) -> tuple:
+    """(status, detail) of a v1 or v3 session payload, lower-cased strings (None if absent)."""
+    st = s.get("status")
+    det = s.get("status_detail") or s.get("status_enum")
+    return tuple(str(x).lower() if x is not None else None for x in (st, det))
+
+
+def devin_is_idle(status: tuple) -> bool:
+    return any(x in DEVIN_IDLE for x in status if x)
+
+
+def devin_poll_action(status: tuple, so, prev_so, idle_s: float, idle_grace_s: float = DEVIN_IDLE_GRACE_S) -> str:
+    """'return' | 'fail' | 'wait' for one poll of a Devin session.
+
+    A complete structured output is returned once the session is terminal/idle, or once it is unchanged between two
+    polls (Devin may update it incrementally). A terminal session without one fails immediately (the old loop only
+    failed when the status contained 'error', so exit/finished/expired sessions burned the full timeout), and a
+    session idle (blocked / waiting for the user) without one fails after `idle_grace_s`.
+    """
+    complete = isinstance(so, dict) and all(so.get(k) for k in ("hypothesis", "new_forecaster_code"))
+    terminal = any(x in DEVIN_TERMINAL for x in status if x)
+    idle = devin_is_idle(status)
+    if complete and (terminal or idle or so == prev_so):
+        return "return"
+    if not complete and (terminal or (idle and idle_s >= idle_grace_s)):
+        return "fail"
+    return "wait"
 
 
 class StrandsAgentDriver:
@@ -648,52 +721,158 @@ class StrandsAgentDriver:
 
     def run_iteration(self, ctrl: RSIController, i: int) -> dict:
         from strands import Agent, tool
+        from strands.types.exceptions import MaxTokensReachedException
 
-        results: list[dict] = []
-
-        @tool
-        def inspect_current_state() -> str:
-            """Return the playbook, notebook tail, champion code, Discovery diagnostics, Holdout aggregates and ledger."""
-            return json.dumps(ctrl.inspect_current_state(), default=str)[:60000]
-
-        @tool
-        def propose_and_test_forecaster(hypothesis: str, theory_update_md: str, new_forecaster_code: str) -> str:
-            """Write a complete new workspace/forecaster.py, evaluate it (Discovery diagnostics + 4 Holdout gates), and
-            promote it or revert it. Returns the verdict and the candidate's Discovery diagnostics."""
-            r = ctrl.propose_and_test_forecaster(hypothesis, theory_update_md, new_forecaster_code)
-            results.append(r)
-            return json.dumps(r, default=str)[:30000]
-
-        @tool
-        def probe_forecaster_on_discovery(hypothesis: str, new_forecaster_code: str) -> str:
-            """Dry-run a complete forecaster.py on Discovery only (no Holdout, no promotion, limited per iteration).
-            Returns the pre-Holdout screen verdict, paired per-origin / per-horizon / per-slice deltas versus the
-            champion, and full Discovery diagnostics. Use it to iterate before propose_and_test_forecaster."""
-            return json.dumps(ctrl.probe_discovery(hypothesis, new_forecaster_code), default=str)[:30000]
-
-        @tool
-        def update_scientist_prompt(new_playbook_md: str, rationale: str) -> str:
-            """Replace workspace/scientist_prompt.md (your research playbook) with a revised version."""
-            return json.dumps(ctrl.update_scientist_prompt(new_playbook_md, rationale), default=str)
-
-        tools = [inspect_current_state, probe_forecaster_on_discovery, propose_and_test_forecaster, update_scientist_prompt]
+        tb = AgentToolbox(ctrl)
+        tools = [tool(getattr(tb, n)) for n in AgentToolbox.TOOL_NAMES]
         if ctrl.cfg.enable_exa:
-            @tool
-            def search_exa_signals(query: str, origin_date: str) -> str:
-                """Point-in-time web search (results published on or before origin_date <= the last Discovery origin)."""
-                return json.dumps(ctrl.search_exa_signals(query, origin_date), default=str)[:20000]
-            tools.append(search_exa_signals)
-
+            tools.append(tool(tb.search_exa_signals))
         playbook = ctrl.cfg.prompt_path.read_text() if ctrl.cfg.prompt_path.exists() else ""
-        agent = Agent(model=self.model, tools=tools, system_prompt=AGENT_CONTRACT + "\n\n" + playbook, callback_handler=None)
-        agent(f"Iteration {ctrl.next_iteration()} of stage {ctrl.cfg.stage}. Call inspect_current_state, diagnose the "
-              f"Discovery errors, optionally call probe_forecaster_on_discovery (up to {ctrl.cfg.max_discovery_probes} "
-              "times) until a variant beats the champion on Discovery, then call propose_and_test_forecaster exactly "
-              "once with one falsifiable hypothesis and a "
-              "complete forecaster (keep it under ~250 lines). Finally call update_scientist_prompt with your revised playbook.")
-        if not results:
-            raise RuntimeError("the Strands agent finished without proposing a candidate")
-        return results[-1]
+        agent = Agent(model=self.model, tools=tools, system_prompt=AGENT_CONTRACT + "\n\n" + WORKBENCH_PROTOCOL + "\n\n"
+                      + playbook, callback_handler=None)
+        prompt = (f"Iteration {tb.iteration} of stage {ctrl.cfg.stage}. Call inspect_current_state and diagnose the "
+                  f"Discovery errors. Then edit the candidate with small edit_candidate changes, dry-run it on Discovery "
+                  f"(at most {tb.max_dry_runs} dry runs), submit_candidate_for_holdout exactly once with one falsifiable "
+                  f"hypothesis, and finally call update_scientist_prompt with your revised playbook.")
+        retries = int(os.environ.get("LLM_MAX_TOKEN_RETRIES", "2"))
+        for attempt in range(retries + 2):
+            try:
+                agent(prompt)
+            except MaxTokensReachedException as e:
+                if tb.results:
+                    print(f"[rsi] output limit after the Holdout submission; keeping the result ({e})", file=sys.stderr)
+                    break
+                if attempt >= retries:
+                    raise
+                self._raise_output_budget()
+                prompt = CONTINUE_AFTER_MAX_TOKENS
+                continue
+            if tb.results or attempt >= retries + 1:
+                break
+            prompt = NUDGE_SUBMIT
+        if not tb.results:
+            raise RuntimeError("the Strands agent finished without submitting a candidate for Holdout")
+        return tb.results[-1]
+
+    def _raise_output_budget(self) -> None:
+        """Double max_tokens (capped) after a MaxTokensReachedException so the retried turn can finish its tool call."""
+        cfg = self.model.get_config() if hasattr(self.model, "get_config") else {}
+        params = dict(cfg.get("params") or {})
+        cur = params.get("max_tokens")
+        if cur:
+            params["max_tokens"] = min(int(cur) * 2, int(os.environ.get("LLM_MAX_TOKENS_CAP", "131072")))
+            self.model.update_config(params=params)
+            print(f"[rsi] output limit hit; retrying with max_tokens={params['max_tokens']}", file=sys.stderr)
+
+
+WORKBENCH_PROTOCOL = """
+WORKBENCH (per iteration). The candidate starts as a copy of the champion. Use view_candidate and edit_candidate
+(exact, unique old_str -> new_str; keep each edit small) instead of re-writing the whole file; write_candidate replaces
+the whole file and is only for large rewrites. dry_run_discovery scores the current candidate on the Discovery origins
+only (full diagnostics, paired deltas vs the champion and the pre-Holdout screen verdict `would_reach_holdout`;
+Holdout untouched, champion untouched, nothing promoted). A submission whose Discovery pooled skill does not beat the
+champion's, or whose outputs fail the sanity screen, is rejected before Holdout, so dry-run until would_reach_holdout
+is true before submitting.
+analyze_discovery runs your own `def analyze(pack_slice, origin_date)` (same import firewall as the forecaster, must
+return JSON-able data) on point-in-time Discovery slices. submit_candidate_for_holdout runs the one Holdout evaluation
+of this iteration (promote or revert); it can be called once. Keep your reasoning short and act through tools.
+""".strip()
+
+CONTINUE_AFTER_MAX_TOKENS = ("Your previous response hit the output-token limit before a tool call was made. Do not "
+                             "restate your analysis. Make the next tool call now; prefer small edit_candidate edits over "
+                             "write_candidate, then dry_run_discovery or submit_candidate_for_holdout.")
+NUDGE_SUBMIT = ("You have not called submit_candidate_for_holdout yet. Finish the candidate with edit_candidate if needed, "
+                "call submit_candidate_for_holdout exactly once, then update_scientist_prompt.")
+
+
+class AgentToolbox:
+    """The in-iteration tools of the Strands driver as plain methods (wrapped with strands.tool by the driver)."""
+
+    TOOL_NAMES = ("inspect_current_state", "view_candidate", "edit_candidate", "write_candidate", "show_candidate_diff",
+                  "dry_run_discovery", "analyze_discovery", "submit_candidate_for_holdout",
+                  "propose_and_test_forecaster", "update_scientist_prompt")
+
+    def __init__(self, ctrl: RSIController, max_dry_runs: int | None = None, max_analyses: int | None = None,
+                 max_submissions: int = 1):
+        self.ctrl = ctrl
+        self.iteration = ctrl.next_iteration()
+        ctrl.bootstrap()
+        self.wb = CandidateWorkbench(ctrl.backup_path.read_text())
+        self.max_dry_runs = (max_dry_runs if max_dry_runs is not None
+                             else int(os.environ.get("RSI_MAX_DRY_RUNS", ctrl.cfg.max_discovery_probes)))
+        self.max_analyses = max_analyses if max_analyses is not None else int(os.environ.get("RSI_MAX_ANALYSES", "6"))
+        self.max_submissions = max_submissions
+        self.n_dry_runs = self.n_analyses = 0
+        self.results: list[dict] = []
+
+    def inspect_current_state(self) -> str:
+        """Return the playbook, notebook tail, champion code, Discovery diagnostics, Holdout aggregates and ledger."""
+        return clip_json(self.ctrl.inspect_current_state(), 60000)
+
+    def view_candidate(self, start_line: int = 1, end_line: int = 0) -> str:
+        """Show the current candidate forecaster with line numbers (end_line 0 = to the end)."""
+        return self.wb.view(start_line, end_line or None)
+
+    def edit_candidate(self, old_str: str, new_str: str) -> str:
+        """Replace one exact, unique snippet old_str of the candidate with new_str. Returns status + firewall audit."""
+        return json.dumps(self.wb.replace(old_str, new_str))
+
+    def write_candidate(self, new_forecaster_code: str) -> str:
+        """Replace the whole candidate forecaster (only for large rewrites; prefer edit_candidate)."""
+        return json.dumps(self.wb.write(new_forecaster_code))
+
+    def show_candidate_diff(self) -> str:
+        """Unified diff of the candidate against the champion."""
+        return self.wb.diff() or "(candidate is identical to the champion)"
+
+    def dry_run_discovery(self) -> str:
+        """Score the current candidate on the Discovery origins only (full diagnostics + delta vs the champion).
+        Holdout is not evaluated, nothing is promoted and the champion is untouched."""
+        if self.wb.code == self.wb.base_code:
+            return json.dumps({"status": "DRY_RUN_SKIPPED", "error": "candidate is identical to the champion; edit it first"})
+        if self.n_dry_runs >= self.max_dry_runs:
+            return json.dumps({"status": "DRY_RUN_BUDGET_EXHAUSTED",
+                               "error": f"{self.max_dry_runs} dry runs used; submit_candidate_for_holdout or stop"})
+        self.n_dry_runs += 1
+        r = self.ctrl.dry_run_discovery(self.wb.code, iteration=self.iteration)
+        return clip_json({**r, "dry_runs_left": self.max_dry_runs - self.n_dry_runs}, 30000)
+
+    def analyze_discovery(self, analysis_code: str, origins: list[str]) -> str:
+        """Run `def analyze(pack_slice, origin_date)` from analysis_code on point-in-time slices of the given Discovery
+        origins (forecaster import firewall; return small JSON-able summaries, DataFrames are capped at 200 rows)."""
+        if self.n_analyses >= self.max_analyses:
+            return json.dumps({"status": "ANALYSIS_BUDGET_EXHAUSTED", "error": f"{self.max_analyses} analyses used"})
+        self.n_analyses += 1
+        return clip_json(self.ctrl.run_discovery_analysis(analysis_code, origins, iteration=self.iteration), 20000)
+
+    def submit_candidate_for_holdout(self, hypothesis: str, theory_update_md: str) -> str:
+        """Evaluate the current candidate (Discovery diagnostics + 4 Holdout gates) and promote or revert it.
+        Allowed once per iteration."""
+        return self._submit(hypothesis, theory_update_md, self.wb.code)
+
+    def propose_and_test_forecaster(self, hypothesis: str, theory_update_md: str, new_forecaster_code: str) -> str:
+        """Legacy one-shot tool: replace the whole candidate with new_forecaster_code and submit it for Holdout.
+        Counts as this iteration's single submission."""
+        self.wb.write(new_forecaster_code)
+        return self._submit(hypothesis, theory_update_md, new_forecaster_code)
+
+    def _submit(self, hypothesis: str, theory_update_md: str, code: str) -> str:
+        if len(self.results) >= self.max_submissions:
+            return json.dumps({"status": "SUBMISSION_BUDGET_EXHAUSTED",
+                               "error": "this iteration's Holdout submission was already used; call update_scientist_prompt"})
+        if code == self.wb.base_code:
+            return json.dumps({"status": "SUBMISSION_REJECTED", "error": "candidate is identical to the champion"})
+        r = self.ctrl.propose_and_test_forecaster(hypothesis, theory_update_md, code)
+        self.results.append(r)
+        return clip_json(r, 30000)
+
+    def update_scientist_prompt(self, new_playbook_md: str, rationale: str) -> str:
+        """Replace workspace/scientist_prompt.md (your research playbook) with a revised version."""
+        return json.dumps(self.ctrl.update_scientist_prompt(new_playbook_md, rationale, iteration=self.iteration), default=str)
+
+    def search_exa_signals(self, query: str, origin_date: str) -> str:
+        """Point-in-time web search (results published on or before origin_date <= the last Discovery origin)."""
+        return clip_json(self.ctrl.search_exa_signals(query, origin_date), 20000)
 
 
 DEFAULT_MODAL_LLM_URL = "https://ananthbashyam1--ep-glm-5-3-server.us-west.modal.direct"
@@ -828,18 +1007,46 @@ def main() -> int:
     ctrl = RSIController(cfg, driver_name=driver.name)
     ctrl.bootstrap()
     n = len(a.candidates) if a.driver == "scripted" and a.candidates else a.iterations
+    n_errors = run_iterations(ctrl, driver, n)
+    ctrl.checkpoint_notes(f"notebook checkpoint after {n} iteration(s)")
+    write_ablation_summary(cfg)
+    return 1 if n and n_errors >= n else 0
+
+
+def run_iterations(ctrl: RSIController, driver, n: int, max_consecutive_errors: int | None = None) -> int:
+    """Run n driver iterations; returns the number of DRIVER_ERRORs. A failed driver call is logged (a DRIVER_ERROR is
+    not an experiment, so it carries the iteration number the next experiment will use plus a per-run attempt index),
+    the champion file is restored, and the loop stops after `max_consecutive_errors` errors in a row."""
+    if max_consecutive_errors is None:
+        max_consecutive_errors = int(os.environ.get("RSI_MAX_CONSECUTIVE_DRIVER_ERRORS", "3"))
+    n_errors = consecutive = 0
     for i in range(n):
         try:
             r = driver.run_iteration(ctrl, i)
+            consecutive = 0
             print(json.dumps({k: r.get(k) for k in ("iteration", "status", "hypothesis", "holdout", "error")}, default=str))
-        except Exception as e:  # a failed driver call is logged and the loop continues
-            ctrl._ledger({"status": "DRIVER_ERROR", "iteration": ctrl.next_iteration(), "error": f"{type(e).__name__}: {e}"[:1500]})
-            print(f"[rsi] iteration {i + 1} driver error: {e}", file=sys.stderr)
-            if ctrl.cfg.forecaster_path.read_text() != ctrl.backup_path.read_text():
-                ctrl._restore_champion()
-    ctrl.checkpoint_notes(f"notebook checkpoint after {n} iteration(s)")
-    write_ablation_summary(cfg)
-    return 0
+        except Exception as e:
+            n_errors += 1
+            consecutive += 1
+            ctrl._ledger({"status": "DRIVER_ERROR", "iteration": ctrl.next_iteration(), "attempt": i + 1,
+                          "counts_as_experiment": False, "error": f"{type(e).__name__}: {e}"[:1500]})
+            print(f"[rsi] iteration {i + 1} driver error: {type(e).__name__}: {e}", file=sys.stderr)
+            restore_champion_file(ctrl)
+            if max_consecutive_errors and consecutive >= max_consecutive_errors:
+                print(f"[rsi] {consecutive} consecutive driver errors; stopping the run", file=sys.stderr)
+                break
+    return n_errors
+
+
+def restore_champion_file(ctrl: RSIController) -> bool:
+    """Put the champion back into workspace/forecaster.py if it was changed or deleted. Returns True if restored."""
+    f = ctrl.cfg.forecaster_path
+    if not ctrl.backup_path.exists():
+        return False
+    if not f.exists() or f.read_bytes() != ctrl.backup_path.read_bytes():
+        ctrl._restore_champion()
+        return True
+    return False
 
 
 if __name__ == "__main__":

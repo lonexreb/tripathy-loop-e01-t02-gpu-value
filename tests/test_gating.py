@@ -345,16 +345,18 @@ def test_holdout_insanity_blocks_promotion(ctrl):
     assert r["status"] == "REVERTED" and r["gates"]["holdout_sanity"]["pass"] is False
 
 
-def test_discovery_probe_is_budgeted_and_side_effect_free(ctrl):
-    for i in range(ctrl.cfg.max_discovery_probes):
-        r = ctrl.probe_discovery(f"probe {i}", CODE + f"# {i}\n")
-        assert r["status"] == "PROBED" and r["would_reach_holdout"] is True
+def test_discovery_dry_run_is_budgeted_and_side_effect_free(ctrl):
+    from lab.rsi_controller import AgentToolbox
+    tb = AgentToolbox(ctrl)
+    assert tb.max_dry_runs == ctrl.cfg.max_discovery_probes
+    for i in range(tb.max_dry_runs):
+        tb.wb.write(CODE + f"# {i}\n")
+        r = json.loads(tb.dry_run_discovery())
+        assert r["status"] == "DRY_RUN_OK" and r["would_reach_holdout"] is True
         assert r["vs_champion_discovery"]["pooled_skill_delta"] == pytest.approx(0.01)
-    assert ctrl.probe_discovery("one more", CODE)["status"] == "PROBE_BUDGET_EXHAUSTED"
+    assert json.loads(tb.dry_run_discovery())["status"] == "DRY_RUN_BUDGET_EXHAUSTED"
     assert {p for p, _ in ctrl.calls} == {"discovery"}
     assert ctrl.cfg.forecaster_path.read_text() == "# champion\n"
-    assert ctrl.next_iteration() == 1                                  # probes are not experiments
+    assert ctrl.next_iteration() == 1                                  # dry runs are not experiments
     assert ctrl.propose_and_test_forecaster("submit", "", CODE)["status"] == "PROMOTED"
-    assert ctrl.probes_left() == ctrl.cfg.max_discovery_probes        # budget resets per iteration
-    bad = ctrl.probe_discovery("io", "import os\nclass Forecaster: pass\n")
-    assert bad["status"] == "PROBE_REJECTED"
+    assert ctrl.dry_run_discovery("import os\nclass Forecaster: pass\n")["status"] == "DRY_RUN_REJECTED"

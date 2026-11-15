@@ -25,7 +25,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from lab.config import CATALOG_AS_OF, FINAL_ORIGIN, SCORED_TIER, LabConfig, load_config
+from lab.config import (
+    CATALOG_AS_OF,
+    FINAL_ORIGIN,
+    LONG_SERIES_PREFIX,
+    SCORED_TIER,
+    LabConfig,
+    load_config,
+)
 
 STATIC_CATALOG_COLUMNS = [
     "series_id", "table", "source_id", "instrument_class", "statistic", "gpu_model", "pricing_tier",
@@ -122,6 +129,8 @@ class PointInTimeSandbox:
     @cached_property
     def scored_ids(self) -> list[str]:
         c = self.catalog
+        if self.cfg.is_long:
+            return sorted(c.loc[c["series_id"].str.startswith(LONG_SERIES_PREFIX), "series_id"].tolist())
         return sorted(c.loc[c["tier"] == SCORED_TIER, "series_id"].tolist())
 
     @cached_property

@@ -117,7 +117,11 @@ def _num(x) -> float | None:
 
 def gate_descriptions(cfg: LabConfig) -> dict:
     g = cfg.gates
-    return {"gate1": f"holdout pooled > max({g.pooled_floor:.3f}, champion + {g.pooled_min_gain:.3f})",
+    g1 = f"holdout pooled > max({g.pooled_floor:.3f}, champion + {g.pooled_min_gain:.3f})"
+    if g.pooled_gain_z is not None:
+        g1 = (f"holdout pooled > max({g.pooled_floor:.3f}, champion + {g.pooled_gain_z:g} paired standard errors of the "
+              f"Holdout gain over origins); falls back to champion + {g.pooled_min_gain:.3f} when the error is unknown")
+    return {"gate1": g1,
             "gate2": f"holdout median >= champion median - {g.median_tolerance:.3f}",
             "gate3": f"{g.coverage_hard_low:.2f} <= holdout coverage_80 <= {g.coverage_hard_high:.2f} and either "
                      f"{g.coverage_low:.2f} <= coverage_80 <= {g.coverage_high:.2f} or |coverage_80 - {g.coverage_target:.2f}| "
@@ -128,13 +132,39 @@ def gate_descriptions(cfg: LabConfig) -> dict:
                       f"Discovery pooled + {g.discovery_min_gain:.4f}"}
 
 
-def evaluate_gates(holdout: dict, champion_holdout: dict | None, cfg: LabConfig) -> dict:
-    """The four promotion gates, evaluated strictly on Holdout aggregates (missing / non-finite values fail)."""
+def paired_origin_stats(cand_by_origin: dict | None, ref_by_origin: dict | None, cfg: LabConfig) -> dict | None:
+    """Paired skill delta, standard error and z of candidate vs reference from their per-origin loss sums
+    (Evaluator loss_by_origin), on the origins both have. None when either side is missing or the cells differ."""
+    from lab.evaluator import overlap_block, paired_delta_stats
+
+    cand_by_origin, ref_by_origin = cand_by_origin or {}, ref_by_origin or {}
+    origins = sorted(o for o in cand_by_origin if o in ref_by_origin)
+    if len(origins) < 2:
+        return None
+    c, r = [cand_by_origin[o] for o in origins], [ref_by_origin[o] for o in origins]
+    base = [_num(x.get("baseline_sum")) for x in c]
+    if any(b is None or _num(y.get("baseline_sum")) is None or abs(b - _num(y["baseline_sum"])) > 1e-9 * max(1.0, abs(b))
+           for b, y in zip(base, r)):
+        return None                                      # not the same scored cells: the comparison is not paired
+    st = paired_delta_stats([x.get("loss_sum") for x in c], [y.get("loss_sum") for y in r], base,
+                            overlap_block(origins, max(cfg.horizons)))
+    return {k: (_r(v, 6) if isinstance(v, float) else v) for k, v in st.items()}
+
+
+def evaluate_gates(holdout: dict, champion_holdout: dict | None, cfg: LabConfig, paired: dict | None = None) -> dict:
+    """The four promotion gates, evaluated strictly on Holdout aggregates (missing / non-finite values fail).
+
+    `paired` (paired_origin_stats of candidate vs champion on Holdout) only matters when gates.pooled_gain_z is set:
+    the required gain is then pooled_gain_z paired standard errors instead of the fixed pooled_min_gain."""
     g, ch = cfg.gates, champion_holdout or {}
     champ_pooled = _num(ch.get("pooled_skill"))
     champ_median = _num(ch.get("median_skill"))
     champ_cov = _num(ch.get("coverage_80"))
-    need = max(g.pooled_floor, (champ_pooled if champ_pooled is not None else -1e9) + g.pooled_min_gain)
+    min_gain, rule = g.pooled_min_gain, "fixed"
+    se = _num((paired or {}).get("delta_se"))
+    if g.pooled_gain_z is not None and se is not None and (paired.get("n_independent_blocks") or 0) >= g.pooled_gain_min_blocks:
+        min_gain, rule = g.pooled_gain_z * se, "paired_z"
+    need = max(g.pooled_floor, (champ_pooled if champ_pooled is not None else -1e9) + min_gain)
     med_need = (champ_median if champ_median is not None else -1e9) - g.median_tolerance
     pooled, median, cov = _num(holdout.get("pooled_skill")), _num(holdout.get("median_skill")), _num(holdout.get("coverage_80"))
     by_h = {str(k): _num(v) for k, v in (holdout.get("skill_by_horizon") or {}).items()}
@@ -143,7 +173,8 @@ def evaluate_gates(holdout: dict, champion_holdout: dict | None, cfg: LabConfig)
     allowed_dist = None if champ_cov is None else abs(champ_cov - g.coverage_target) + g.coverage_tolerance
     rel_ok = cov is not None and allowed_dist is not None and abs(cov - g.coverage_target) <= allowed_dist + 1e-12
     out = {
-        "gate1_pooled_gain": {"value": _r(pooled), "threshold": _r(need), "pass": pooled is not None and pooled > need},
+        "gate1_pooled_gain": {"value": _r(pooled), "threshold": _r(need), "pass": pooled is not None and pooled > need,
+                              "rule": rule, "required_gain": _r(min_gain, 6)},
         "gate2_breadth": {"value": _r(median), "threshold": _r(med_need), "pass": median is not None and median >= med_need},
         "gate3_calibration": {"value": _r(cov), "band": [g.coverage_low, g.coverage_high],
                               "hard_band": [g.coverage_hard_low, g.coverage_hard_high],
@@ -186,7 +217,19 @@ def screen_candidate(discovery: dict, champion_discovery: dict | None, cfg: LabC
     return {"pass": not failed, "failed": failed, "status": status, "checks": checks}
 
 
-def compare_discovery(cand: dict, champ: dict | None) -> dict:
+def origin_delta_noise(by_origin_delta: dict) -> dict | None:
+    """Mean, standard error and z of the per-origin skill deltas (unweighted; adjacent origins treated as independent)."""
+    vals = [v for v in by_origin_delta.values() if v is not None]
+    if len(vals) < 3:
+        return None
+    mean = sum(vals) / len(vals)
+    se = math.sqrt(sum((v - mean) ** 2 for v in vals) / (len(vals) - 1) / len(vals))
+    return {"mean_origin_delta": round(mean, 6), "se": round(se, 6), "z": round(mean / se, 2) if se > 0 else None,
+            "n_origins": len(vals),
+            "note": "|z| < 2: the Discovery difference is within origin-to-origin noise; do not read it as a gain or a loss"}
+
+
+def compare_discovery(cand: dict, champ: dict | None, cfg: LabConfig | None = None) -> dict:
     """Paired Discovery comparison with the champion (same cells, same baseline): where the candidate wins or loses."""
     champ = champ or {}
 
@@ -214,6 +257,8 @@ def compare_discovery(cand: dict, champ: dict | None) -> dict:
         "skill_by_horizon_delta": {h: delta(v, (champ.get("skill_by_horizon") or {}).get(h))
                                    for h, v in (cand.get("skill_by_horizon") or {}).items()},
         "skill_by_origin_delta": by_o,
+        "origin_delta_noise": origin_delta_noise(by_o),
+        "paired_pooled_delta": paired_origin_stats(cand.get("loss_by_origin"), champ.get("loss_by_origin"), cfg or LabConfig()),
         "n_origins_improved": sum(v > 0 for v in vals), "n_origins_worse": sum(v < 0 for v in vals),
         "slice_deltas_best_first": sl,
     }
@@ -331,8 +376,8 @@ class RSIController:
         shutil.copyfile(self.cfg.forecaster_path, self.backup_path)
         commit = self.git_commit(f"[{self.cfg.stage}] seed champion")
         state = {"stage": self.cfg.stage, "iteration": 0, "code_sha256": sha256_text(code), "git_commit": commit,
-                 "discovery": res["discovery"], "holdout": res["holdout"], "benchmark_2026_10_24": res["benchmark_2026_10_24"],
-                 "since": utc_now()}
+                 "discovery": res["discovery"], "holdout": res["holdout"], "holdout_by_origin": res.get("holdout_by_origin"),
+                 "benchmark_2026_10_24": res["benchmark_2026_10_24"], "since": utc_now()}
         self.state_path.write_text(json.dumps(state, indent=2))
         self._ledger({"status": "SEED", "iteration": 0, "hypothesis": "seed champion (current workspace forecaster)",
                       "code_sha256": state["code_sha256"], "discovery": self._discovery_summary(res["discovery"]),
@@ -471,7 +516,7 @@ class RSIController:
         disc = res["discovery"]
         self._pending_discovery = disc
         screen = screen_candidate(disc, champ.get("discovery"), self.cfg)
-        vs = compare_discovery(disc, champ.get("discovery"))
+        vs = compare_discovery(disc, champ.get("discovery"), self.cfg)
         rec = {**base, "discovery": self._discovery_summary(disc), "screen": screen,
                "discovery_delta_vs_champion": metric_delta(disc, champ.get("discovery")),
                "vs_champion_discovery": {k: vs[k] for k in vs if k != "slice_deltas_best_first"}}
@@ -489,7 +534,10 @@ class RSIController:
             return self._finish(base, "RUNTIME_ERROR", theory_update_md, t0, error=hres.get("error"),
                                 traceback_tail=hres.get("traceback_tail"))
         res = {**res, **hres, "discovery": disc}
-        gates = evaluate_gates(res["holdout"], champ["holdout"], self.cfg)
+        # per-origin Holdout losses stay inside the lab (champion state only): the agent sees the paired error, not them
+        by_origin = hres.get("holdout_by_origin")
+        paired = paired_origin_stats(by_origin, champ.get("holdout_by_origin"), self.cfg)
+        gates = evaluate_gates(res["holdout"], champ["holdout"], self.cfg, paired)
         if not res.get("holdout_sanity_ok", True):
             gates["holdout_sanity"] = {"pass": False}
             gates["all_pass"] = False
@@ -497,6 +545,9 @@ class RSIController:
                    gate_margins=gate_margins(gates),
                    holdout_delta_vs_champion=metric_delta(res["holdout"], champ["holdout"]),
                    champion_holdout_before=champ["holdout"])
+        if paired:
+            rec["holdout_paired_vs_champion"] = {k: paired[k] for k in ("delta_se", "delta_z", "n_origins",
+                                                                         "n_independent_blocks", "share_origins_improved")}
         if is_no_op(res["holdout"], champ["holdout"]):
             rec["no_op"] = True
         if gates["all_pass"]:
@@ -504,7 +555,7 @@ class RSIController:
             shutil.copyfile(self.cfg.forecaster_path, self.backup_path)
             commit = self.git_commit(f"[{self.cfg.stage}] iter {it} PROMOTED: {hypothesis[:60]}")
             state = {"stage": self.cfg.stage, "iteration": it, "code_sha256": code_sha, "git_commit": commit,
-                     "discovery": res["discovery"], "holdout": res["holdout"],
+                     "discovery": res["discovery"], "holdout": res["holdout"], "holdout_by_origin": by_origin,
                      "benchmark_2026_10_24": res["benchmark_2026_10_24"], "since": utc_now()}
             self.state_path.write_text(json.dumps(state, indent=2))
             if self.use_git and commit:
@@ -609,7 +660,7 @@ class RSIController:
                                  "traceback_tail": res.get("traceback_tail"), "seconds": round(time.time() - t0, 1)})
         d, cd = res["discovery"], champ.get("discovery") or {}
         screen = screen_candidate(d, cd, self.cfg)
-        vs = compare_discovery(d, cd)
+        vs = compare_discovery(d, cd, self.cfg)
         same = all(d.get(k) == cd.get(k) for k in ("pooled_skill", "median_skill", "coverage_80"))
         rec = self._ledger({**base, "status": "DRY_RUN_OK", "discovery": self._discovery_summary(d), "screen": screen,
                             "would_reach_holdout": screen["pass"], "identical_to_champion_on_discovery": same,
@@ -667,7 +718,8 @@ class RSIController:
             return self._ledger({**base, "status": "BACKTEST_ERROR", "error": res.get("error"),
                                  "traceback_tail": res.get("traceback_tail"), "n_origins": len(origins),
                                  "seconds": round(time.time() - t0, 1)})
-        keys = ("n_origins", "pooled_skill_delta", "delta_se_origin_bootstrap", "delta_z", "share_origins_improved")
+        keys = ("n_origins", "pooled_skill_delta", "delta_se_origin_bootstrap", "delta_z", "share_origins_improved",
+                "bootstrap_block_origins", "n_independent_blocks", "delta_se_iid_origins")
         self._ledger({**base, "status": "BACKTEST_OK", **{k: res.get(k) for k in keys},
                       "seconds": round(time.time() - t0, 1)})
         return {**base, "status": "BACKTEST_OK", **{k: v for k, v in res.items() if k != "ok"}}

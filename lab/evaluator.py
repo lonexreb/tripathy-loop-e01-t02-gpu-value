@@ -285,7 +285,7 @@ class Evaluator:
             if phase == "full":
                 f = load_forecaster(forecaster_path)  # fresh instance: same Holdout numbers as the two-stage path
             hold, hs = self.evaluate(f, list(self.cfg.holdout_origins), False, with_sanity=True)
-            bench = self.benchmark_skill(f)
+            bench = self.benchmark_skill(f, self.cfg.benchmark_origin)
             out.update(holdout=hold, holdout_sanity_ok=bool(hs["ok"]),
                        benchmark_2026_10_24={k: bench[k] for k in HOLDOUT_KEYS})
         out["seconds"] = round(time.time() - t0, 2)
@@ -436,12 +436,13 @@ def main() -> int:
     ap.add_argument("--out", required=True, help="JSON result path")
     ap.add_argument("--enable-exa", action="store_true")
     ap.add_argument("--exa-cache-only", action="store_true")
+    ap.add_argument("--track", choices=("short", "long"), default=None)
     ap.add_argument("--phase", choices=PHASES + ("backtest",), default="full")
     ap.add_argument("--reference", help="backtest: reference forecaster (default: the candidate is compared to it)")
     ap.add_argument("--origins", default="", help="backtest: comma-separated pseudo-origins")
     ap.add_argument("--series", default="", help="backtest: comma-separated series_ids to return per-cell residuals for")
     a = ap.parse_args()
-    cfg = load_config(enable_exa=a.enable_exa, exa_cache_only=a.exa_cache_only)
+    cfg = load_config(enable_exa=a.enable_exa, exa_cache_only=a.exa_cache_only, track=a.track)
     try:
         ev = Evaluator(cfg)
         if a.phase == "backtest":

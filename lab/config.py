@@ -23,6 +23,16 @@ SCORED_TIER = "headline"
 
 STAGE_PACK_ONLY = "PACK_ONLY"
 STAGE_PACK_PLUS_EXA = "PACK_PLUS_EXA"
+STAGE_LONG_HORIZON = "LONG_HORIZON"
+
+# Long-horizon track (lab research track, not the official 1/3/7-day score): AWS EC2 spot series only (the one source
+# with multi-year history), monthly origins, 30/90/180-day horizons. Every Discovery target precedes the first Holdout
+# origin, and every Holdout target precedes the 2026-03..06 hole in the AWS archive.
+LONG_DISCOVERY_ORIGINS: tuple[str, ...] = tuple(f"{y}-{m:02d}-01" for y, m in
+                                               [(2023, m) for m in range(6, 13)] + [(2024, m) for m in range(1, 10)])
+LONG_HOLDOUT_ORIGINS: tuple[str, ...] = tuple(f"2025-{m:02d}-01" for m in range(3, 9))
+LONG_HORIZONS: tuple[int, ...] = (30, 90, 180)
+LONG_SERIES_PREFIX = "aws_spot."
 
 
 @dataclass(frozen=True)
@@ -55,10 +65,18 @@ class LabConfig:
     discovery_origins: tuple[str, ...] = DISCOVERY_ORIGINS
     holdout_origins: tuple[str, ...] = HOLDOUT_ORIGINS
     horizons: tuple[int, ...] = HORIZONS
+    track: str = "short"                  # "short": official 1/3/7-day track; "long": 30/90/180-day AWS track
+    benchmark_origin: str = BENCHMARK_ORIGIN
 
     @property
     def stage(self) -> str:
+        if self.track == "long":
+            return STAGE_LONG_HORIZON
         return STAGE_PACK_PLUS_EXA if self.enable_exa else STAGE_PACK_ONLY
+
+    @property
+    def is_long(self) -> bool:
+        return self.track == "long"
 
     @property
     def pack_dir(self) -> Path:
@@ -116,8 +134,15 @@ def load_config(**overrides) -> LabConfig:
         kw["root"] = Path(os.environ["LAB_ROOT"]).resolve()
     if os.environ.get("LAB_CACHE_DIR"):
         kw["cache_dir"] = Path(os.environ["LAB_CACHE_DIR"]).resolve()
+    track = overrides.pop("track", None) or os.environ.get("LAB_TRACK", "short")
+    if track == "long":
+        kw.update(track="long", discovery_origins=LONG_DISCOVERY_ORIGINS, holdout_origins=LONG_HOLDOUT_ORIGINS,
+                  horizons=LONG_HORIZONS, benchmark_origin=LONG_HOLDOUT_ORIGINS[-1],
+                  gates=GateThresholds(pooled_floor=0.0))
     kw.update(overrides)
-    return LabConfig(**kw)
+    cfg = LabConfig(**kw)
+    check_partition(cfg)
+    return cfg
 
 
 def _d(s: str) -> dt.date:
@@ -131,8 +156,10 @@ def check_partition(cfg: LabConfig | None = None) -> None:
     assert disc == sorted(disc) and hold == sorted(hold)
     last_disc_target = max(disc) + dt.timedelta(days=max(cfg.horizons))
     assert last_disc_target <= min(hold), "discovery targets overlap the holdout window"
-    assert BENCHMARK_ORIGIN in cfg.holdout_origins
+    assert cfg.benchmark_origin in cfg.holdout_origins
     assert max(hold) < _d(FINAL_ORIGIN)
+    if cfg.track == "long":
+        assert max(hold) + dt.timedelta(days=max(cfg.horizons)) < _d("2026-03-01"), "holdout targets hit the AWS hole"
 
 
 check_partition()

@@ -30,6 +30,7 @@ from pathlib import Path
 from lab.config import (
     DISCOVERY_ORIGINS,
     HOLDOUT_ORIGINS,
+    STAGE_LONG_HORIZON,
     STAGE_PACK_ONLY,
     STAGE_PACK_PLUS_EXA,
     LabConfig,
@@ -300,7 +301,8 @@ class RSIController:
                 cmd.append("--enable-exa")
             if self.cfg.exa_cache_only:
                 cmd.append("--exa-cache-only")
-            env = {**os.environ, "PYTHONPATH": str(self.root), "PYTHONDONTWRITEBYTECODE": "1", "LAB_ROOT": str(self.root)}
+            env = {**os.environ, "PYTHONPATH": str(self.root), "PYTHONDONTWRITEBYTECODE": "1", "LAB_ROOT": str(self.root),
+                   "LAB_TRACK": self.cfg.track}
             if self.cfg.cache_dir:
                 env["LAB_CACHE_DIR"] = str(self.cfg.cache_dir)
             try:
@@ -674,8 +676,8 @@ class RSIController:
 
     def profile_pack(self, origin_date: str) -> dict:
         """Data-quality and table-join profile of the point-in-time pack slice at origin_date (<= last Discovery)."""
-        if origin_date > DISCOVERY_ORIGINS[-1]:
-            return {"status": "PROFILE_REJECTED", "error": f"origin_date must be <= {DISCOVERY_ORIGINS[-1]}"}
+        if origin_date > self.cfg.discovery_origins[-1]:
+            return {"status": "PROFILE_REJECTED", "error": f"origin_date must be <= {self.cfg.discovery_origins[-1]}"}
         res = self._run_lab_child(["lab.workbench", "profile", "--origin", origin_date], ANALYSIS_TIMEOUT_S)
         if not res.get("ok"):
             return {"status": "PROFILE_ERROR", "error": res.get("error"), "traceback_tail": res.get("traceback_tail")}
@@ -685,8 +687,9 @@ class RSIController:
         """Agent-side research search; pinned at or before the last Discovery origin so Holdout news never leaks."""
         if not self.cfg.enable_exa:
             raise PermissionError("search_exa_signals is only available in PACK_PLUS_EXA")
-        if origin_date > DISCOVERY_ORIGINS[-1]:
-            raise PermissionError(f"agent research searches must use origin_date <= {DISCOVERY_ORIGINS[-1]} (Discovery)")
+        last = self.cfg.discovery_origins[-1]
+        if origin_date > last:
+            raise PermissionError(f"agent research searches must use origin_date <= {last} (Discovery)")
         from lab.sandbox import PointInTimeSandbox
         return PointInTimeSandbox(self.cfg).search_exa_point_in_time(query, origin_date)
 
@@ -772,16 +775,18 @@ class RSIController:
     def checkpoint_notes(self, message: str) -> str | None:
         return self.git_commit(f"[{self.cfg.stage}] {message}")
 
-    def fork_from(self, parent_stage: str) -> dict:
-        """Start this stage from another stage's champion (Stage 2 forks from the Stage 1 champion)."""
+    def fork_from(self, parent_stage: str, seed_path: Path | None = None) -> dict:
+        """Start this stage from another stage's champion (Stage 2 forks from the Stage 1 champion), or from a
+        lab-provided seed file (the long-horizon track: 1/3/7-day momentum does not extrapolate to 180 days)."""
         parent_dir = self.cfg.outputs_dir / "champions" / parent_stage
         parent = json.loads((parent_dir / "champion_state.json").read_text())
+        src = seed_path or parent_dir / "forecaster.py"
         self.champ_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(parent_dir / "forecaster.py", self.cfg.forecaster_path)
-        shutil.copyfile(parent_dir / "forecaster.py", self.backup_path)
+        shutil.copyfile(src, self.cfg.forecaster_path)
+        shutil.copyfile(src, self.backup_path)
         if self.state_path.exists():
             self.state_path.unlink()
-        if self.use_git:
+        if self.use_git and self.cfg.stage == STAGE_PACK_PLUS_EXA:
             branch = f"stage2-{self.cfg.stage.lower().replace('_', '-')}"
             if self._git("branch", "--list", branch):
                 self._git("checkout", "-q", branch)
@@ -1098,6 +1103,8 @@ class StrandsAgentDriver:
                   "playbook (keep the lab-protected block; record what you learned and rank untried directions).")
         if ctrl.cfg.enable_exa:
             prompt += ("\n" + EXA_STAGE_DIRECTIVE)
+        if ctrl.cfg.is_long:
+            prompt += "\n" + LONG_STAGE_DIRECTIVE
         retries = int(os.environ.get("LLM_MAX_TOKEN_RETRIES", "2"))
         for attempt in range(retries + 2):
             try:
@@ -1143,6 +1150,8 @@ class StrandsAgentDriver:
                   "the champion.")
         if ctrl.cfg.enable_exa:
             prompt += "\n" + EXA_STAGE_DIRECTIVE
+        if ctrl.cfg.is_long:
+            prompt += "\n" + LONG_STAGE_DIRECTIVE
         retries = int(os.environ.get("LLM_MAX_TOKEN_RETRIES", "2"))
         for attempt in range(retries + 2):
             try:
@@ -1216,6 +1225,16 @@ analyze_discovery runs your own `def analyze(pack_slice, origin_date)` (same imp
 return JSON-able data) on point-in-time Discovery slices. submit_candidate_for_holdout runs the one Holdout evaluation
 of this iteration (promote or revert); it can be called once. Keep your reasoning short and act through tools.
 """.strip()
+
+LONG_STAGE_DIRECTIVE = (
+    "LONG-HORIZON TRACK (overrides the 1/3/7-day text of the contract): targets are every AWS EC2 spot series "
+    "(aws_spot.*) at horizons 30, 90 and 180 days, monthly origins; Discovery origins 2023-06-01..2024-09-01, Holdout "
+    "2025-03-01..2025-08-01. Score = pooled pinball skill vs the flat last value at each horizon. At these horizons "
+    "momentum fades and regime drivers dominate (GPU generation launches, list-price cuts, capacity build-outs, demand "
+    "shocks, instance retirement), so dated evidence matters: research it with search_exa_signals and use it inside "
+    "predict_origin through external_signals.search. commit_forecast requires market_insight: a qualitative note "
+    "(>= 200 characters) naming the drivers the forecast assumes, the dated evidence behind them (URLs from your "
+    "searches), and what observation would change the view.")
 
 EXA_STAGE_DIRECTIVE = (
     "Stage PACK_PLUS_EXA exists to test exogenous web signals (pack-only levers were explored in Stage 1, but only "
@@ -1446,7 +1465,7 @@ class AgentToolbox:
 
     def commit_forecast(self, hypothesis: str, mechanism: str, expected_observation: str, competing_explanation: str,
                         test: str, rejection_condition: str, model_class: str = "", hypothesis_family: str = "",
-                        novelty: str = "") -> str:
+                        novelty: str = "", market_insight: str = "") -> str:
         """Lock the current candidate as this episode's forecast and end the episode. Requires a complete hypothesis
         card: mechanism, expected_observation, competing_explanation (a rival explanation of the same errors), test
         (the comparison that decides it) and rejection_condition (the result that would reject it). The lab scores the
@@ -1460,13 +1479,17 @@ class AgentToolbox:
         if missing:
             return json.dumps({"status": "COMMIT_REJECTED",
                                "error": f"hypothesis card incomplete (each field >= 15 characters): {missing}"})
+        if self.ctrl.cfg.is_long and len((market_insight or "").strip()) < 200:
+            return json.dumps({"status": "COMMIT_REJECTED", "error": "long-horizon track: market_insight (>= 200 "
+                               "characters: drivers, dated evidence, what would change the view) is required"})
         if self.wb.code == self.wb.base_code:
             return json.dumps({"status": "COMMIT_REJECTED", "error": "candidate is identical to the champion"})
         problems = audit_forecaster_source(self.wb.code)
         if problems:
             return json.dumps({"status": "COMMIT_REJECTED", "error": "; ".join(problems)[:1500]})
         meta = {"hypothesis": hypothesis[:2000], "model_class": normalize_model_class(model_class),
-                "hypothesis_family": hypothesis_family, "novelty": novelty, "builds_on_iteration": self.builds_on}
+                "hypothesis_family": hypothesis_family, "novelty": novelty, "builds_on_iteration": self.builds_on,
+                "market_insight": (market_insight or "")[:4000]}
         self.lock = self.ctrl.lock_episode_forecast(self.wb.code, card, meta, self.episode_id, self.procedure_version)
         return clip_json({"status": "LOCKED", **{k: self.lock.get(k) for k in ("screen_pass", "discovery_pooled_delta",
                                                                                "error", "discovery")},
@@ -1552,7 +1575,7 @@ def _compact_lock(lock: dict | None) -> dict | None:
     if not lock:
         return None
     keep = ("procedure_version", "code_sha256", "code_file", "model_class", "hypothesis_family", "novelty",
-            "hypothesis", "hypothesis_card", "status", "error", "screen_pass", "discovery_pooled_delta")
+            "hypothesis", "hypothesis_card", "status", "error", "screen_pass", "discovery_pooled_delta", "market_insight")
     out = {k: lock.get(k) for k in keep}
     out["discovery_pooled_skill"] = (lock.get("discovery") or {}).get("pooled_skill")
     return out
@@ -1611,7 +1634,10 @@ def run_generation(ctrl: RSIController, driver) -> dict:
     if best:
         lock = toolboxes[best["arm"]].lock
         code = (ctrl.locks_dir / lock["code_file"]).read_text()
-        r = ctrl.propose_and_test_forecaster(lock["hypothesis"], card_markdown(lock["hypothesis_card"], best["episode_id"]),
+        theory = card_markdown(lock["hypothesis_card"], best["episode_id"])
+        if lock.get("market_insight"):
+            theory += "\n\n**Market insight:** " + lock["market_insight"]
+        r = ctrl.propose_and_test_forecaster(lock["hypothesis"], theory,
                                              code, lock.get("hypothesis_family") or "", lock.get("novelty") or "",
                                              lock.get("builds_on_iteration"), lock.get("model_class") or "",
                                              hypothesis_card=lock["hypothesis_card"])
@@ -1677,6 +1703,16 @@ def load_dotenv(path: Path) -> None:
                 os.environ.setdefault(k.strip().removeprefix("export ").strip(), v.strip().strip('"').strip("'"))
 
 
+STAGE_CHOICES = ["pack_only", "pack_plus_exa", "long_horizon"]
+
+
+def stage_config(stage: str, exa_cache_only: bool = False) -> LabConfig:
+    """CLI stage -> config; the long-horizon track always has the point-in-time Exa gateway on."""
+    if stage == "long_horizon":
+        return load_config(track="long", enable_exa=True, exa_cache_only=exa_cache_only)
+    return load_config(enable_exa=stage == "pack_plus_exa", exa_cache_only=exa_cache_only)
+
+
 def make_driver(name: str, candidates: list[str] | None = None):
     if name == "scripted":
         return ScriptedDriver(candidates or [])
@@ -1728,16 +1764,18 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     run = sub.add_parser("run", help="run RSI iterations")
-    run.add_argument("--stage", choices=["pack_only", "pack_plus_exa"], default="pack_only")
+    run.add_argument("--stage", choices=STAGE_CHOICES, default="pack_only")
     run.add_argument("--driver", choices=["api", "strands", "modal", "scripted"], default=os.environ.get("DEVIN_MODE", "modal"))
     run.add_argument("--iterations", type=int, default=1)
     run.add_argument("--candidates", nargs="*", help="forecaster files for the scripted driver")
     run.add_argument("--exa-cache-only", action="store_true")
+    fl = sub.add_parser("fork-long", help="start LONG_HORIZON (30/90/180-day AWS track) from the PACK_ONLY champion")
+    fl.add_argument("--exa-cache-only", action="store_true")
     fork = sub.add_parser("fork-stage2", help="start PACK_PLUS_EXA from the PACK_ONLY champion")
     fork.add_argument("--exa-cache-only", action="store_true")
     gen = sub.add_parser("generations", help="Architecture-1 generations: improver -> same-start procedure comparison "
                                              "-> admission -> one Holdout shot")
-    gen.add_argument("--stage", choices=["pack_only", "pack_plus_exa"], default="pack_only")
+    gen.add_argument("--stage", choices=STAGE_CHOICES, default="pack_only")
     gen.add_argument("--driver", choices=["strands", "modal"], default="modal")
     gen.add_argument("--generations", type=int, default=1)
     gen.add_argument("--exa-cache-only", action="store_true")
@@ -1755,6 +1793,12 @@ def main() -> int:
             print(st, json.dumps({k: c[k] for k in ("iteration", "holdout", "benchmark_2026_10_24", "git_commit")}
                                  if c else None, default=str))
         return 0
+    if a.cmd == "fork-long":
+        st = RSIController(stage_config("long_horizon", a.exa_cache_only), driver_name="lab").fork_from(
+            STAGE_PACK_ONLY, Path(__file__).resolve().parent / "seeds" / "long_horizon.py")
+        print(json.dumps({"stage": STAGE_LONG_HORIZON, "discovery": (st.get("discovery") or {}).get("pooled_skill"),
+                          "holdout": st.get("holdout")}, default=str))
+        return 0
     if a.cmd == "fork-stage2":
         cfg = load_config(enable_exa=True, exa_cache_only=a.exa_cache_only)
         RSIController(load_config(), driver_name="lab").checkpoint_notes("notebook checkpoint before Stage 2 fork")
@@ -1763,7 +1807,7 @@ def main() -> int:
         return 0
 
     if a.cmd == "generations":
-        cfg = load_config(enable_exa=a.stage == "pack_plus_exa", exa_cache_only=a.exa_cache_only)
+        cfg = stage_config(a.stage, a.exa_cache_only)
         driver = make_driver(a.driver)
         ctrl = RSIController(cfg, driver_name=driver.name)
         ctrl.bootstrap()
@@ -1782,7 +1826,7 @@ def main() -> int:
         write_ablation_summary(cfg)
         return 0 if n_ok else 1
 
-    cfg = load_config(enable_exa=a.stage == "pack_plus_exa", exa_cache_only=a.exa_cache_only)
+    cfg = stage_config(a.stage, a.exa_cache_only)
     driver = make_driver(a.driver, a.candidates)
     ctrl = RSIController(cfg, driver_name=driver.name)
     ctrl.bootstrap()

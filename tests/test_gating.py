@@ -25,6 +25,13 @@ def _ledger_rows():
     return [json.loads(x) for x in LEDGER.read_text().splitlines() if x.strip()]
 
 
+def _champ_iter1() -> dict:
+    """The iteration-1 champion as recorded in the ledger (the champion the live iterations 2-4 were judged against)."""
+    r = next(r for r in _ledger_rows() if r.get("iteration") == 1 and r.get("status") == "PROMOTED")
+    return {"stage": r["stage"], "iteration": 1, "code_sha256": r["code_sha256"], "discovery": r["discovery"],
+            "holdout": r["holdout"], "benchmark_2026_10_24": r["benchmark_2026_10_24"]}
+
+
 def _live(it):
     return next(r for r in _ledger_rows() if r.get("iteration") == it and r.get("status") == "REVERTED")
 
@@ -36,7 +43,7 @@ def _hold(pooled=0.30, median=0.26, cov=0.75, h=(0.40, 0.32, 0.27)):
 
 
 def test_gate3_champion_at_floor_is_not_a_trap():
-    champ = json.loads(CHAMP.read_text())["holdout"]          # coverage 0.7408 = 1049/1416 cells, 1 cell above 0.74
+    champ = _champ_iter1()["holdout"]          # coverage 0.7408 = 1049/1416 cells, 1 cell above 0.74
     it3 = _live(3)
     g = evaluate_gates(it3["holdout"], champ, CFG)            # 0.7380 = 1045/1416 cells
     assert g["gate3_calibration"]["in_band"] is False
@@ -85,7 +92,7 @@ def _with_sanity(disc, ok=True):
 
 def test_two_stage_screen_replays_the_live_iterations():
     """None of the three live LLM candidates would have consumed a Holdout evaluation."""
-    champ = json.loads(CHAMP.read_text())["discovery"]
+    champ = _champ_iter1()["discovery"]
     for it in (2, 3, 4):
         s = screen_candidate(_with_sanity(_live(it)["discovery"]), champ, CFG)
         assert s["pass"] is False and s["status"] == "REJECTED_DISCOVERY", (it, s)
@@ -106,7 +113,7 @@ def test_screen_sanity_and_invalid_share():
 
 
 def test_compare_discovery_is_paired():
-    champ = json.loads(CHAMP.read_text())["discovery"]
+    champ = json.loads(CHAMP.read_text())["discovery"]       # the current champion's full Discovery diagnostics
     cand = json.loads(json.dumps(champ))
     o = sorted(cand["skill_by_origin"])
     cand["skill_by_origin"][o[0]] += 0.01
@@ -286,7 +293,7 @@ def ctrl(tmp_path):
     cd = root / "outputs" / "champions" / "PACK_ONLY"
     cd.mkdir(parents=True)
     (cd / "forecaster.py").write_text(champ_code)
-    state = json.loads(CHAMP.read_text())
+    state = _champ_iter1()
     state["code_sha256"] = sha256_text(champ_code)
     (cd / "champion_state.json").write_text(json.dumps(state))
     c = RSIController(LabConfig(root=root), driver_name="test", use_git=False)

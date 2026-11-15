@@ -713,6 +713,8 @@ class RSIController:
         immutable lock: code / champion / pack hashes, procedure version, hypothesis card and the Discovery result."""
         champ = self.bootstrap()
         r = self.dry_run_discovery(code)
+        if not r.get("discovery"):
+            return {"locked": False, "status": r.get("status"), "error": r.get("error")}
         d, cd = r.get("discovery") or {}, champ.get("discovery") or {}
         a, b = d.get("pooled_skill"), cd.get("pooled_skill")
         delta = a - b if isinstance(a, (int, float)) and isinstance(b, (int, float)) else None
@@ -1467,7 +1469,11 @@ class AgentToolbox:
             return json.dumps({"status": "COMMIT_REJECTED", "error": "; ".join(problems)[:1500]})
         meta = {"hypothesis": hypothesis[:2000], "model_class": normalize_model_class(model_class),
                 "hypothesis_family": hypothesis_family, "novelty": novelty, "builds_on_iteration": self.builds_on}
-        self.lock = self.ctrl.lock_episode_forecast(self.wb.code, card, meta, self.episode_id, self.procedure_version)
+        rec = self.ctrl.lock_episode_forecast(self.wb.code, card, meta, self.episode_id, self.procedure_version)
+        if rec.get("locked") is False:
+            return json.dumps({"status": "COMMIT_REJECTED", "error": "the candidate does not run on Discovery, nothing "
+                               f"was locked; fix it and commit again: {str(rec.get('error'))[:1200]}"})
+        self.lock = rec
         return clip_json({"status": "LOCKED", **{k: self.lock.get(k) for k in ("screen_pass", "discovery_pooled_delta",
                                                                                "error", "discovery")},
                           "note": "episode over; the lab compares procedures and decides Holdout"}, 8000)

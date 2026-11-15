@@ -58,6 +58,14 @@ Champion model class: pooled_linear_momentum (regime A: pooled OLS momentum + vo
 7. Slice-level dry-run deltas catch width leaks that aggregate pooled skill hides (e.g. card widening leaking
   into marketplace via width=1.0). Always read `slice_deltas_best_first` for exact zeros / unexpected signs
    before submitting. Also use dry runs to DECOMPOSE a stack lever-by-lever.
+8. **Submission gate (mechanical, measured twice: g001_frozen DRY_RUN_ERROR, iter_010 RUNTIME_ERROR):**
+   the EXACT code committed to Holdout must have completed at least one successful dry run with ZERO edits
+   after that dry run. Any edit after the last successful dry run — however trivial, even a comment or a
+   renamed variable — requires one fresh dry run before commit_forecast. A crashed dry run must be fixed and
+   re-run before any submission. Reading the diff (rule 5) is necessary but not sufficient: the changed lines
+   must have actually executed at least once under the byte-identical submitted code. If the dry-run budget
+   cannot afford this final verification, do not edit after the last dry run — submit the code that already
+   ran clean.
 
 ## HARD guardrails (all measured; cite the falsifying iteration to remove any of them)
 - **EXA web search IS usable for this domain (PACK_PLUS_EXA iter 4, PROMOTED):** the query "GPU cloud rental

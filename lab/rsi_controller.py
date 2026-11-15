@@ -12,7 +12,9 @@ from the champion backup; the playbook and the notebook keep the agent's notes s
 from __future__ import annotations
 
 import argparse
+import collections
 import datetime as dt
+import functools
 import hashlib
 import json
 import math
@@ -25,14 +27,55 @@ import tempfile
 import time
 from pathlib import Path
 
-from lab.config import (DISCOVERY_ORIGINS, HOLDOUT_ORIGINS, STAGE_PACK_ONLY, STAGE_PACK_PLUS_EXA,
-                        LabConfig, load_config)
-from lab.memory import (HYPOTHESIS_FAMILIES, MODEL_CLASSES, champion_model_class, infer_family,
-                        model_class_exploration_required, model_class_stats, normalize_model_class, verified_novelty,
-                        NOVELTY_LEVELS, PROTECTED_BLOCK, archive_candidate, collapse_warnings,
-                        demote_headings, diff_stats, dropped_guardrails, enforce_protected, exploration_directive,
-                        family_stats, fit_json, gate_margins, is_no_op, metric_delta, near_misses, normalize_family,
-                        normalize_novelty, notebook_index, registry_row, unified_diff)
+from lab.config import (
+    DISCOVERY_ORIGINS,
+    HOLDOUT_ORIGINS,
+    STAGE_PACK_ONLY,
+    STAGE_PACK_PLUS_EXA,
+    LabConfig,
+    load_config,
+)
+from lab.memory import (
+    HYPOTHESIS_FAMILIES,
+    MODEL_CLASSES,
+    NOVELTY_LEVELS,
+    PROTECTED_BLOCK,
+    archive_candidate,
+    champion_model_class,
+    collapse_warnings,
+    demote_headings,
+    diff_stats,
+    dropped_guardrails,
+    enforce_protected,
+    exploration_directive,
+    family_stats,
+    fit_json,
+    gate_margins,
+    infer_family,
+    is_no_op,
+    metric_delta,
+    model_class_exploration_required,
+    model_class_stats,
+    near_misses,
+    normalize_family,
+    normalize_model_class,
+    normalize_novelty,
+    notebook_index,
+    registry_row,
+    unified_diff,
+    verified_novelty,
+)
+from lab.procedure import (
+    HYPOTHESIS_CARD_FIELDS,
+    ProcedureRegistry,
+    admission_rule,
+    append_jsonl,
+    episode_score,
+    read_jsonl,
+    validate_card,
+    validate_revision,
+    write_lock,
+)
 from lab.sandbox import audit_forecaster_source, import_policy_text
 from lab.workbench import CandidateWorkbench, audit_analysis_source, clip_json
 
@@ -187,6 +230,9 @@ class RSIController:
         self.backup_path = self.champ_dir / "forecaster.py"
         self.candidates_dir = self.cfg.outputs_dir / "candidates" / self.cfg.stage
         self.playbooks_dir = self.cfg.outputs_dir / "playbooks" / self.cfg.stage
+        self.procedures = ProcedureRegistry(self.cfg.outputs_dir / "procedures" / self.cfg.stage)
+        self.locks_dir = self.cfg.outputs_dir / "locks" / self.cfg.stage
+        self.memory_dir = self.cfg.outputs_dir / "memory" / self.cfg.stage
         self.iteration_budget: dict | None = None  # {"planned": N, "first_iteration": i} set by the run loop
         self._pending_archive = self._pending_discovery = None
         self._lab_hash = self._hash_lab()
@@ -379,7 +425,8 @@ class RSIController:
 
     def propose_and_test_forecaster(self, hypothesis: str, theory_update_md: str, new_forecaster_code: str,
                                     hypothesis_family: str = "", novelty: str = "",
-                                    builds_on_iteration: int | None = None, model_class: str = "") -> dict:
+                                    builds_on_iteration: int | None = None, model_class: str = "",
+                                    hypothesis_card: dict | None = None) -> dict:
         """Two-stage test: audit -> duplicate check -> Discovery (sanity + improvement screen) -> Holdout gates."""
         t0 = time.time()
         champ = self.bootstrap()
@@ -404,6 +451,8 @@ class RSIController:
             base["novelty_claimed"] = normalize_novelty(novelty)
         if builds_on_iteration is not None:
             base["builds_on_iteration"] = int(builds_on_iteration)
+        if hypothesis_card:
+            base["hypothesis_card"] = {k: str(hypothesis_card.get(k) or "")[:800] for k in HYPOTHESIS_CARD_FIELDS}
         self._pending_archive = (cand_dir, new_forecaster_code, champion_code)
         problems = audit_forecaster_source(new_forecaster_code)
         if problems:
@@ -640,6 +689,84 @@ class RSIController:
             raise PermissionError(f"agent research searches must use origin_date <= {DISCOVERY_ORIGINS[-1]} (Discovery)")
         from lab.sandbox import PointInTimeSandbox
         return PointInTimeSandbox(self.cfg).search_exa_point_in_time(query, origin_date)
+
+    # ------------------------------------------------ Architecture 1: procedure I_g, forecast locks, memory ----
+    @property
+    def evidence_path(self) -> Path:
+        return self.memory_dir / "evidence.jsonl"
+
+    @property
+    def episodes_path(self) -> Path:
+        return self.memory_dir / "episodes.jsonl"
+
+    def ensure_procedure(self) -> dict:
+        """Seed I_0 from the current playbook on first use; return the active procedure version."""
+        self._ensure_protected_playbook()
+        return self.procedures.ensure_seed(self.cfg.prompt_path.read_text())
+
+    def pack_manifest_sha256(self) -> str | None:
+        p = self.cfg.pack_dir / "MANIFEST.sha256"
+        return hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None
+
+    def lock_episode_forecast(self, code: str, card: dict, meta: dict, episode_id: str, procedure_version: str) -> dict:
+        """Score an episode's committed forecaster on Discovery (pre-Holdout screen, Holdout untouched) and write an
+        immutable lock: code / champion / pack hashes, procedure version, hypothesis card and the Discovery result."""
+        champ = self.bootstrap()
+        r = self.dry_run_discovery(code)
+        d, cd = r.get("discovery") or {}, champ.get("discovery") or {}
+        a, b = d.get("pooled_skill"), cd.get("pooled_skill")
+        delta = a - b if isinstance(a, (int, float)) and isinstance(b, (int, float)) else None
+        self.locks_dir.mkdir(parents=True, exist_ok=True)
+        (self.locks_dir / f"{episode_id}.py").write_text(code)
+        rec = {"stage": self.cfg.stage, "procedure_version": procedure_version, "code_sha256": sha256_text(code),
+               "champion_code_sha256": champ["code_sha256"], "pack_manifest_sha256": self.pack_manifest_sha256(),
+               "origins": list(self.cfg.discovery_origins), "hypothesis_card": card, **meta,
+               "status": r.get("status"), "error": r.get("error"), "screen_pass": bool(r.get("would_reach_holdout")),
+               "discovery": r.get("discovery"), "discovery_pooled_delta": delta, "code_file": f"{episode_id}.py"}
+        write_lock(self.locks_dir, episode_id, rec)
+        return rec
+
+    def record_evidence(self, episode_id: str, query: str, origin_date: str, results, hypothesis_link: str = "") -> dict:
+        """Evidence memory: every Exa search with its point-in-time sources and the hypothesis it was meant to inform."""
+        srcs = [{"url": x.get("url"), "title": str(x.get("title") or "")[:160],
+                 "published": x.get("publishedDate") or x.get("published_date")}
+                for x in (results or [])[:10] if isinstance(x, dict)]
+        return append_jsonl(self.evidence_path, {"stage": self.cfg.stage, "episode_id": episode_id, "query": query,
+                                                 "origin_date": origin_date, "hypothesis_link": (hypothesis_link or "")[:300],
+                                                 "n_results": len(results or []), "sources": srcs})
+
+    def released_episodes(self) -> list[dict]:
+        return read_jsonl(self.episodes_path)
+
+    def next_generation(self) -> int:
+        return 1 + max([int(e.get("generation") or 0) for e in self.released_episodes()], default=0)
+
+    def memory_digest(self, n_episodes: int = 12, n_evidence: int = 20) -> dict:
+        """The three memories, time-filtered by construction (episodes and evidence only use Discovery-era data and
+        released verdicts): procedural (I_g lineage), episodic (research episodes + experiment registry), evidence."""
+        active = self.ensure_procedure()
+        lineage = [{k: v.get(k) for k in ("version", "parent_version", "status", "admission")}
+                   | {"change": (v.get("revision") or {}).get("change"),
+                      "target_component": (v.get("revision") or {}).get("target_component")}
+                   for v in self.procedures.versions()]
+        return {"procedural_memory": {"active_version": active["version"], "lineage": lineage},
+                "episode_memory": self.released_episodes()[-n_episodes:],
+                "experiment_registry": self.experiment_registry(),
+                "evidence_memory": read_jsonl(self.evidence_path)[-n_evidence:]}
+
+    def write_procedure_report(self) -> Path:
+        """lineage.md: procedure versions with their admission comparisons, then every episode's behavior."""
+        lines = [self.procedures.lineage_md(), "## Research episodes", "",
+                 "| episode | procedure | tools used | model class | locked score | Holdout shot |", "|---|---|---|---|---|---|"]
+        for e in self.released_episodes():
+            lock, ho = e.get("lock") or {}, e.get("holdout_result") or {}
+            tools = ", ".join(f"{k}x{v}" for k, v in (e.get("tool_counts") or {}).items())
+            lines.append(f"| {e['episode_id']} | {e.get('procedure_version')} | {tools} | {lock.get('model_class', '-')} | "
+                         f"{e.get('score')} | {ho.get('status', '-')} {(ho.get('holdout') or {}).get('pooled_skill', '')} |")
+        out = self.procedures.root / "lineage.md"
+        self.procedures.root.mkdir(parents=True, exist_ok=True)
+        out.write_text("\n".join(lines) + "\n")
+        return out
 
     # ----------------------------------------------------------------------- stage control ----
     def checkpoint_notes(self, message: str) -> str | None:
@@ -946,13 +1073,11 @@ class StrandsAgentDriver:
             self.model = OpenAIModel(client_args=client_args, model_id=model_id, params={"temperature": 0.2})
 
     def run_iteration(self, ctrl: RSIController, i: int) -> dict:
-        from strands import Agent, tool
+        from strands import Agent
         from strands.types.exceptions import MaxTokensReachedException
 
         tb = AgentToolbox(ctrl)
-        tools = [tool(getattr(tb, n)) for n in AgentToolbox.TOOL_NAMES]
-        if ctrl.cfg.enable_exa:
-            tools.append(tool(tb.search_exa_signals))
+        tools = traced_tools(tb, list(AgentToolbox.TOOL_NAMES) + (["search_exa_signals"] if ctrl.cfg.enable_exa else []))
         ctrl._ensure_protected_playbook()
         playbook = ctrl.cfg.prompt_path.read_text()
         registry = ctrl.experiment_registry()
@@ -992,6 +1117,73 @@ class StrandsAgentDriver:
         if not tb.results:
             raise RuntimeError("the Strands agent finished without submitting a candidate for Holdout")
         return tb.results[-1]
+
+    def run_episode(self, ctrl: RSIController, version: dict, episode_id: str, arm: str) -> AgentToolbox:
+        """One bounded research episode governed by procedure `version` (its research_policy is the playbook). The
+        agent researches and commits (locks) at most one forecast; no Holdout, no playbook edits."""
+        from strands import Agent
+        from strands.types.exceptions import MaxTokensReachedException
+
+        tb = AgentToolbox(ctrl, mode="episode", episode_id=episode_id, procedure_version=version["version"])
+        names = list(AgentToolbox.EPISODE_TOOL_NAMES) + (["search_exa_signals"] if ctrl.cfg.enable_exa else [])
+        agent = Agent(model=self.model, tools=traced_tools(tb, names), callback_handler=None,
+                      system_prompt=AGENT_CONTRACT + "\n\n" + EPISODE_PROTOCOL + "\n\n"
+                      + version["components"]["research_policy"])
+        registry = ctrl.experiment_registry()
+        explore = model_class_exploration_required(registry)
+        prompt = (f"Research episode {episode_id} (stage {ctrl.cfg.stage}, procedure {version['version']}). Lab directive: "
+                  f"{exploration_directive(registry, None)}\nFollow your research policy (system prompt). Start with "
+                  "inspect_current_state and recall_memory. Before building, decide one hypothesis card (mechanism, "
+                  "expected observation, competing explanation, test, rejection condition). Budget: "
+                  f"{tb.max_dry_runs} dry runs, {tb.max_backtests} backtests, "
+                  f"{tb.max_exa if ctrl.cfg.enable_exa else 0} Exa searches. "
+                  + ("This episode must compare forecasters of at least two different model classes (save_variant "
+                     "each). " if explore else "")
+                  + "End with commit_forecast for the best candidate, or end without committing if nothing beats "
+                  "the champion.")
+        if ctrl.cfg.enable_exa:
+            prompt += "\n" + EXA_STAGE_DIRECTIVE
+        retries = int(os.environ.get("LLM_MAX_TOKEN_RETRIES", "2"))
+        for attempt in range(retries + 2):
+            try:
+                agent(prompt)
+            except MaxTokensReachedException as e:
+                if tb.lock is not None or attempt >= retries:
+                    print(f"[rsi] episode {episode_id}: output limit ({e})", file=sys.stderr)
+                    break
+                self._raise_output_budget()
+                prompt = CONTINUE_AFTER_MAX_TOKENS
+                continue
+            if tb.lock is not None or tb.n_dry_runs == 0 or attempt >= retries + 1:
+                break
+            prompt = NUDGE_COMMIT
+        return tb
+
+    def propose_revision(self, ctrl: RSIController, active: dict, digest: dict, known_ids: set[str],
+                         max_attempts: int = 3) -> tuple[dict | None, list[str]]:
+        """The improver (A7): a separate tool-less call governed by the active improver_policy. Returns a revision
+        object that passed structural validation, or (None, problems)."""
+        from strands import Agent
+        from strands.types.exceptions import MaxTokensReachedException
+
+        agent = Agent(model=self.model, tools=[], callback_handler=None,
+                      system_prompt=active["components"]["improver_policy"] + "\n\n" + REVISION_PROTOCOL)
+        prompt = improver_prompt(active, digest)
+        problems: list[str] = []
+        for _ in range(max_attempts):
+            try:
+                out = str(agent(prompt))
+            except MaxTokensReachedException:
+                self._raise_output_budget()
+                prompt = "Output limit hit. Reply with only the JSON object; keep new_component_text under 8000 characters."
+                continue
+            rev = parse_json_object(out)
+            problems = validate_revision(rev, active, known_ids)
+            if not problems:
+                return rev, []
+            prompt = ("The lab rejected the revision object: " + "; ".join(problems)
+                      + ". Reply with the corrected JSON object only.")
+        return None, problems
 
     def _raise_output_budget(self) -> None:
         """Double max_tokens (capped) after a MaxTokensReachedException so the retried turn can finish its tool call."""
@@ -1050,15 +1242,27 @@ class AgentToolbox:
                   "backtest_candidate", "profile_pack", "save_variant", "load_variant", "list_variants",
                   "submit_candidate_for_holdout", "propose_and_test_forecaster", "update_scientist_prompt")
 
+    EPISODE_TOOL_NAMES = tuple(n for n in TOOL_NAMES if n not in ("submit_candidate_for_holdout",
+                                                                  "propose_and_test_forecaster",
+                                                                  "update_scientist_prompt")) + ("recall_memory",
+                                                                                                 "commit_forecast")
+
     def __init__(self, ctrl: RSIController, max_dry_runs: int | None = None, max_analyses: int | None = None,
-                 max_submissions: int = 1):
+                 max_submissions: int = 1, mode: str = "holdout", episode_id: str = "", procedure_version: str = ""):
         self.ctrl = ctrl
+        self.mode, self.episode_id, self.procedure_version = mode, episode_id, procedure_version
+        self.lock: dict | None = None
+        self.trace: list[dict] = []
+        self.n_exa = 0
+        self.max_exa = int(os.environ.get("RSI_EPISODE_EXA_SEARCHES", "2")) if mode == "episode" else 10 ** 6
         self.iteration = ctrl.next_iteration()
         ctrl.bootstrap()
         self.wb = CandidateWorkbench(ctrl.backup_path.read_text())
         self.model_class_exploration = model_class_exploration_required(ctrl.experiment_registry())
         default_dry = (int(os.environ.get("RSI_EXPLORE_DRY_RUNS", 2 * ctrl.cfg.max_discovery_probes))
                        if self.model_class_exploration else ctrl.cfg.max_discovery_probes)
+        if mode == "episode":
+            default_dry = int(os.environ.get("RSI_EPISODE_DRY_RUNS", "3"))
         self.max_dry_runs = (max_dry_runs if max_dry_runs is not None
                              else int(os.environ.get("RSI_MAX_DRY_RUNS", default_dry)))
         self.variants: dict[str, dict] = {}
@@ -1222,9 +1426,206 @@ class AgentToolbox:
         r["playbook_updates_left"] = self.max_playbook_updates - self.n_playbook_updates
         return json.dumps(r, default=str)
 
-    def search_exa_signals(self, query: str, origin_date: str) -> str:
-        """Point-in-time web search (results published on or before origin_date <= the last Discovery origin)."""
-        return clip_json(self.ctrl.search_exa_signals(query, origin_date), 20000)
+    def search_exa_signals(self, query: str, origin_date: str, hypothesis_link: str = "") -> str:
+        """Point-in-time web search (results published on or before origin_date <= the last Discovery origin).
+        hypothesis_link names the open question / hypothesis this search is meant to inform (kept in evidence memory).
+        Budgeted per research episode: search only when you have a specific evidence question."""
+        if self.n_exa >= self.max_exa:
+            return json.dumps({"status": "EXA_BUDGET_EXHAUSTED", "error": f"{self.max_exa} searches used this episode"})
+        self.n_exa += 1
+        res = self.ctrl.search_exa_signals(query, origin_date)
+        self.ctrl.record_evidence(self.episode_id or f"iter_{self.iteration:03d}", query, origin_date, res, hypothesis_link)
+        return clip_json(res, 20000)
+
+    def recall_memory(self) -> str:
+        """Procedural memory (the active improvement-procedure version and its lineage with admission results),
+        episode memory (past research episodes: procedure version, tools used, hypothesis card, locked Discovery score,
+        Holdout outcome; failed attempts included), the experiment registry and evidence memory (past Exa searches,
+        their sources and the hypotheses they informed)."""
+        return clip_json(self.ctrl.memory_digest(), 30000)
+
+    def commit_forecast(self, hypothesis: str, mechanism: str, expected_observation: str, competing_explanation: str,
+                        test: str, rejection_condition: str, model_class: str = "", hypothesis_family: str = "",
+                        novelty: str = "") -> str:
+        """Lock the current candidate as this episode's forecast and end the episode. Requires a complete hypothesis
+        card: mechanism, expected_observation, competing_explanation (a rival explanation of the same errors), test
+        (the comparison that decides it) and rejection_condition (the result that would reject it). The lab scores the
+        lock on Discovery and decides any Holdout evaluation after the episode. Allowed once. If no candidate beats
+        the champion, do not commit: end the episode with a short summary (a valid research outcome)."""
+        if self.lock is not None:
+            return json.dumps({"status": "ALREADY_LOCKED", "error": "this episode's forecast is locked; stop now"})
+        card = {"mechanism": mechanism, "expected_observation": expected_observation,
+                "competing_explanation": competing_explanation, "test": test, "rejection_condition": rejection_condition}
+        missing = validate_card(card)
+        if missing:
+            return json.dumps({"status": "COMMIT_REJECTED",
+                               "error": f"hypothesis card incomplete (each field >= 15 characters): {missing}"})
+        if self.wb.code == self.wb.base_code:
+            return json.dumps({"status": "COMMIT_REJECTED", "error": "candidate is identical to the champion"})
+        problems = audit_forecaster_source(self.wb.code)
+        if problems:
+            return json.dumps({"status": "COMMIT_REJECTED", "error": "; ".join(problems)[:1500]})
+        meta = {"hypothesis": hypothesis[:2000], "model_class": normalize_model_class(model_class),
+                "hypothesis_family": hypothesis_family, "novelty": novelty, "builds_on_iteration": self.builds_on}
+        self.lock = self.ctrl.lock_episode_forecast(self.wb.code, card, meta, self.episode_id, self.procedure_version)
+        return clip_json({"status": "LOCKED", **{k: self.lock.get(k) for k in ("screen_pass", "discovery_pooled_delta",
+                                                                               "error", "discovery")},
+                          "note": "episode over; the lab compares procedures and decides Holdout"}, 8000)
+
+
+EPISODE_PROTOCOL = WORKBENCH_PROTOCOL.split("submit_candidate_for_holdout runs")[0].rstrip() + """
+RESEARCH EPISODE (Architecture 1). There is no Holdout submission and no playbook editing in an episode: your
+procedure (research policy) is versioned by the lab and only changes through the improver plus an admission
+comparison. recall_memory returns procedural, episode and evidence memory (failed attempts included).
+commit_forecast(hypothesis + hypothesis card) locks the current candidate (immutable record, scored on Discovery)
+and ends the episode; after the episode the lab compares procedures and gives the best lock the one Holdout
+evaluation. Keep your reasoning short and act through tools."""
+
+REVISION_PROTOCOL = """
+OUTPUT: reply with exactly one JSON object (optionally in a ```json fence) and nothing else:
+{"parent_version": "<active version>", "target_component": "research_policy" | "improver_policy",
+ "proposed_by": "improver_<active version>", "change": "<the specific bounded edit>",
+ "supporting_episode_ids": ["<episode ids or iter_NNN experiments that show the failure>"],
+ "expected_behavior_change": "<observable difference in the next episode's actions or experiments>",
+ "development_comparison": "<how the same-start comparison should reveal it>",
+ "rejection_condition": "<the result that rejects the change>", "status": "proposed",
+ "new_component_text": "<the COMPLETE replacement text of the target component>"}
+research_policy is the scientist's playbook for research episodes (the lab re-inserts its LAB-PROTECTED block);
+improver_policy is the instruction set you are following now, so revising it changes how the next improvement is
+proposed. The lab admits the new version only if, from the same champion and budget, an episode run under it locks a
+forecaster that beats the frozen version's episode on Discovery by the fixed margin. Change one thing.
+""".strip()
+
+NUDGE_COMMIT = ("You have not called commit_forecast. If a dry-run candidate beats the champion, finish it and call "
+                "commit_forecast with the full hypothesis card; otherwise reply with a two-line summary and stop.")
+
+
+def improver_prompt(active: dict, digest: dict) -> str:
+    return "\n\n".join([
+        f"Active improvement procedure: {active['version']} (parent {active.get('parent_version')}).",
+        "## Current research_policy\n" + active["components"]["research_policy"],
+        "## Current improver_policy\n" + active["components"]["improver_policy"],
+        "## Released memory (procedural lineage, research episodes, experiment registry, evidence)\n"
+        + clip_json(digest, 45000),
+        "Propose the one revision now (JSON object only).",
+    ])
+
+
+def parse_json_object(text: str) -> dict | None:
+    m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text or "", re.S)
+    cand = m.group(1) if m else (text[text.find("{"): text.rfind("}") + 1] if text and "{" in text else "")
+    try:
+        obj = json.loads(cand)
+    except (json.JSONDecodeError, ValueError):
+        return None
+    return obj if isinstance(obj, dict) else None
+
+
+_TRACE_SKIP = {"new_forecaster_code", "analysis_code", "old_str", "new_str", "new_playbook_md", "theory_update_md"}
+
+
+def traced_tools(tb: AgentToolbox, names: list[str]) -> list:
+    """Wrap toolbox methods as Strands tools that append (tool, short args, status) to tb.trace."""
+    from strands import tool
+
+    def wrap(n: str):
+        fn = getattr(tb, n)
+
+        @functools.wraps(fn)
+        def w(*args, **kwargs):
+            out = fn(*args, **kwargs)
+            status = None
+            if isinstance(out, str) and out.startswith("{"):
+                try:
+                    status = json.loads(out).get("status")
+                except (json.JSONDecodeError, AttributeError):
+                    status = None
+            tb.trace.append({"tool": n, "status": status,
+                             "args": {k: v if isinstance(v, (int, float)) else str(v)[:100]
+                                      for k, v in kwargs.items() if k not in _TRACE_SKIP}})
+            return out
+        return tool(w)
+    return [wrap(n) for n in names]
+
+
+def _compact_lock(lock: dict | None) -> dict | None:
+    if not lock:
+        return None
+    keep = ("procedure_version", "code_sha256", "code_file", "model_class", "hypothesis_family", "novelty",
+            "hypothesis", "hypothesis_card", "status", "error", "screen_pass", "discovery_pooled_delta")
+    out = {k: lock.get(k) for k in keep}
+    out["discovery_pooled_skill"] = (lock.get("discovery") or {}).get("pooled_skill")
+    return out
+
+
+def card_markdown(card: dict, episode_id: str) -> str:
+    return (f"Locked in research episode {episode_id}.\n" +
+            "\n".join(f"- **{k.replace('_', ' ')}:** {card.get(k, '')}" for k in HYPOTHESIS_CARD_FIELDS))
+
+
+def run_generation(ctrl: RSIController, driver) -> dict:
+    """One Architecture-1 generation: improver proposes I_{g+1} -> frozen I_g and candidate I_{g+1} each run one
+    research episode from the same champion and budget -> fixed admission rule -> the best lock gets the single
+    Holdout evaluation (Holdout gates decide F_{g+1}) -> episode, procedural and lineage memory are written."""
+    t0 = time.time()
+    active = ctrl.ensure_procedure()
+    g = ctrl.next_generation()
+    known = ({str(e["episode_id"]) for e in ctrl.released_episodes()}
+             | {f"iter_{int(r['iteration']):03d}" for r in ctrl.experiment_registry() if r.get("iteration") is not None})
+    try:
+        rev, problems = driver.propose_revision(ctrl, active, ctrl.memory_digest(), known)
+    except Exception as e:  # an improver failure still lets the frozen procedure run its episode
+        rev, problems = None, [f"{type(e).__name__}: {e}"[:800]]
+    cand = ctrl.procedures.add_candidate(rev) if rev else None
+    ctrl._ledger({"status": "REVISION_PROPOSED" if cand else "REVISION_INVALID", "generation": g,
+                  "parent_version": active["version"], "procedure_version": cand and cand["version"],
+                  "revision": cand and cand["revision"], "error": "; ".join(problems)[:1500] or None})
+    champion_sha = ctrl.champion["code_sha256"]
+    episodes, toolboxes = {}, {}
+    for arm, ver in [("frozen", active)] + ([("candidate", cand)] if cand else []):
+        eid = f"g{g:03d}_{arm}"
+        err, tb = None, None
+        try:
+            tb = driver.run_episode(ctrl, ver, eid, arm)
+        except Exception as e:
+            err = f"{type(e).__name__}: {e}"[:800]
+        restore_champion_file(ctrl)
+        toolboxes[arm] = tb
+        ep = {"episode_id": eid, "generation": g, "arm": arm, "procedure_version": ver["version"],
+              "stage": ctrl.cfg.stage, "champion_code_sha256": champion_sha, "error": err,
+              "tool_counts": dict(collections.Counter(t["tool"] for t in (tb.trace if tb else []))),
+              "trace": (tb.trace if tb else [])[:60], "lock": _compact_lock(tb.lock if tb else None)}
+        ep["score"] = round(episode_score(ep), 6)
+        episodes[arm] = ep
+    admission = None
+    if cand:
+        admission = admission_rule(episodes["frozen"], episodes["candidate"])
+        ctrl.procedures.decide(cand["version"], admission)
+        if admission["admitted"] and cand["revision"]["target_component"] == "research_policy":
+            ctrl.cfg.prompt_path.write_text(cand["components"]["research_policy"])
+        ctrl._ledger({"status": "PROCEDURE_ADMITTED" if admission["admitted"] else "PROCEDURE_REJECTED",
+                      "generation": g, "procedure_version": cand["version"], "parent_version": active["version"],
+                      "admission": admission})
+    best = max((e for e in episodes.values() if episode_score(e) > 0), key=episode_score, default=None)
+    holdout = None
+    if best:
+        lock = toolboxes[best["arm"]].lock
+        code = (ctrl.locks_dir / lock["code_file"]).read_text()
+        r = ctrl.propose_and_test_forecaster(lock["hypothesis"], card_markdown(lock["hypothesis_card"], best["episode_id"]),
+                                             code, lock.get("hypothesis_family") or "", lock.get("novelty") or "",
+                                             lock.get("builds_on_iteration"), lock.get("model_class") or "",
+                                             hypothesis_card=lock["hypothesis_card"])
+        holdout = {k: r.get(k) for k in ("iteration", "status", "holdout", "gate_margins", "error")}
+    for e in episodes.values():
+        e["holdout_result"] = holdout if best is not None and e is best else None
+        append_jsonl(ctrl.episodes_path, e)
+    row = ctrl._ledger({"status": "GENERATION", "generation": g, "active_before": active["version"],
+                        "candidate_version": cand and cand["version"], "admission": admission,
+                        "active_after": ctrl.procedures.active()["version"],
+                        "episode_scores": {a: e["score"] for a, e in episodes.items()},
+                        "holdout_shot": holdout, "seconds": round(time.time() - t0, 1)})
+    ctrl.write_procedure_report()
+    return row
 
 
 DEFAULT_MODAL_LLM_URL = "https://ananthbashyam1--ep-glm-5-3-server.us-west.modal.direct"
@@ -1334,6 +1735,12 @@ def main() -> int:
     run.add_argument("--exa-cache-only", action="store_true")
     fork = sub.add_parser("fork-stage2", help="start PACK_PLUS_EXA from the PACK_ONLY champion")
     fork.add_argument("--exa-cache-only", action="store_true")
+    gen = sub.add_parser("generations", help="Architecture-1 generations: improver -> same-start procedure comparison "
+                                             "-> admission -> one Holdout shot")
+    gen.add_argument("--stage", choices=["pack_only", "pack_plus_exa"], default="pack_only")
+    gen.add_argument("--driver", choices=["strands", "modal"], default="modal")
+    gen.add_argument("--generations", type=int, default=1)
+    gen.add_argument("--exa-cache-only", action="store_true")
     sub.add_parser("status")
     sub.add_parser("ablation")
     a = ap.parse_args()
@@ -1354,6 +1761,26 @@ def main() -> int:
         st = RSIController(cfg, driver_name="lab").fork_from(STAGE_PACK_ONLY)
         print(json.dumps({"forked": True, "holdout": st["holdout"]}, default=str))
         return 0
+
+    if a.cmd == "generations":
+        cfg = load_config(enable_exa=a.stage == "pack_plus_exa", exa_cache_only=a.exa_cache_only)
+        driver = make_driver(a.driver)
+        ctrl = RSIController(cfg, driver_name=driver.name)
+        ctrl.bootstrap()
+        ctrl.ensure_procedure()
+        n_ok = 0
+        for _ in range(a.generations):
+            try:
+                print(json.dumps(run_generation(ctrl, driver), default=str)[:4000])
+                n_ok += 1
+            except Exception as e:
+                ctrl._ledger({"status": "DRIVER_ERROR", "generation": ctrl.next_generation(), "counts_as_experiment": False,
+                              "error": f"{type(e).__name__}: {e}"[:1500]})
+                print(f"[rsi] generation driver error: {type(e).__name__}: {e}", file=sys.stderr)
+                restore_champion_file(ctrl)
+        ctrl.checkpoint_notes(f"notebook checkpoint after {a.generations} generation(s)")
+        write_ablation_summary(cfg)
+        return 0 if n_ok else 1
 
     cfg = load_config(enable_exa=a.stage == "pack_plus_exa", exa_cache_only=a.exa_cache_only)
     driver = make_driver(a.driver, a.candidates)

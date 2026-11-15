@@ -1,0 +1,368 @@
+{
+  "as_of": "2026-11-06",
+  "levels": {
+    "H100_SXM_80GB": {
+      "neocloud_rate_card_on_demand": 3.9695,
+      "marketplace_ask_on_demand": 2.25,
+      "hyperscaler_spot": 5.209,
+      "hyperscaler_list_on_demand": 10.0
+    },
+    "A100_SXM_80GB": {
+      "neocloud_rate_card_on_demand": 2.79,
+      "marketplace_ask_on_demand": 1.8,
+      "hyperscaler_spot": 1.7932,
+      "hyperscaler_list_on_demand": 4.0122
+    },
+    "B200": {
+      "neocloud_rate_card_on_demand": 6.89
+    },
+    "B300": {
+      "neocloud_rate_card_on_demand": 9.5
+    },
+    "H200": {
+      "neocloud_rate_card_on_demand": 4.59
+    }
+  },
+  "capability": {
+    "a100_to_h100_measured": 2.464959884055451,
+    "h100_to_b200_measured": 3.2109053746829126,
+    "h100_to_b300_measured": 3.556821236602841,
+    "b300_to_vr200_datasheet_fp8": 3.888888888888889,
+    "vr200_release_date": "2026-09-30",
+    "tdp_w": {
+      "H100_SXM_80GB": 700.0,
+      "A100_SXM_80GB": 400.0
+    }
+  },
+  "aws_decay": {
+    "H100_SXM_80GB": {
+      "instance_type": "p5.48xlarge",
+      "first_month": "2023-07",
+      "last_month": "2026-10",
+      "first_price": 8.603,
+      "last_price": 3.552,
+      "decay_per_year_full": 0.47935469934475633,
+      "decay_per_year_pre_2026": 0.6306130952919339,
+      "monthly": {
+        "2023-07": 8.603,
+        "2023-08": 8.603,
+        "2023-09": 8.8177,
+        "2023-10": 8.7987,
+        "2023-11": 9.0369,
+        "2023-12": 9.076,
+        "2024-01": 8.7564,
+        "2024-02": 8.8204,
+        "2024-03": 8.4807,
+        "2024-04": 5.0504,
+        "2024-05": 5.0746,
+        "2024-06": 5.4423,
+        "2024-07": 5.1307,
+        "2024-08": 4.9942,
+        "2024-09": 4.4442,
+        "2024-10": 3.9146,
+        "2024-11": 4.1582,
+        "2024-12": 2.2759,
+        "2025-01": 4.0261,
+        "2025-02": 3.7387,
+        "2025-03": 3.941,
+        "2025-04": 3.5084,
+        "2025-05": 3.6247,
+        "2025-06": 2.5168,
+        "2025-07": 2.0869,
+        "2025-08": 2.3477,
+        "2025-09": 2.4832,
+        "2025-10": 2.6767,
+        "2025-11": 2.3291,
+        "2025-12": 2.3751,
+        "2026-01": 2.3717,
+        "2026-02": 2.2735,
+        "2026-07": 2.5518,
+        "2026-08": 2.6145,
+        "2026-09": 2.5942,
+        "2026-10": 3.5522
+      }
+    },
+    "A100_SXM_80GB": {
+      "instance_type": "p4d.24xlarge",
+      "first_month": "2022-05",
+      "last_month": "2026-10",
+      "first_price": 2.428,
+      "last_price": 2.12,
+      "decay_per_year_full": 0.08338639724990105,
+      "decay_per_year_pre_2026": 0.1771640590674507,
+      "monthly": {
+        "2022-05": 2.428,
+        "2022-06": 1.8589,
+        "2022-07": 1.7433,
+        "2022-08": 2.4738,
+        "2022-09": 2.2951,
+        "2022-10": 2.5886,
+        "2022-11": 2.1495,
+        "2022-12": 2.0095,
+        "2023-01": 2.1463,
+        "2023-02": 2.6119,
+        "2023-03": 1.8943,
+        "2023-04": 1.6551,
+        "2023-05": 1.4314,
+        "2023-06": 1.229,
+        "2023-07": 1.6898,
+        "2023-08": 2.0636,
+        "2023-09": 2.0627,
+        "2023-10": 1.2035,
+        "2023-11": 1.259,
+        "2023-12": 1.3102,
+        "2024-01": 1.3375,
+        "2024-02": 0.9504,
+        "2024-03": 0.7596,
+        "2024-04": 0.9478,
+        "2024-05": 1.0794,
+        "2024-06": 1.3214,
+        "2024-07": 1.2644,
+        "2024-08": 1.4235,
+        "2024-09": 1.4625,
+        "2024-10": 1.5326,
+        "2024-11": 1.6331,
+        "2024-12": 1.6891,
+        "2025-01": 1.5464,
+        "2025-02": 1.2737,
+        "2025-03": 1.2553,
+        "2025-04": 1.2915,
+        "2025-05": 1.2309,
+        "2025-06": 1.0124,
+        "2025-07": 1.1345,
+        "2025-08": 1.1617,
+        "2025-09": 1.3132,
+        "2025-10": 1.2086,
+        "2025-11": 1.1874,
+        "2025-12": 1.2102,
+        "2026-01": 1.1729,
+        "2026-02": 1.2266,
+        "2026-07": 1.9747,
+        "2026-08": 2.3716,
+        "2026-09": 2.2746,
+        "2026-10": 2.1204
+      }
+    }
+  },
+  "assumptions": {
+    "node_overhead": 1.5,
+    "pue": [
+      1.25,
+      1.45
+    ],
+    "power_usd_kwh": [
+      0.07,
+      0.11
+    ],
+    "ops_usd_gpu_hr": [
+      0.05,
+      0.08
+    ],
+    "scenarios": {
+      "bear": {
+        "utilisation": 0.55,
+        "discount": 0.15,
+        "decay_mult": 1.4
+      },
+      "base": {
+        "utilisation": 0.7,
+        "discount": 0.12,
+        "decay_mult": 1.0
+      },
+      "bull": {
+        "utilisation": 0.85,
+        "discount": 0.1,
+        "decay_mult": 0.6
+      }
+    },
+    "life_end_year": 2032.0
+  },
+  "gpus": {
+    "H100_SXM_80GB": {
+      "p0_neocloud_on_demand": 3.9695,
+      "opex_floor_band": [
+        0.142,
+        0.247
+      ],
+      "opex_mid": 0.195,
+      "scenarios": {
+        "bear": {
+          "effective_decay_per_year": 0.5947,
+          "value_now_usd_per_gpu": 20236.0,
+          "path": [
+            {
+              "year": 2027,
+              "rental_usd_gpu_hr": 3.585,
+              "net_cash_usd_gpu_hr": 1.777,
+              "resale_value_usd_per_gpu": 17799.0,
+              "resale_value_usd_per_8gpu_node": 142389.0
+            },
+            {
+              "year": 2028,
+              "rental_usd_gpu_hr": 1.969,
+              "net_cash_usd_gpu_hr": 0.888,
+              "resale_value_usd_per_gpu": 7885.0,
+              "resale_value_usd_per_8gpu_node": 63082.0
+            },
+            {
+              "year": 2029,
+              "rental_usd_gpu_hr": 1.105,
+              "net_cash_usd_gpu_hr": 0.413,
+              "resale_value_usd_per_gpu": 2915.0,
+              "resale_value_usd_per_8gpu_node": 23323.0
+            }
+          ]
+        },
+        "base": {
+          "effective_decay_per_year": 0.4295,
+          "value_now_usd_per_gpu": 36713.0,
+          "path": [
+            {
+              "year": 2027,
+              "rental_usd_gpu_hr": 3.69,
+              "net_cash_usd_gpu_hr": 2.389,
+              "resale_value_usd_per_gpu": 33599.0,
+              "resale_value_usd_per_8gpu_node": 268791.0
+            },
+            {
+              "year": 2028,
+              "rental_usd_gpu_hr": 2.398,
+              "net_cash_usd_gpu_hr": 1.484,
+              "resale_value_usd_per_gpu": 19504.0,
+              "resale_value_usd_per_8gpu_node": 156030.0
+            },
+            {
+              "year": 2029,
+              "rental_usd_gpu_hr": 1.576,
+              "net_cash_usd_gpu_hr": 0.909,
+              "resale_value_usd_per_gpu": 10637.0,
+              "resale_value_usd_per_8gpu_node": 85095.0
+            }
+          ]
+        },
+        "bull": {
+          "effective_decay_per_year": 0.2606,
+          "value_now_usd_per_gpu": 64318.0,
+          "path": [
+            {
+              "year": 2027,
+              "rental_usd_gpu_hr": 3.799,
+              "net_cash_usd_gpu_hr": 3.035,
+              "resale_value_usd_per_gpu": 60612.0,
+              "resale_value_usd_per_8gpu_node": 484895.0
+            },
+            {
+              "year": 2028,
+              "rental_usd_gpu_hr": 2.928,
+              "net_cash_usd_gpu_hr": 2.295,
+              "resale_value_usd_per_gpu": 41939.0,
+              "resale_value_usd_per_8gpu_node": 335512.0
+            },
+            {
+              "year": 2029,
+              "rental_usd_gpu_hr": 2.266,
+              "net_cash_usd_gpu_hr": 1.732,
+              "resale_value_usd_per_gpu": 27444.0,
+              "resale_value_usd_per_8gpu_node": 219550.0
+            }
+          ]
+        }
+      }
+    },
+    "A100_SXM_80GB": {
+      "p0_neocloud_on_demand": 2.79,
+      "opex_floor_band": [
+        0.103,
+        0.176
+      ],
+      "opex_mid": 0.139,
+      "scenarios": {
+        "bear": {
+          "effective_decay_per_year": 0.6637,
+          "value_now_usd_per_gpu": 12858.0,
+          "path": [
+            {
+              "year": 2027,
+              "rental_usd_gpu_hr": 2.488,
+              "net_cash_usd_gpu_hr": 1.229,
+              "resale_value_usd_per_gpu": 11126.0,
+              "resale_value_usd_per_8gpu_node": 89012.0
+            },
+            {
+              "year": 2028,
+              "rental_usd_gpu_hr": 1.272,
+              "net_cash_usd_gpu_hr": 0.56,
+              "resale_value_usd_per_gpu": 4387.0,
+              "resale_value_usd_per_8gpu_node": 35093.0
+            },
+            {
+              "year": 2029,
+              "rental_usd_gpu_hr": 0.669,
+              "net_cash_usd_gpu_hr": 0.229,
+              "resale_value_usd_per_gpu": 1329.0,
+              "resale_value_usd_per_8gpu_node": 10632.0
+            }
+          ]
+        },
+        "base": {
+          "effective_decay_per_year": 0.4805,
+          "value_now_usd_per_gpu": 23589.0,
+          "path": [
+            {
+              "year": 2027,
+              "rental_usd_gpu_hr": 2.57,
+              "net_cash_usd_gpu_hr": 1.66,
+              "resale_value_usd_per_gpu": 21371.0,
+              "resale_value_usd_per_8gpu_node": 170971.0
+            },
+            {
+              "year": 2028,
+              "rental_usd_gpu_hr": 1.585,
+              "net_cash_usd_gpu_hr": 0.971,
+              "resale_value_usd_per_gpu": 11644.0,
+              "resale_value_usd_per_8gpu_node": 93151.0
+            },
+            {
+              "year": 2029,
+              "rental_usd_gpu_hr": 0.993,
+              "net_cash_usd_gpu_hr": 0.556,
+              "resale_value_usd_per_gpu": 5903.0,
+              "resale_value_usd_per_8gpu_node": 47225.0
+            }
+          ]
+        },
+        "bull": {
+          "effective_decay_per_year": 0.2923,
+          "value_now_usd_per_gpu": 42444.0,
+          "path": [
+            {
+              "year": 2027,
+              "rental_usd_gpu_hr": 2.656,
+              "net_cash_usd_gpu_hr": 2.118,
+              "resale_value_usd_per_gpu": 39807.0,
+              "resale_value_usd_per_8gpu_node": 318456.0
+            },
+            {
+              "year": 2028,
+              "rental_usd_gpu_hr": 1.982,
+              "net_cash_usd_gpu_hr": 1.546,
+              "resale_value_usd_per_gpu": 26781.0,
+              "resale_value_usd_per_8gpu_node": 214246.0
+            },
+            {
+              "year": 2029,
+              "rental_usd_gpu_hr": 1.488,
+              "net_cash_usd_gpu_hr": 1.126,
+              "resale_value_usd_per_gpu": 17056.0,
+              "resale_value_usd_per_8gpu_node": 136451.0
+            }
+          ]
+        }
+      }
+    }
+  },
+  "capability_parity_now": {
+    "H100_vs_B200_usd_gpu_hr": 2.1458122230339503,
+    "A100_vs_H100_usd_gpu_hr": 1.6103710351136502
+  }
+}

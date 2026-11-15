@@ -458,10 +458,20 @@ class StrandsAgentDriver:
 
     name = "strands"
 
-    def __init__(self):
-        provider = os.environ.get("STRANDS_PROVIDER", "openai")
-        model_id = os.environ.get("STRANDS_MODEL_ID", "gpt-4.1")
-        if provider == "litellm":
+    def __init__(self, provider: str | None = None):
+        provider = provider or os.environ.get("STRANDS_PROVIDER", "openai")
+        model_id = os.environ.get("STRANDS_MODEL_ID", "llm" if provider == "modal" else "gpt-4.1")
+        self.name = f"strands_{provider}"
+        if provider == "modal":
+            from strands.models.openai import OpenAIModel
+            base = os.environ.get("MODAL_LLM_URL", "").rstrip("/")
+            if not base or not os.environ.get("MODAL_LLM_API_KEY"):
+                raise RuntimeError("set MODAL_LLM_URL and MODAL_LLM_API_KEY (see infra/modal_vllm.py)")
+            wait_for_health(base, os.environ["MODAL_LLM_API_KEY"])
+            self.model = OpenAIModel(client_args={"api_key": os.environ["MODAL_LLM_API_KEY"], "base_url": base + "/v1",
+                                                  "timeout": 1800, "max_retries": 2},
+                                     model_id=model_id, params={"temperature": 0.2, "max_tokens": 12000})
+        elif provider == "litellm":
             from strands.models.litellm import LiteLLMModel
             self.model = LiteLLMModel(model_id=model_id, params={"temperature": 0.2})
         else:
@@ -512,6 +522,32 @@ class StrandsAgentDriver:
         return results[-1]
 
 
+def wait_for_health(base: str, key: str, timeout_s: int = 1500) -> None:
+    """Block until a (possibly cold-starting) Modal vLLM endpoint answers /health."""
+    import httpx
+
+    t0 = time.time()
+    while time.time() - t0 < timeout_s:
+        try:
+            if httpx.get(base + "/health", headers={"Authorization": f"Bearer {key}"}, timeout=60).status_code == 200:
+                return
+        except httpx.HTTPError:
+            pass
+        print("[modal] waiting for the LLM endpoint to warm up...", file=sys.stderr)
+        time.sleep(20)
+    raise TimeoutError(f"LLM endpoint {base} not healthy after {timeout_s}s")
+
+
+def load_dotenv(path: Path) -> None:
+    """Minimal .env loader (KEY=VALUE lines); existing environment variables win."""
+    if path.exists():
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip().removeprefix("export ").strip(), v.strip().strip('"').strip("'"))
+
+
 def make_driver(name: str, candidates: list[str] | None = None):
     if name == "scripted":
         return ScriptedDriver(candidates or [])
@@ -519,7 +555,9 @@ def make_driver(name: str, candidates: list[str] | None = None):
         return DevinAPIDriver()
     if name == "strands":
         return StrandsAgentDriver()
-    raise ValueError(f"unknown driver {name!r} (api, strands, scripted)")
+    if name == "modal":
+        return StrandsAgentDriver(provider="modal")
+    raise ValueError(f"unknown driver {name!r} (api, strands, modal, scripted)")
 
 
 # ================================================================================ ablation ====
@@ -561,7 +599,7 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     run = sub.add_parser("run", help="run RSI iterations")
     run.add_argument("--stage", choices=["pack_only", "pack_plus_exa"], default="pack_only")
-    run.add_argument("--driver", choices=["api", "strands", "scripted"], default=os.environ.get("DEVIN_MODE", "api"))
+    run.add_argument("--driver", choices=["api", "strands", "modal", "scripted"], default=os.environ.get("DEVIN_MODE", "modal"))
     run.add_argument("--iterations", type=int, default=1)
     run.add_argument("--candidates", nargs="*", help="forecaster files for the scripted driver")
     run.add_argument("--exa-cache-only", action="store_true")
@@ -570,6 +608,7 @@ def main() -> int:
     sub.add_parser("status")
     sub.add_parser("ablation")
     a = ap.parse_args()
+    load_dotenv(load_config().root / ".env")
 
     if a.cmd == "ablation":
         print(write_ablation_summary(load_config()))

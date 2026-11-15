@@ -6,3 +6,4 @@ outputs/cache/
 outputs/starter_demo/
 outputs/runs/
 .pytest_cache/
+outputs/starter_demo.log

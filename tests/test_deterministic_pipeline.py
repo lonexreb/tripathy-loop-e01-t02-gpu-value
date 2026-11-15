@@ -18,7 +18,7 @@ from lab.sandbox import (TIME_INDEXED, PointInTimeSandbox, assert_point_in_time,
 
 FIX = Path(__file__).parent / "fixtures"
 CACHE = ROOT / "outputs" / "cache"
-SEED = ROOT / "workspace" / "forecaster.py"
+SEED = FIX / "seed_drift.py"
 
 
 @pytest.fixture(scope="session")

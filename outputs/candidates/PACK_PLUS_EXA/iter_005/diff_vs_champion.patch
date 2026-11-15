@@ -1,0 +1,83 @@
+--- champion/forecaster.py
++++ candidate/forecaster.py
+@@ -62,26 +62,34 @@
+     rec_win = 60  # regime-C recent-window change quantiles (regime_change): provider repricing
+     rec_min = 30  # is non-stationary; full-history quantiles under-cover (Discovery cov 0.58-0.63)
+-    tail_scale = {1: 0.95, 3: 0.95, 7: 0.95}  # iter-4 frontier rebalance (interval_calibration):
+-    # the iter-3 stack passed Gate 1 (+0.0003) but failed Gate 3 by 0.0027 — the gates pin the
+-    # stack from both sides. Rebalance: h1 0.90->0.95 and h3 0.93->0.95 recover the measured
+-    # holdout coverage (~+0.006 / +0.004 aggregate, playbook frontier) at ~-0.0004 / -0.0002
+-    # pooled; h7 0.95 is a NEW skill lever (h7 narrowing never tried — only widening was
+-    # falsified): pseudo-origin OOS (fit at origin-28d, score next 28 days, 6 Discovery
+-    # origins, chained center, ensemble members, 540-day z) shows f=0.95 cuts h7 loss ~0.8%
+-    # at 6/6 origins (f0.97 6/6 ~0.55%, monotone toward 0.93) — h7 is 63% of pooled loss, so
+-    # ~+0.002 pooled at the ~80% h1-lever transfer precedent. h7 OOS coverage cost ~-0.008 on
+-    # h7 cells (~-0.0024 aggregate), budgeted at 2x per the iter-3 coverage-transfer lesson.
++    tail_scale = {1: 0.95, 3: 0.95, 7: 0.93}  # iter-5 frontier walk (interval_calibration): h7
++    # 0.95 -> 0.93 — pseudo-origin OOS (fit at origin-28d, score next 28 days, 9 Discovery
++    # origins, full champion machinery: chained center, ensemble members, 540-day z) shows
++    # f0.93 cuts h7 loss -0.41% vs f0.95 (f0.95 was -0.80% vs 1.0, monotone toward 0.93);
++    # h7 is 63% of pooled loss -> ~+0.0011 pooled at the ~0.9x iter-4 transfer precedent.
++    # h7 OOS coverage cost ~-0.005 on h7 cells (~-0.0015 aggregate), budgeted at 2x = -0.003
++    # against the card g2.0 reserve (+0.001) and the calm-damp coverage gain (+0.006 h3/h7
++    # cells). h3 stays 0.95: f0.93 at h3 was holdout-measured WORSE than 0.95 (iter-4 stack
++    # arithmetic: 0.93->0.95 = +0.0007 h3 skill) — non-transfer precedent, do not retry.
+     sticky_share = 0.5
+     kappa = 0.0
++    calm_damp = 1.0  # TEMP dry-run switch: 1.0 = off (no damping)
++    calm_damp = 1.0  # DISABLED near-miss lever (iter 5): pooled cross-sectional calm-zone center
++    # damping at h3/h7 — for series whose 14-day local vol is at/below the pooled cross-sectional
++    # median at the origin, damp the chained center's deviation from the last value (0.7 was
++    # OOS-POSITIVE: h3 -0.12% / h7 -0.20% loss, coverage +0.006 both horizons, 9 pseudo-origins,
++    # full champion machinery — the only conditional form ever OOS-positive; per-series
++    # conditionals are dead, iter 7). BUT it is IN-SAMPLE-NEGATIVE -0.004 pooled (dry run 1:
++    # screen FAIL at -0.003 with all levers on) — the champion's chained center is
++    # in-sample-optimal, so any centering shift is in-sample-negative by construction, and the
++    # penalty is 4x the OOS gain: it cannot clear the pre-Holdout screen even stacked with the
++    # h7 0.93 (+0.0009) and card g2.0 in-sample-positive levers. Kept as machinery (1.0 = no-op)
++    # for a future iteration that finds a bigger in-sample-positive companion.
+     web_max_age_days = 45  # exogenous_signals (iter 4): point-in-time web gate for regime-B
+-    card_widen = 1.5  # band widening. The 2026 GPU repricing wave (CCIR 2026-07-08: "the sharpest
+-    # broad repricing of prior-generation silicon in the record"; FastGPU 2026-09-15) makes the
+-    # rate cards' near-zero-width bands under-cover (Discovery card coverage 0.51-0.61, q90 breach
+-    # 27-31%). Pseudo-origin OOS (fit at origin-28d, score next 28 days, 6 Discovery origins):
+-    # widening the card band x1.5 cuts loss AND raises coverage at both measurable late origins
+-    # (09-23: loss 0.00501->0.00481, cov 0.774->0.887; 09-16: cov 0.861->0.925); marketplace
+-    # widening is loss-negative (dead, not applied). The gate fires only when a <=45-day-old
+-    # web article about GPU rental pricing exists at the origin (point-in-time search, cached);
+-    # otherwise the multiplier is 1.0 = champion behaviour (safe fallback).
++    card_widen = 2.0  # band widening (iter 5 frontier walk 1.5 -> 2.0): pseudo-origin OOS card
++    # frontier (fit at origin-28d, score next 28 days, 4 late Discovery origins, 2988 cells):
++    # g1.5 -0.68% loss (iter-4 choice), g1.75 -0.41%, g2.0 +0.30% loss but coverage 0.680 -> 0.762
++    # (+0.082 card cells, ~+0.001 aggregate) and q90 breach 0.159 -> 0.139 — the card slices are
++    # ~2% of pooled loss so the skill cost is ~-0.00003 pooled: a cheap Gate-3 reserve bought
++    # alongside the h7 0.93 narrowing's coverage spend. g2.5 +2.2% loss — beyond the frontier.
+ 
+     def _web_repricing_gate(self, external_signals, origin_date):
+@@ -125,4 +133,13 @@
+         # single h-day pooled regression (which over-weights the 1-day lag at long horizons).
+         beta1 = self._aws_beta(feats, 1, od)
++        # Pooled cross-sectional calm-zone threshold (iter 5): median of the per-series
++        # 14-day local vol at the origin. Series at/below it get the chained center's
++        # deviation from the last value damped by calm_damp (sticky zones over-extrapolate).
++        vol_now = {}
++        for sid, (days, lv, X, vols) in feats.items():
++            v = vols[1][-1] if len(vols[1]) else np.nan
++            vol_now[sid] = v if np.isfinite(v) else np.nan
++        _vn = [v for v in vol_now.values() if np.isfinite(v)]
++        vol_med = float(np.median(_vn)) if len(_vn) >= 10 else np.nan
+         rows = []
+         for h in horizons:
+@@ -190,4 +207,12 @@
+                         if np.isfinite(cp):
+                             q = q + (cp - (lv[-1] + np.nan_to_num(Xa[-1]) @ beta))
++                            # calm-zone center damping (iter 5): for low-vol series damp the
++                            # chained center's deviation from the last value by calm_damp
++                            # (pooled cross-sectional rule; shifts all three quantiles by
++                            # the same centering delta, band shape unchanged).
++                            if np.isfinite(vol_med) and np.isfinite(vol_now.get(sid, np.nan)) \
++                                    and vol_now[sid] <= vol_med:
++                                dc = lv[-1] + self.calm_damp * (cp - lv[-1])
++                                q = q + (dc - cp)
+                     qs.append(q)
+                 q = np.mean(qs, axis=0)

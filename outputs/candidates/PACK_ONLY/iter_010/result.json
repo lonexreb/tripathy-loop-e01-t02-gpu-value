@@ -1,0 +1,22 @@
+{
+ "ts_utc": "2026-11-15T18:00:41Z",
+ "stage": "PACK_ONLY",
+ "driver": "strands_modal:zai-org/GLM-5.3",
+ "iteration": 10,
+ "hypothesis": "MODEL-CLASS EXPLORATION (model_combination, bold): the AWS regime is rewritten from scratch as a 50/50 log-space quantile average of two forecasters from DIFFERENT classes, both fit point-in-time on the pooled AWS benchmark series (trailing 540 days): (1) gradient_boosting \u2014 sklearn HistGradientBoostingRegressor(loss='quantile') per quantile on trailing 1/3/7-day log changes + 7/14/28-day local vol, a nonlinear state->quantile map; (2) pooled_linear_momentum \u2014 the champion's class embedded (pooled OLS momentum + vol-window ensemble {7,14,28} at h3/h7 + 0.95 h1 tail narrowing + vol-scaled conformal z). Mechanism: the champion's pooled LINEAR momentum OLS cannot represent nonlinear state-conditional dynamics (vol clustering, momentum saturation, sticky zones); the GBM member captures them (alone: Discovery pooled 0.4856 vs champion 0.4462, +0.039, 10/11 origins, h1 +0.070/h3 +0.036/h7 +0.036 skill) but its tree q50 drifts on calm sticky zones (median skill 0.2438 vs 0.2831, Gate-2 risk), so the linear member anchors the calm-zone center and the calibrated band while the tree carries the pooled gain; quantile averaging is the one width lever with a confirmed-positive record (iters 8/9). Regimes B/C byte-identical to the champion. Falsified if holdout pooled <= 0.3118 (Gate 1), or holdout median < 0.2695 (Gate 2), or coverage leaves [0.74, 0.86] (Gate 3), or any horizon skill < -0.020 (Gate 4); the class-exploration mechanism is additionally falsified if the blend's holdout pooled is not above the champion's by at least +0.005 (both members' Discovery pooled gains were +0.039 and 0.0, so a transfer below +0.005 means the tree gain did not transfer out of sample).",
+ "hypothesis_family": "unspecified",
+ "model_class": "model_combination",
+ "novelty": "bold",
+ "code_sha256": "b28abbe4f033aee4f480642e3c02e7362452f0ad2cb0a905ec10bed3591e8c10",
+ "parent_code_sha256": "f30eed6c5ce08626837e86c9469ef28d52b21711781f7a0d2a0c97c4adfbda4b",
+ "candidate_dir": "outputs/candidates/PACK_ONLY/iter_010",
+ "diff_vs_champion_lines": {
+  "added": 121,
+  "removed": 93
+ },
+ "status": "RUNTIME_ERROR",
+ "error": "ValueError: not enough values to unpack (expected 5, got 4)",
+ "traceback_tail": "Traceback (most recent call last):\n  File \"/home/ubuntu/repos/AgentRSI-GPUPrice/lab/evaluator.py\", line 451, in main\n    run = ev.full_run(a.forecaster, a.phase)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/repos/AgentRSI-GPUPrice/lab/evaluator.py\", line 283, in full_run\n    out[\"discovery\"] = self.evaluate(f, list(self.cfg.discovery_origins), True)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/repos/AgentRSI-GPUPrice/lab/evaluator.py\", line 254, in evaluate\n    fc, info = self.forecast(forecaster, origins)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/repos/AgentRSI-GPUPrice/lab/evaluator.py\", line 128, in forecast\n    fc = forecaster.predict_origin(sl, o, tuple(self.cfg.horizons), sig)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/repos/AgentRSI-GPUPrice/workspace/forecaster.py\", line 197, in predict_origin\n    rows = self._aws(aws, origin_date, od, horizons) if aws else []\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/repos/AgentRSI-GPUPrice/workspace/forecaster.py\", line 148, in _aws\n    qg = self._gbm_quantiles(feats, od, h)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/repos/AgentRSI-GPUPrice/workspace/forecaster.py\", line 84, in _gbm_quantiles\n    for sid, (days, lv, X, y, m2) in per.items():\n             ^^^^^^^^^^^^^^^^^^^^\nValueError: not enough values to unpack (expected 5, got 4)",
+ "seconds": 3.8,
+ "discovery_diagnostics": null
+}

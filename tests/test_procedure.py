@@ -8,9 +8,10 @@ import pytest
 
 from lab.config import LabConfig
 from lab.memory import PROTECTED_BEGIN
-from lab.procedure import (ProcedureRegistry, admission_rule, read_jsonl, validate_card, validate_revision,
-                           write_lock)
-from lab.rsi_controller import AgentToolbox, RSIController, parse_json_object, run_generation, traced_tools
+from lab.procedure import (CONTROL_TOTAL, DEFAULT_CONTROLS, MAX_COMPONENT_CHARS, ProcedureRegistry, admission_rule,
+                           append_jsonl, procedure_controls, read_jsonl, validate_card, validate_revision, write_lock)
+from lab.rsi_controller import (REVISION_PROTOCOL, AgentToolbox, RSIController, improver_prompt, parse_json_object,
+                                run_generation, traced_tools)
 from tests.test_driver_loop import CAND, CHAMP, HOLD, _disc
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -147,7 +148,7 @@ class FakeDriver:
 
 def test_generation_admits_candidate_procedure_and_spends_one_holdout_shot(lab):
     drv = FakeDriver([lambda a: _rev(a), lambda a: _rev(a, supporting_episode_ids=["unknown"])])
-    row = run_generation(lab, drv)
+    row = run_generation(lab, drv, pairs=1)
     st = [r["status"] for r in lab.ledger_entries()]
     assert st.count("REVISION_PROPOSED") == 1 and "PROCEDURE_ADMITTED" in st and st[-1] == "GENERATION"
     assert row["active_after"] == "v001" and row["episode_scores"] == {"frozen": 0.0, "candidate": 0.01}
@@ -158,7 +159,7 @@ def test_generation_admits_candidate_procedure_and_spends_one_holdout_shot(lab):
     assert eps[1]["holdout_result"]["status"] == "REVERTED" and eps[0]["holdout_result"] is None
     exp = [r for r in lab.ledger_entries() if r.get("status") == "REVERTED"][0]
     assert exp["hypothesis_card"]["test"] == CARD["test"]
-    row2 = run_generation(lab, drv)                         # recursive step: the improver now runs under v001
+    row2 = run_generation(lab, drv, pairs=1)                         # recursive step: the improver now runs under v001
     assert row2["active_before"] == "v001" and row2["candidate_version"] is None
     assert "REVISION_INVALID" in [r["status"] for r in lab.ledger_entries()]
     assert [e["episode_id"] for e in lab.released_episodes()][-1] == "g002_frozen"
@@ -213,3 +214,76 @@ def test_backtest_output_keeps_summary_when_cells_overflow():
     assert all(3 <= len(v) < 210 for v in out["series_cells"].values())
     small = {"status": "BACKTEST_OK", "series_cells": {"s": [cell] * 5}}
     assert fit_backtest(small, 30000) is small
+
+
+def test_paired_admission_rule_needs_a_gain_larger_than_its_noise():
+    ep = lambda d: {"lock": {"screen_pass": True, "discovery_pooled_delta": d}}  # noqa: E731
+    eps = lambda *ds: [ep(d) for d in ds]  # noqa: E731
+    a = admission_rule(eps(0.01, 0.0, 0.02), eps(0.02, 0.011, 0.029))       # consistent +0.01 in every pair
+    assert a["admitted"] and a["n_pairs"] == 3 and a["pairs_won"] == 3 and abs(a["difference"] - 0.01) < 1e-6
+    b = admission_rule(eps(0.035, 0.0, 0.01), eps(0.027, 0.03, 0.0))        # mean +0.004 but se 0.013: noise
+    assert not b["admitted"] and b["difference"] > 0.001 and b["difference_se"] > b["difference"]
+    assert not admission_rule(eps(0.0, 0.0, 0.0), eps(0.0, 0.0, 0.0))["admitted"]
+    assert not admission_rule(eps(0.01), [])["admitted"]                    # missing arm keeps I_g
+
+
+def test_episode_controls_are_a_typed_bounded_revision_target(lab):
+    v0 = lab.ensure_procedure()
+    assert procedure_controls(v0) == DEFAULT_CONTROLS == procedure_controls({"components": {}})   # legacy versions
+    ctl = lambda **kw: _rev(v0, target_component="episode_controls", new_component_text=json.dumps(kw))  # noqa: E731
+    ok = ctl(max_dry_runs=6, max_backtests=3, max_analyses=4)
+    assert sum(json.loads(ok["new_component_text"]).values()) == CONTROL_TOTAL and validate_revision(ok, v0, {"iter_008"}) == []
+    assert any("sum to" in x for x in validate_revision(ctl(max_dry_runs=8, max_backtests=4, max_analyses=6), v0, set()))
+    assert any("integer in" in x for x in validate_revision(ctl(max_dry_runs=0, max_backtests=7, max_analyses=6), v0, set()))
+    assert any("exactly the keys" in x for x in validate_revision(ctl(max_dry_runs=13, max_exa=0), v0, set()))
+    assert any("identical" in x for x in validate_revision(ctl(**DEFAULT_CONTROLS), v0, set()))
+    c1 = lab.procedures.add_candidate(ok)
+    tb = AgentToolbox(lab, mode="episode", episode_id="e1", procedure_version="v001", controls=procedure_controls(c1))
+    assert (tb.max_dry_runs, tb.max_backtests, tb.max_analyses) == (6, 3, 4)
+    assert AgentToolbox(lab, controls=procedure_controls(c1)).max_analyses == 6     # Holdout-mode budgets untouched
+
+
+def test_generation_replicates_pairs_and_tests_improver_policy_through_its_follow_up(lab):
+    imp = lambda a: _rev(a, target_component="improver_policy",  # noqa: E731
+                         new_component_text="Improver policy: rank repeated failures by lost Discovery skill. " * 4)
+    imp2 = lambda a: _rev(a, target_component="improver_policy", supporting_episode_ids=["g001_frozen"],  # noqa: E731
+                          new_component_text=f"Improver policy {a['version']}: cite the worst Discovery slice first. " * 4)
+    drv = FakeDriver([imp, lambda a: _rev(a), imp2, imp2])
+    row = run_generation(lab, drv, pairs=3)
+    eps = lab.released_episodes()
+    assert [e["episode_id"] for e in eps] == ["g001_frozen", "g001_candidate", "g001_candidate_r2", "g001_frozen_r2",
+                                              "g001_frozen_r3", "g001_candidate_r3"]
+    adm = row["admission"]
+    assert adm["n_pairs"] == 3 and adm["admitted"] and adm["candidate_scores"] == [0.01] * 3
+    v1 = lab.procedures.active()
+    assert v1["version"] == "v001" and v1["revision"]["target_component"] == "improver_policy"
+    assert v1["revision"]["follow_up_revision"]["target_component"] == "research_policy"
+    assert "rank repeated failures" in v1["components"]["improver_policy"]
+    assert "profile_pack first" in v1["components"]["research_policy"] == lab.cfg.prompt_path.read_text()
+    assert sum(e["holdout_result"] is not None for e in eps) == 1          # still one Holdout shot per generation
+    row2 = run_generation(lab, drv, pairs=3)       # an improver_policy change with no measurable follow-up is refused
+    assert row2["candidate_version"] is None and len(lab.released_episodes()) == 7
+    assert "must propose a research_policy" in [r for r in lab.ledger_entries() if r["status"] == "REVISION_INVALID"][-1]["error"]
+
+
+def test_improver_digest_stays_valid_json_and_carries_measured_procedural_knowledge(lab):
+    lab.ensure_procedure()
+    trace = [{"tool": "dry_run_discovery", "status": "DRY_RUN_OK", "args": {"note": "x" * 120}}] * 60
+    for i in range(12):
+        mc = "gradient_boosting" if i % 2 else "pooled_linear_momentum"
+        append_jsonl(lab.episodes_path, {"episode_id": f"g{i:03d}_frozen", "generation": i, "procedure_version": "v000",
+                                         "score": 0.03 if i % 2 else 0.0, "trace": trace, "tool_counts": {},
+                                         "lock": {"model_class": mc, "hypothesis": "h" * 1500}, "holdout_result": None})
+    lab._ledger({"status": "REVISION_INVALID", "generation": 1, "parent_version": "v000", "error": "too long"})
+    d = lab.memory_digest()
+    pm = d["procedural_memory"]
+    assert pm["episode_scores_by_model_class"]["gradient_boosting"]["mean_score"] == 0.03
+    assert pm["episode_scores_by_procedure"]["v000"]["n"] == 12 and pm["episode_scores_by_procedure"]["v000"]["sd_score"] > 0
+    assert pm["invalid_revisions"][0]["error"] == "too long" and pm["episode_controls"] == DEFAULT_CONTROLS
+    assert "trace" not in d["episode_memory"][0] and d["episode_memory"][0]["tool_sequence"].startswith("dry_run_discovery:DRY_RUN_OK")
+    assert len(json.dumps(lab.released_episodes())) > 100_000              # the raw episodes would not fit in 45k
+    body = improver_prompt(lab.procedures.active(), d).split("evidence)\n")[1].split("\n\nPropose")[0]
+    assert json.loads(body)["procedural_memory"]["active_version"] == "v000" and "truncated" not in json.loads(body)
+    rec = json.loads(AgentToolbox(lab, mode="episode", episode_id="e").recall_memory())
+    assert rec["procedural_memory"]["episode_scores_by_model_class"] and "experiment_registry" in rec
+    assert str(MAX_COMPONENT_CHARS) in REVISION_PROTOCOL and "episode_controls" in REVISION_PROTOCOL

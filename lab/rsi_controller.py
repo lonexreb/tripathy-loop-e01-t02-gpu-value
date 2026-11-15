@@ -67,6 +67,12 @@ from lab.memory import (
     verified_novelty,
 )
 from lab.procedure import (
+    ADMISSION_PAIRS,
+    CONTROL_BOUNDS,
+    CONTROL_TOTAL,
+    MAX_COMPONENT_CHARS,
+    MIN_COMPONENT_CHARS,
+    procedure_controls,
     HYPOTHESIS_CARD_FIELDS,
     ProcedureRegistry,
     admission_rule,
@@ -751,14 +757,23 @@ class RSIController:
 
     def memory_digest(self, n_episodes: int = 12, n_evidence: int = 20) -> dict:
         """The three memories, time-filtered by construction (episodes and evidence only use Discovery-era data and
-        released verdicts): procedural (I_g lineage), episodic (research episodes + experiment registry), evidence."""
+        released verdicts): procedural (I_g lineage, measured episode scores per version and per model class, rejected
+        revision objects), episodic (research episodes + experiment registry), evidence."""
         active = self.ensure_procedure()
         lineage = [{k: v.get(k) for k in ("version", "parent_version", "status", "admission")}
                    | {"change": (v.get("revision") or {}).get("change"),
                       "target_component": (v.get("revision") or {}).get("target_component")}
                    for v in self.procedures.versions()]
-        return {"procedural_memory": {"active_version": active["version"], "lineage": lineage},
-                "episode_memory": self.released_episodes()[-n_episodes:],
+        eps = self.released_episodes()
+        invalid = [{"generation": r.get("generation"), "parent_version": r.get("parent_version"), "error": r.get("error")}
+                   for r in self.ledger_entries(self.cfg.stage) if r.get("status") == "REVISION_INVALID"]
+        return {"procedural_memory": {"active_version": active["version"], "lineage": lineage,
+                                      "episode_controls": procedure_controls(active),
+                                      "episode_scores_by_procedure": episode_stats(eps, lambda e: e.get("procedure_version")),
+                                      "episode_scores_by_model_class": episode_stats(
+                                          eps, lambda e: (e.get("lock") or {}).get("model_class") or "no_lock"),
+                                      "invalid_revisions": invalid[-5:]},
+                "episode_memory": [compact_episode(e) for e in eps[-n_episodes:]],
                 "experiment_registry": self.experiment_registry(),
                 "evidence_memory": read_jsonl(self.evidence_path)[-n_evidence:]}
 
@@ -1136,7 +1151,8 @@ class StrandsAgentDriver:
         from strands import Agent
         from strands.types.exceptions import MaxTokensReachedException
 
-        tb = AgentToolbox(ctrl, mode="episode", episode_id=episode_id, procedure_version=version["version"])
+        tb = AgentToolbox(ctrl, mode="episode", episode_id=episode_id, procedure_version=version["version"],
+                          controls=procedure_controls(version))
         names = list(AgentToolbox.EPISODE_TOOL_NAMES) + (["search_exa_signals"] if ctrl.cfg.enable_exa else [])
         agent = Agent(model=self.model, tools=traced_tools(tb, names), callback_handler=None,
                       system_prompt=AGENT_CONTRACT + "\n\n" + EPISODE_PROTOCOL + "\n\n"
@@ -1195,7 +1211,9 @@ class StrandsAgentDriver:
                 out = str(agent(prompt))
             except MaxTokensReachedException:
                 self._raise_output_budget()
-                prompt = "Output limit hit. Reply with only the JSON object; keep new_component_text under 8000 characters."
+                prompt = ("Output limit hit. Reply with only the JSON object; new_component_text must still be the "
+                          f"COMPLETE component (at most {MAX_COMPONENT_CHARS} characters), so shorten the component "
+                          "itself rather than truncating it.")
                 continue
             rev = parse_json_object(out)
             problems = validate_revision(rev, active, known_ids)
@@ -1291,7 +1309,8 @@ class AgentToolbox:
                                                                                                  "commit_forecast")
 
     def __init__(self, ctrl: RSIController, max_dry_runs: int | None = None, max_analyses: int | None = None,
-                 max_submissions: int = 1, mode: str = "holdout", episode_id: str = "", procedure_version: str = ""):
+                 max_submissions: int = 1, mode: str = "holdout", episode_id: str = "", procedure_version: str = "",
+                 controls: dict | None = None):
         self.ctrl = ctrl
         self.mode, self.episode_id, self.procedure_version = mode, episode_id, procedure_version
         self.lock: dict | None = None
@@ -1317,6 +1336,11 @@ class AgentToolbox:
         self.max_submissions = max_submissions
         self.n_dry_runs = self.n_analyses = self.n_playbook_updates = self.n_refunds = 0
         self.max_playbook_updates = int(os.environ.get("RSI_MAX_PLAYBOOK_UPDATES", "2"))
+        if mode == "episode" and controls:   # I_g's typed budgets; an operator env override still wins for both arms
+            for k, env in (("max_dry_runs", "RSI_EPISODE_DRY_RUNS"), ("max_backtests", "RSI_MAX_BACKTESTS"),
+                           ("max_analyses", "RSI_MAX_ANALYSES")):
+                if env not in os.environ and k in controls:
+                    setattr(self, k, int(controls[k]))
         self.builds_on: int | None = None
         self.results: list[dict] = []
 
@@ -1510,7 +1534,7 @@ class AgentToolbox:
         episode memory (past research episodes: procedure version, tools used, hypothesis card, locked Discovery score,
         Holdout outcome; failed attempts included), the experiment registry and evidence memory (past Exa searches,
         their sources and the hypotheses they informed)."""
-        return clip_json(self.ctrl.memory_digest(), 30000)
+        return fit_json(self.ctrl.memory_digest(), 30000, DIGEST_SHRINK_ORDER)
 
     def commit_forecast(self, hypothesis: str, mechanism: str, expected_observation: str, competing_explanation: str,
                         test: str, rejection_condition: str, model_class: str = "", hypothesis_family: str = "",
@@ -1560,7 +1584,7 @@ evaluation. Keep your reasoning short and act through tools."""
 
 REVISION_PROTOCOL = """
 OUTPUT: reply with exactly one JSON object (optionally in a ```json fence) and nothing else:
-{"parent_version": "<active version>", "target_component": "research_policy" | "improver_policy",
+{"parent_version": "<active version>", "target_component": "research_policy" | "improver_policy" | "episode_controls",
  "proposed_by": "improver_<active version>", "change": "<the specific bounded edit>",
  "supporting_episode_ids": ["<episode ids or iter_NNN experiments that show the failure>"],
  "expected_behavior_change": "<observable difference in the next episode's actions or experiments>",
@@ -1571,7 +1595,15 @@ research_policy is the scientist's playbook for research episodes (the lab re-in
 improver_policy is the instruction set you are following now, so revising it changes how the next improvement is
 proposed. The lab admits the new version only if, from the same champion and budget, an episode run under it locks a
 forecaster that beats the frozen version's episode on Discovery by the fixed margin. Change one thing.
-""".strip()
+""".strip() + f"""
+A text component must be {MIN_COMPONENT_CHARS}..{MAX_COMPONENT_CHARS} characters. episode_controls is the per-episode
+tool budget: its new_component_text is a JSON object with integer max_dry_runs, max_backtests and max_analyses, each
+inside {CONTROL_BOUNDS}, summing to exactly {CONTROL_TOTAL} (you reallocate the budget, you cannot enlarge it).
+Admission is a fixed paired rule: both versions run the same number of episodes, paired in order, and the mean paired
+difference of the locked Discovery scores must exceed the margin by more than its standard error. An improver_policy
+revision cannot change an episode by itself, so the lab then asks the revised improver for one research_policy or
+episode_controls revision and tests and admits the two together. procedural_memory holds the lab-measured episode
+scores per procedure version and model class and the errors of earlier invalid revision objects."""
 
 NUDGE_COMMIT = ("You have not called commit_forecast. If a dry-run candidate beats the champion, finish it and call "
                 "commit_forecast with the full hypothesis card; otherwise reply with a two-line summary and stop.")
@@ -1583,7 +1615,7 @@ def improver_prompt(active: dict, digest: dict) -> str:
         "## Current research_policy\n" + active["components"]["research_policy"],
         "## Current improver_policy\n" + active["components"]["improver_policy"],
         "## Released memory (procedural lineage, research episodes, experiment registry, evidence)\n"
-        + clip_json(digest, 45000),
+        + fit_json(digest, 45000, DIGEST_SHRINK_ORDER),
         "Propose the one revision now (JSON object only).",
     ])
 
@@ -1625,6 +1657,35 @@ def traced_tools(tb: AgentToolbox, names: list[str]) -> list:
     return [wrap(n) for n in names]
 
 
+DIGEST_SHRINK_ORDER = [("episode_memory", "drop_old"), ("evidence_memory", "drop_old"),
+                       ("experiment_registry", "drop_old")]
+
+
+def compact_episode(e: dict) -> dict:
+    """An episode for the memory digest: the ordered tool trace becomes one short string (tool[:status] > ...)."""
+    out = {k: v for k, v in e.items() if k != "trace"}
+    out["tool_sequence"] = " > ".join(t["tool"] + (f":{t['status']}" if t.get("status") else "")
+                                      for t in e.get("trace") or [])[:1500]
+    return out
+
+
+def episode_stats(eps: list[dict], key) -> dict:
+    """Measured episode outcomes grouped by key(episode): n, locked-score mean/sd/list and Holdout verdicts. This is
+    the lab-computed (never agent-written) record of which procedure versions and model classes worked."""
+    out: dict[str, dict] = {}
+    for e in eps:
+        g = out.setdefault(str(key(e)), {"n": 0, "scores": [], "holdout": []})
+        g["n"] += 1
+        g["scores"].append(e.get("score") or 0.0)
+        if e.get("holdout_result"):
+            g["holdout"].append(e["holdout_result"].get("status"))
+    for g in out.values():
+        m = sum(g["scores"]) / g["n"]
+        g["mean_score"] = round(m, 6)
+        g["sd_score"] = round((sum((x - m) ** 2 for x in g["scores"]) / (g["n"] - 1)) ** 0.5, 6) if g["n"] > 1 else None
+    return out
+
+
 def _compact_lock(lock: dict | None) -> dict | None:
     if not lock:
         return None
@@ -1640,45 +1701,59 @@ def card_markdown(card: dict, episode_id: str) -> str:
             "\n".join(f"- **{k.replace('_', ' ')}:** {card.get(k, '')}" for k in HYPOTHESIS_CARD_FIELDS))
 
 
-def run_generation(ctrl: RSIController, driver) -> dict:
-    """One Architecture-1 generation: improver proposes I_{g+1} -> frozen I_g and candidate I_{g+1} each run one
-    research episode from the same champion and budget -> fixed admission rule -> the best lock gets the single
+def run_generation(ctrl: RSIController, driver, pairs: int | None = None) -> dict:
+    """One Architecture-1 generation: improver proposes I_{g+1} -> frozen I_g and candidate I_{g+1} each run `pairs`
+    research episodes (RSI_ADMISSION_PAIRS, default ADMISSION_PAIRS; one frozen episode when there is no candidate)
+    from the same champion and budget -> fixed paired admission rule -> the best lock gets the single
     Holdout evaluation (Holdout gates decide F_{g+1}) -> episode, procedural and lineage memory are written."""
     t0 = time.time()
     active = ctrl.ensure_procedure()
     g = ctrl.next_generation()
     known = ({str(e["episode_id"]) for e in ctrl.released_episodes()}
              | {f"iter_{int(r['iteration']):03d}" for r in ctrl.experiment_registry() if r.get("iteration") is not None})
+    follow_up = None
     try:
         rev, problems = driver.propose_revision(ctrl, active, ctrl.memory_digest(), known)
+        if rev and rev["target_component"] == "improver_policy":
+            # Episodes never read improver_policy, so the revised improver must show its effect: it proposes one
+            # testable revision, and the pair is admitted or rejected together by the same episode comparison.
+            follow_up, problems = driver.propose_revision(ctrl, ctrl.procedures.preview(rev), ctrl.memory_digest(), known)
+            if follow_up and follow_up["target_component"] == "improver_policy":
+                follow_up, problems = None, ["the revised improver_policy must propose a research_policy or "
+                                             "episode_controls revision so that its effect can be measured"]
+            rev = rev if follow_up else None
     except Exception as e:  # an improver failure still lets the frozen procedure run its episode
         rev, problems = None, [f"{type(e).__name__}: {e}"[:800]]
-    cand = ctrl.procedures.add_candidate(rev) if rev else None
+    cand = ctrl.procedures.add_candidate(rev, follow_up) if rev else None
     ctrl._ledger({"status": "REVISION_PROPOSED" if cand else "REVISION_INVALID", "generation": g,
                   "parent_version": active["version"], "procedure_version": cand and cand["version"],
                   "revision": cand and cand["revision"], "error": "; ".join(problems)[:1500] or None})
     champion_sha = ctrl.champion["code_sha256"]
+    n_pairs = max(1, int(pairs if pairs is not None else os.environ.get("RSI_ADMISSION_PAIRS", ADMISSION_PAIRS)))
     episodes, toolboxes = {}, {}
-    for arm, ver in [("frozen", active)] + ([("candidate", cand)] if cand else []):
-        eid = f"g{g:03d}_{arm}"
-        err, tb = None, None
-        try:
-            tb = driver.run_episode(ctrl, ver, eid, arm)
-        except Exception as e:
-            err = f"{type(e).__name__}: {e}"[:800]
-        restore_champion_file(ctrl)
-        toolboxes[arm] = tb
-        ep = {"episode_id": eid, "generation": g, "arm": arm, "procedure_version": ver["version"],
-              "stage": ctrl.cfg.stage, "champion_code_sha256": champion_sha, "error": err,
-              "tool_counts": dict(collections.Counter(t["tool"] for t in (tb.trace if tb else []))),
-              "trace": (tb.trace if tb else [])[:60], "lock": _compact_lock(tb.lock if tb else None)}
-        ep["score"] = round(episode_score(ep), 6)
-        episodes[arm] = ep
+    arms = [("frozen", active)] + ([("candidate", cand)] if cand else [])
+    for rep in range(1, (n_pairs if cand else 1) + 1):
+        for arm, ver in arms if rep % 2 else arms[::-1]:   # alternate which arm runs first
+            eid = f"g{g:03d}_{arm}" + (f"_r{rep}" if rep > 1 else "")
+            err, tb = None, None
+            try:
+                tb = driver.run_episode(ctrl, ver, eid, arm)
+            except Exception as e:
+                err = f"{type(e).__name__}: {e}"[:800]
+            restore_champion_file(ctrl)
+            toolboxes[eid] = tb
+            ep = {"episode_id": eid, "generation": g, "arm": arm, "replicate": rep, "procedure_version": ver["version"],
+                  "stage": ctrl.cfg.stage, "champion_code_sha256": champion_sha, "error": err,
+                  "tool_counts": dict(collections.Counter(t["tool"] for t in (tb.trace if tb else []))),
+                  "trace": (tb.trace if tb else [])[:60], "lock": _compact_lock(tb.lock if tb else None)}
+            ep["score"] = round(episode_score(ep), 6)
+            episodes[eid] = ep
+    by_arm = {a: [e for e in episodes.values() if e["arm"] == a] for a, _ in arms}
     admission = None
     if cand:
-        admission = admission_rule(episodes["frozen"], episodes["candidate"])
+        admission = admission_rule(by_arm["frozen"], by_arm["candidate"])
         ctrl.procedures.decide(cand["version"], admission)
-        if admission["admitted"] and cand["revision"]["target_component"] == "research_policy":
+        if admission["admitted"] and cand["components"]["research_policy"] != active["components"]["research_policy"]:
             ctrl.cfg.prompt_path.write_text(cand["components"]["research_policy"])
         ctrl._ledger({"status": "PROCEDURE_ADMITTED" if admission["admitted"] else "PROCEDURE_REJECTED",
                       "generation": g, "procedure_version": cand["version"], "parent_version": active["version"],
@@ -1686,7 +1761,7 @@ def run_generation(ctrl: RSIController, driver) -> dict:
     best = max((e for e in episodes.values() if episode_score(e) > 0), key=episode_score, default=None)
     holdout = None
     if best:
-        lock = toolboxes[best["arm"]].lock
+        lock = toolboxes[best["episode_id"]].lock
         code = (ctrl.locks_dir / lock["code_file"]).read_text()
         theory = card_markdown(lock["hypothesis_card"], best["episode_id"])
         if lock.get("market_insight"):
@@ -1702,7 +1777,8 @@ def run_generation(ctrl: RSIController, driver) -> dict:
     row = ctrl._ledger({"status": "GENERATION", "generation": g, "active_before": active["version"],
                         "candidate_version": cand and cand["version"], "admission": admission,
                         "active_after": ctrl.procedures.active()["version"],
-                        "episode_scores": {a: e["score"] for a, e in episodes.items()},
+                        "episode_scores": {a: round(sum(e["score"] for e in es) / len(es), 6) for a, es in by_arm.items()},
+                        "episode_scores_all": {i: e["score"] for i, e in episodes.items()},
                         "holdout_shot": holdout, "seconds": round(time.time() - t0, 1)})
     ctrl.write_procedure_report()
     return row

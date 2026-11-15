@@ -227,6 +227,55 @@ class PointInTimeSandbox:
         cache[key] = hits
         return hits
 
+    def fetch_page_as_of(self, url: str, origin_date: str, max_chars: int = 60_000) -> dict:
+        """Point-in-time web page: the newest Wayback Machine capture of `url` taken on or before origin_date, as
+        text, with the capture timestamp, snapshot URL and content hash (cached in outputs/wayback_cache.jsonl). A
+        capture after the origin is never returned. Lab-side only: forecaster code reaches it through
+        external_signals.page, pinned to its origin. Requires the external-evidence stages (enable_exa)."""
+        if not self.cfg.enable_exa:
+            raise PermissionError("point-in-time pages are only available in the external-evidence stages")
+        dt.date.fromisoformat(origin_date)
+        key = wayback_cache_key(url, origin_date)
+        cache = self._wayback_cache()
+        if key in cache:
+            return cache[key]
+        if self.cfg.exa_cache_only:
+            return {"ok": False, "url": url, "as_of": origin_date, "error": "cache-only mode: snapshot not cached"}
+        import httpx
+
+        stamp = origin_date.replace("-", "")
+        r = httpx.get(WAYBACK_AVAILABLE, params={"url": url, "timestamp": stamp + "235959"}, timeout=60)
+        r.raise_for_status()
+        snap = (r.json().get("archived_snapshots") or {}).get("closest") or {}
+        ts = str(snap.get("timestamp") or "")
+        if not snap.get("available") or len(ts) < 8 or ts[:8] > stamp:
+            rec = {"ok": False, "url": url, "as_of": origin_date,
+                   "error": "no Wayback Machine capture on or before the origin date"}
+        else:
+            snap_url = f"https://web.archive.org/web/{ts}id_/{url}"
+            page = httpx.get(snap_url, timeout=90, follow_redirects=True)
+            page.raise_for_status()
+            text = html_to_text(page.text)[:max_chars]
+            rec = {"ok": True, "url": url, "as_of": origin_date, "snapshot_url": snap_url,
+                   "captured_at": f"{ts[:4]}-{ts[4:6]}-{ts[6:8]}T{ts[8:10] or '00'}:{ts[10:12] or '00'}:{ts[12:14] or '00'}Z",
+                   "sha256": hashlib.sha256(text.encode()).hexdigest(), "n_chars": len(text), "text": text}
+        self.cfg.wayback_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.cfg.wayback_cache_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"key": key, "retrieved_at_utc": dt.datetime.now(dt.timezone.utc).replace(
+                microsecond=0).isoformat(), **rec}, sort_keys=True) + "\n")
+        cache[key] = rec
+        return rec
+
+    def _wayback_cache(self) -> dict[str, dict]:
+        if not hasattr(self, "_wayback_mem"):
+            self._wayback_mem = {}
+            if self.cfg.wayback_cache_path.exists():
+                for line in self.cfg.wayback_cache_path.read_text(encoding="utf-8").splitlines():
+                    if line.strip():
+                        rec = json.loads(line)
+                        self._wayback_mem[rec.pop("key")] = {k: v for k, v in rec.items() if k != "retrieved_at_utc"}
+        return self._wayback_mem
+
     def _exa_cache(self) -> dict[str, list[dict]]:
         if not hasattr(self, "_exa_mem"):
             self._exa_mem = {}
@@ -246,6 +295,30 @@ class ExaSignals:
 
     def search(self, query: str, domains: list[str] | None = None, num_results: int = 8) -> list[dict]:
         return self._sandbox.search_exa_point_in_time(query, self.origin_date, domains, num_results)
+
+    def page(self, url: str, max_chars: int = 20_000) -> dict:
+        """Text of `url` as captured by the Wayback Machine on or before this origin (ok=False when none exists)."""
+        rec = dict(self._sandbox.fetch_page_as_of(url, self.origin_date, max_chars))
+        rec["text"] = (rec.get("text") or "")[:max_chars]
+        return rec
+
+
+WAYBACK_AVAILABLE = "https://archive.org/wayback/available"
+
+
+def wayback_cache_key(url: str, origin_date: str) -> str:
+    return hashlib.sha256(json.dumps([url.strip(), origin_date]).encode()).hexdigest()[:24]
+
+
+def html_to_text(html: str) -> str:
+    """Visible text of an HTML page: scripts/styles dropped, tags removed, whitespace collapsed."""
+    t = re.sub(r"(?is)<(script|style|noscript)\b.*?</\1>", " ", html or "")
+    t = re.sub(r"(?s)<!--.*?-->", " ", t)
+    t = re.sub(r"(?i)<br\s*/?>|</(p|div|tr|li|h[1-6]|table|section)>", "\n", t)
+    t = re.sub(r"<[^>]+>", " ", t)
+    t = t.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"')
+    t = re.sub(r"[ \t\r\f\v]+", " ", t)
+    return "\n".join(x for x in (ln.strip() for ln in t.split("\n")) if x)
 
 
 def exa_cache_key(query: str, origin_date: str, domains: list[str] | None, num_results: int) -> str:

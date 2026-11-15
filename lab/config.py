@@ -124,6 +124,10 @@ class LabConfig:
     def exa_cache_path(self) -> Path:
         return self.outputs_dir / "exa_cache.jsonl"
 
+    @property
+    def wayback_cache_path(self) -> Path:
+        return self.outputs_dir / "wayback_cache.jsonl"
+
     def with_(self, **kw) -> "LabConfig":
         return replace(self, **kw)
 

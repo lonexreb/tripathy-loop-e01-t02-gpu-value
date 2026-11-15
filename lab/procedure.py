@@ -27,6 +27,14 @@ CONTROL_TOTAL = sum(DEFAULT_CONTROLS.values())
 REVISION_FIELDS = ("parent_version", "target_component", "proposed_by", "change", "supporting_episode_ids",
                    "expected_behavior_change", "development_comparison", "rejection_condition", "status")
 HYPOTHESIS_CARD_FIELDS = ("mechanism", "expected_observation", "competing_explanation", "test", "rejection_condition")
+# Introspection. A generation opens with the scientist's own diagnosis of what limits skill (data quality, missing
+# data or tools, compute, ideas); the improver turns needs that no playbook edit can satisfy into typed capability
+# requests. The lab records both verbatim, self-serves the safe kinds and queues the rest for a maintainer: the
+# research agenda, including data sourcing and cleaning, is the model's, while scoring and partitions stay fixed.
+DIAGNOSIS_FIELDS = ("limiting_factors", "data_quality_issues", "data_needed", "tools_needed", "hypotheses")
+CAPABILITY_KINDS = ("data_source", "tool", "library", "budget", "diagnostic", "compute", "other")
+CAPABILITY_FIELDS = ("kind", "request", "evidence", "expected_effect", "how_to_test")
+SELF_SERVICE_KINDS = ("data_source",)   # a dated URL -> point-in-time Wayback snapshot, served by the lab
 MIN_COMPONENT_CHARS, MAX_COMPONENT_CHARS = 200, 24_000
 ADMISSION_MARGIN = 0.001   # mean paired difference (candidate - frozen locked score) must exceed this (pooled skill)
 ADMISSION_PAIRS = 3        # default number of frozen/candidate episode pairs per admission comparison
@@ -39,7 +47,59 @@ searched without a testable question, hypotheses without a rejection condition, 
 Holdout). Propose ONE bounded change, explain the behavior it should alter, and specify a comparison that could reject
 it. You may revise the researcher instructions (research_policy) or these improver instructions (improver_policy).
 Cite the episode ids that support the change. Never claim the change is proved: the lab runs the comparison.
+Read the scientist's diagnoses (procedural_memory.diagnoses) first. When they name a need that no playbook edit can
+satisfy (a data source, a tool, a library, compute, a diagnostic the lab does not provide), emit it as a typed
+capability_request with the evidence behind it; the lab serves what it safely can and queues the rest, and repeated
+unmet requests are a finding in their own right.
 """.strip()
+
+
+def _short(x, n: int = 15) -> bool:
+    return len(x if isinstance(x, str) else json.dumps(x)) < n
+
+
+def validate_diagnosis(d) -> list[str]:
+    """Problems with a scientist's self-assessment (empty list = recorded as the generation's diagnosis)."""
+    if not isinstance(d, dict):
+        return ["diagnosis must be a JSON object"]
+    p = []
+    for k in DIAGNOSIS_FIELDS:
+        v = d.get(k)
+        if v is None:
+            p.append(f"missing field {k} (use an empty list when there is nothing to report)")
+        elif not isinstance(v, list):
+            p.append(f"{k} must be a list")
+        else:
+            p += [f"{k}[{i}] is too short to be actionable (>= 15 characters)" for i, x in enumerate(v) if _short(x)]
+    if isinstance(d.get("limiting_factors"), list) and not d["limiting_factors"]:
+        p.append("limiting_factors must name at least one factor, with the evidence for it")
+    if all(isinstance(d.get(k), list) for k in DIAGNOSIS_FIELDS) and not any(
+            d.get(k) for k in ("data_needed", "tools_needed", "hypotheses")):
+        p.append("state at least one need (data_needed / tools_needed) or hypothesis")
+    return p
+
+
+def validate_capability_request(req) -> list[str]:
+    """Problems with a typed capability request emitted by the improver."""
+    if not isinstance(req, dict):
+        return ["capability request must be a JSON object"]
+    p = [f"missing field {k}" for k in CAPABILITY_FIELDS if req.get(k) in (None, "", [])]
+    if req.get("kind") and req["kind"] not in CAPABILITY_KINDS:
+        p.append(f"kind must be one of {CAPABILITY_KINDS}")
+    if req.get("request") and _short(req["request"], 20):
+        p.append("request must say concretely what is needed (>= 20 characters)")
+    if req.get("evidence") is not None and not isinstance(req["evidence"], list):
+        p.append("evidence must be a list of episode ids, diagnosis ids or measured facts")
+    url = req.get("url")
+    if url is not None and not (isinstance(url, str) and url.startswith(("http://", "https://"))):
+        p.append("url must start with http:// or https://")
+    as_of = req.get("as_of")
+    if as_of is not None:
+        try:
+            dt.date.fromisoformat(str(as_of))
+        except ValueError:
+            p.append("as_of must be an ISO date (YYYY-MM-DD)")
+    return p
 
 
 def utc_now() -> str:

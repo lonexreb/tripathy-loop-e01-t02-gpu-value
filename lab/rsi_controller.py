@@ -68,6 +68,10 @@ from lab.memory import (
 )
 from lab.procedure import (
     ADMISSION_PAIRS,
+    DIAGNOSIS_FIELDS,
+    SELF_SERVICE_KINDS,
+    validate_capability_request,
+    validate_diagnosis,
     CONTROL_BOUNDS,
     CONTROL_TOTAL,
     MAX_COMPONENT_CHARS,
@@ -776,6 +780,103 @@ class RSIController:
     def episodes_path(self) -> Path:
         return self.memory_dir / "episodes.jsonl"
 
+    @property
+    def diagnoses_path(self) -> Path:
+        return self.memory_dir / "diagnoses.jsonl"
+
+    @property
+    def requests_path(self) -> Path:
+        return self.procedures.root / "capability_requests.jsonl"
+
+    # ------------------------------------------------------------------ introspection (model-owned agenda) ----
+    def record_diagnosis(self, generation: int, procedure_version: str, diagnosis: dict | None,
+                         tool_counts: dict | None = None, error: str | None = None) -> dict:
+        """Store the scientist's self-assessment for a generation verbatim (episodic memory) and ledger it."""
+        rec = {"diagnosis_id": f"d{generation:03d}", "stage": self.cfg.stage, "generation": generation,
+               "procedure_version": procedure_version, "tool_counts": tool_counts or {},
+               "diagnosis": diagnosis, "error": error}
+        append_jsonl(self.diagnoses_path, rec)
+        self._ledger({"status": "DIAGNOSIS" if diagnosis else "DIAGNOSIS_MISSING", "generation": generation,
+                      "procedure_version": procedure_version, "diagnosis": diagnosis, "error": error})
+        return rec
+
+    def diagnoses(self) -> list[dict]:
+        return read_jsonl(self.diagnoses_path)
+
+    def capability_requests(self) -> list[dict]:
+        return read_jsonl(self.requests_path)
+
+    def record_capability_requests(self, reqs, proposed_by: str, generation: int | None = None) -> list[dict]:
+        """Typed requests from the improver. Each is validated and stored with what the lab did: `self_served`
+        (data_source with a URL: a point-in-time Wayback snapshot was fetched and is now available to episodes),
+        `redirected` (budget: episode_controls revisions already cover it), `queued_for_maintainer` (anything that
+        would change scoring, partitions, network policy or needs code), or `invalid`. A request repeating an earlier
+        one carries `repeat_of` and `times_requested`, so persistently unmet needs are visible in the lineage."""
+        if not isinstance(reqs, list):
+            reqs = [reqs] if reqs else []
+        earlier = self.capability_requests()
+        out = []
+        for req in reqs[:4]:
+            problems = validate_capability_request(req)
+            req = req if isinstance(req, dict) else {"raw": req}
+            key = re.sub(r"\W+", " ", str(req.get("request") or "")).strip().lower()[:160]
+            same = [r for r in earlier + out if r.get("request_key") == key and key]
+            rec = {"request_id": f"cr{len(earlier) + len(out) + 1:03d}", "stage": self.cfg.stage, "generation": generation,
+                   "proposed_by": proposed_by, "request_key": key, "repeat_of": same[0]["request_id"] if same else None,
+                   "times_requested": len(same) + 1,
+                   **{k: req.get(k) for k in ("kind", "request", "evidence", "expected_effect", "how_to_test", "url", "as_of")}}
+            if problems:
+                rec.update(status="invalid", problems=problems)
+            elif req["kind"] == "budget":
+                rec.update(status="redirected", note="per-episode budgets are the episode_controls component: propose "
+                                                    "an episode_controls revision instead")
+            elif req["kind"] in SELF_SERVICE_KINDS and req.get("url"):
+                rec.update(self._self_serve_page(req))
+            else:
+                rec.update(status="queued_for_maintainer",
+                           note="needs a lab change (scoring, partitions, network policy or new code): recorded as a "
+                                "spec for the maintainer; the lab never lets the model change those itself")
+            append_jsonl(self.requests_path, rec)
+            self._ledger({"status": "CAPABILITY_REQUEST", "generation": generation, "request": rec})
+            out.append(rec)
+        return out
+
+    def _self_serve_page(self, req: dict) -> dict:
+        as_of = str(req.get("as_of") or self.cfg.discovery_origins[-1])
+        if as_of > self.cfg.discovery_origins[-1]:
+            return {"status": "queued_for_maintainer", "note": f"as_of must be <= the last Discovery origin "
+                                                                f"{self.cfg.discovery_origins[-1]} (Holdout isolation)"}
+        try:
+            page = self.fetch_page_as_of(req["url"], as_of)
+        except Exception as e:  # network or policy failure: the request stays open
+            return {"status": "queued_for_maintainer", "note": f"snapshot fetch failed: {type(e).__name__}: {e}"[:400]}
+        if not page.get("ok"):
+            return {"status": "queued_for_maintainer", "note": f"no point-in-time snapshot: {page.get('error')}"[:400]}
+        return {"status": "self_served", "captured_at": page.get("captured_at"), "snapshot_url": page.get("snapshot_url"),
+                "sha256": page.get("sha256"), "n_chars": page.get("n_chars"),
+                "note": "available to research episodes via fetch_page_as_of(url, origin) and to forecasters via "
+                        "external_signals.page(url) (each pinned to its origin)"}
+
+    def fetch_page_as_of(self, url: str, origin_date: str, max_chars: int = 60_000) -> dict:
+        """Point-in-time page (Wayback capture on or before origin_date <= last Discovery origin); lab-side."""
+        if not self.cfg.enable_exa:
+            raise PermissionError("point-in-time pages are only available in the external-evidence stages")
+        last = self.cfg.discovery_origins[-1]
+        if origin_date > last:
+            raise PermissionError(f"agent research fetches must use origin_date <= {last} (Discovery)")
+        from lab.sandbox import PointInTimeSandbox
+        return PointInTimeSandbox(self.cfg).fetch_page_as_of(url, origin_date, max_chars)
+
+    def external_pages(self) -> list[dict]:
+        """Data sources the model asked for and the lab served (point-in-time snapshots)."""
+        seen, out = set(), []
+        for r in self.capability_requests():
+            if r.get("status") == "self_served" and r.get("url") and r["url"] not in seen:
+                seen.add(r["url"])
+                out.append({"url": r["url"], "as_of": r.get("as_of"), "captured_at": r.get("captured_at"),
+                            "requested_by": r.get("proposed_by")})
+        return out
+
     def ensure_procedure(self) -> dict:
         """Seed I_0 from the current playbook on first use; return the active procedure version."""
         self._ensure_protected_playbook()
@@ -838,7 +939,10 @@ class RSIController:
                                       "episode_scores_by_procedure": episode_stats(eps, lambda e: e.get("procedure_version")),
                                       "episode_scores_by_model_class": episode_stats(
                                           eps, lambda e: (e.get("lock") or {}).get("model_class") or "no_lock"),
-                                      "invalid_revisions": invalid[-5:]},
+                                      "invalid_revisions": invalid[-5:],
+                                      "diagnoses": [compact_diagnosis(d) for d in self.diagnoses()[-6:]],
+                                      "capability_requests": [compact_request(r) for r in self.capability_requests()[-12:]],
+                                      "external_pages_available": self.external_pages()},
                 "episode_memory": [compact_episode(e) for e in eps[-n_episodes:]],
                 "experiment_registry": self.experiment_registry(),
                 "evidence_memory": read_jsonl(self.evidence_path)[-n_evidence:]}
@@ -852,6 +956,21 @@ class RSIController:
             tools = ", ".join(f"{k}x{v}" for k, v in (e.get("tool_counts") or {}).items())
             lines.append(f"| {e['episode_id']} | {e.get('procedure_version')} | {tools} | {lock.get('model_class', '-')} | "
                          f"{e.get('score')} | {ho.get('status', '-')} {(ho.get('holdout') or {}).get('pooled_skill', '')} |")
+        lines += ["", "## Scientist diagnoses (what the model says limits it)", ""]
+        for d in self.diagnoses():
+            dg = d.get("diagnosis") or {}
+            lines.append(f"- **{d['diagnosis_id']}** (gen {d.get('generation')}, {d.get('procedure_version')}): "
+                         + ("; ".join(str(x) for x in dg.get("limiting_factors") or [])[:400] if dg else
+                            f"no diagnosis submitted ({d.get('error') or 'agent ended without submit_diagnosis'})"))
+            for k in ("data_quality_issues", "data_needed", "tools_needed"):
+                if dg.get(k):
+                    lines.append(f"  - {k}: " + "; ".join(str(x) for x in dg[k])[:400])
+        lines += ["", "## Capability requests (model-proposed; lab-served, redirected or queued)", "",
+                  "| id | gen | kind | request | status | times | note |", "|---|---|---|---|---|---|---|"]
+        for r in self.capability_requests():
+            lines.append(f"| {r['request_id']} | {r.get('generation')} | {r.get('kind')} | "
+                         f"{str(r.get('request') or '')[:120].replace('|', '/')} | {r.get('status')} | "
+                         f"{r.get('times_requested')} | {str(r.get('note') or r.get('problems') or '')[:120].replace('|', '/')} |")
         out = self.procedures.root / "lineage.md"
         self.procedures.root.mkdir(parents=True, exist_ok=True)
         out.write_text("\n".join(lines) + "\n")
@@ -1219,7 +1338,7 @@ class StrandsAgentDriver:
 
         tb = AgentToolbox(ctrl, mode="episode", episode_id=episode_id, procedure_version=version["version"],
                           controls=procedure_controls(version))
-        names = list(AgentToolbox.EPISODE_TOOL_NAMES) + (["search_exa_signals"] if ctrl.cfg.enable_exa else [])
+        names = list(AgentToolbox.EPISODE_TOOL_NAMES) + (list(AgentToolbox.EXTERNAL_TOOL_NAMES) if ctrl.cfg.enable_exa else [])
         agent = Agent(model=self.model, tools=traced_tools(tb, names), callback_handler=None,
                       system_prompt=AGENT_CONTRACT + "\n\n" + EPISODE_PROTOCOL + "\n\n"
                       + version["components"]["research_policy"])
@@ -1239,6 +1358,8 @@ class StrandsAgentDriver:
                      "each). " if explore else "")
                   + (f"Variants carried over from earlier episodes (load_variant): {sorted(tb.variants)}. "
                      if tb.variants else "")
+                  + (f"Point-in-time pages the lab serves because the system asked for them (fetch_page_as_of / "
+                     f"external_signals.page): {[p['url'] for p in pages]}. " if (pages := ctrl.external_pages()) else "")
                   + "End with commit_forecast for the best candidate, or end without committing if nothing beats "
                   "the champion.")
         if ctrl.cfg.enable_exa:
@@ -1259,6 +1380,40 @@ class StrandsAgentDriver:
             if tb.lock is not None or tb.n_dry_runs == 0 or attempt >= retries + 1:
                 break
             prompt = NUDGE_COMMIT
+        return tb
+
+    def run_diagnosis(self, ctrl: RSIController, version: dict, generation: int) -> AgentToolbox:
+        """The introspection phase that opens a generation: the scientist inspects data, memory and errors with no
+        build budget and must say what limits skill and what it needs (submit_diagnosis). Nothing is locked."""
+        from strands import Agent
+        from strands.types.exceptions import MaxTokensReachedException
+
+        tb = AgentToolbox(ctrl, mode="diagnosis", episode_id=f"d{generation:03d}", procedure_version=version["version"])
+        names = list(AgentToolbox.DIAGNOSIS_TOOL_NAMES) + (list(AgentToolbox.EXTERNAL_TOOL_NAMES) if ctrl.cfg.enable_exa else [])
+        agent = Agent(model=self.model, tools=traced_tools(tb, names), callback_handler=None,
+                      system_prompt=AGENT_CONTRACT + "\n\n" + DIAGNOSIS_PROTOCOL + "\n\n"
+                      + version["components"]["research_policy"])
+        prompt = (f"Diagnosis phase of generation {generation} (stage {ctrl.cfg.stage}, procedure {version['version']}). "
+                  "Start with inspect_current_state and recall_memory, then look at whatever you need (profile_pack, "
+                  f"analyze_discovery x{tb.max_analyses}, backtest_candidate, inspect_candidate"
+                  + (", search_exa_signals / fetch_page_as_of" if ctrl.cfg.enable_exa else "")
+                  + ") and end with submit_diagnosis.")
+        if ctrl.cfg.is_long:
+            prompt += "\n" + LONG_STAGE_DIRECTIVE
+        retries = int(os.environ.get("LLM_MAX_TOKEN_RETRIES", "2"))
+        for attempt in range(retries + 2):
+            try:
+                agent(prompt)
+            except MaxTokensReachedException as e:
+                if tb.diagnosis is not None or attempt >= retries:
+                    print(f"[rsi] diagnosis d{generation:03d}: output limit ({e})", file=sys.stderr)
+                    break
+                self._raise_output_budget()
+                prompt = CONTINUE_AFTER_MAX_TOKENS
+                continue
+            if tb.diagnosis is not None or attempt >= retries + 1:
+                break
+            prompt = NUDGE_DIAGNOSIS
         return tb
 
     def propose_revision(self, ctrl: RSIController, active: dict, digest: dict, known_ids: set[str],
@@ -1282,6 +1437,12 @@ class StrandsAgentDriver:
                           "itself rather than truncating it.")
                 continue
             rev = parse_json_object(out)
+            if isinstance(rev, dict) and "capability_requests" in rev:
+                reqs = rev.pop("capability_requests")
+                if getattr(self, "_requests_recorded", None) != active["version"]:
+                    self._requests_recorded = active["version"]
+                    ctrl.record_capability_requests(reqs, proposed_by=f"improver_{active['version']}",
+                                                    generation=ctrl.next_generation())
             problems = validate_revision(rev, active, known_ids)
             if not problems:
                 return rev, []
@@ -1373,6 +1534,10 @@ class AgentToolbox:
                                                                   "propose_and_test_forecaster",
                                                                   "update_scientist_prompt")) + ("recall_memory",
                                                                                                  "commit_forecast")
+    # The diagnosis phase inspects; it builds nothing and locks nothing.
+    DIAGNOSIS_TOOL_NAMES = ("inspect_current_state", "inspect_candidate", "recall_memory", "profile_pack",
+                            "analyze_discovery", "backtest_candidate", "submit_diagnosis")
+    EXTERNAL_TOOL_NAMES = ("search_exa_signals", "fetch_page_as_of")
 
     def __init__(self, ctrl: RSIController, max_dry_runs: int | None = None, max_analyses: int | None = None,
                  max_submissions: int = 1, mode: str = "holdout", episode_id: str = "", procedure_version: str = "",
@@ -1382,7 +1547,9 @@ class AgentToolbox:
         self.lock: dict | None = None
         self.trace: list[dict] = []
         self.n_exa = 0
-        self.max_exa = int(os.environ.get("RSI_EPISODE_EXA_SEARCHES", "2")) if mode == "episode" else 10 ** 6
+        self.max_exa = (int(os.environ.get("RSI_EPISODE_EXA_SEARCHES", "2")) if mode == "episode"
+                        else int(os.environ.get("RSI_DIAGNOSIS_EXTERNAL_LOOKUPS", "4")) if mode == "diagnosis" else 10 ** 6)
+        self.diagnosis: dict | None = None
         self.iteration = ctrl.next_iteration()
         ctrl.bootstrap()
         self.wb = CandidateWorkbench(ctrl.backup_path.read_text())
@@ -1391,6 +1558,9 @@ class AgentToolbox:
                        if self.model_class_exploration else ctrl.cfg.max_discovery_probes)
         if mode == "episode":
             default_dry = int(os.environ.get("RSI_EPISODE_DRY_RUNS", "6"))
+        if mode == "diagnosis":
+            default_dry = 0
+            max_analyses = max_analyses if max_analyses is not None else int(os.environ.get("RSI_DIAGNOSIS_ANALYSES", "4"))
         self.max_dry_runs = (max_dry_runs if max_dry_runs is not None
                              else int(os.environ.get("RSI_MAX_DRY_RUNS", default_dry)))
         self.variants: dict[str, dict] = {}
@@ -1595,6 +1765,43 @@ class AgentToolbox:
         self.ctrl.record_evidence(self.episode_id or f"iter_{self.iteration:03d}", query, origin_date, res, hypothesis_link)
         return clip_json(res, 20000)
 
+    def fetch_page_as_of(self, url: str, origin_date: str, hypothesis_link: str = "") -> str:
+        """Point-in-time web page: the newest Wayback Machine capture of `url` on or before origin_date (<= the last
+        Discovery origin), as text with its capture timestamp. Use it to read provider pricing pages, launch notes or
+        price lists as they stood at an origin; nothing captured after the origin is ever returned. Pages the lab
+        already serves are listed in recall_memory (external_pages_available). Shares the external-lookup budget."""
+        if self.n_exa >= self.max_exa:
+            return json.dumps({"status": "EXTERNAL_BUDGET_EXHAUSTED", "error": f"{self.max_exa} external lookups used"})
+        self.n_exa += 1
+        try:
+            rec = self.ctrl.fetch_page_as_of(url, origin_date)
+        except PermissionError as e:
+            return json.dumps({"status": "FETCH_REJECTED", "error": str(e)})
+        except Exception as e:
+            return json.dumps({"status": "FETCH_ERROR", "error": f"{type(e).__name__}: {e}"[:600]})
+        src = [{"url": rec.get("snapshot_url") or url, "title": f"Wayback capture {rec.get('captured_at')}",
+                "publishedDate": (rec.get("captured_at") or "")[:10]}] if rec.get("ok") else []
+        self.ctrl.record_evidence(self.episode_id or f"iter_{self.iteration:03d}", f"page:{url}", origin_date, src,
+                                  hypothesis_link)
+        return clip_json({"status": "PAGE_OK" if rec.get("ok") else "PAGE_UNAVAILABLE", **rec}, 16000)
+
+    def submit_diagnosis(self, limiting_factors: list[str], data_quality_issues: list[str], data_needed: list[str],
+                         tools_needed: list[str], hypotheses: list[str]) -> str:
+        """End the diagnosis phase with your own assessment of what limits skill now. limiting_factors: the binding
+        constraints with the evidence (loss shares, data gaps, failed attempts). data_quality_issues: problems you
+        found in the pack (stale/filled/gappy series, unjoinable tables, outliers) and how they hurt. data_needed:
+        data that does not exist in the pack but would plausibly help, with where it could come from and how it is
+        dated. tools_needed: capabilities the lab lacks (diagnostics, libraries, compute, budget). hypotheses: the
+        experiments worth running next. Empty lists are allowed where there is nothing to report."""
+        d = {"limiting_factors": limiting_factors, "data_quality_issues": data_quality_issues, "data_needed": data_needed,
+             "tools_needed": tools_needed, "hypotheses": hypotheses}
+        problems = validate_diagnosis(d)
+        if problems:
+            return json.dumps({"status": "DIAGNOSIS_REJECTED", "error": "; ".join(problems)[:1500]})
+        self.diagnosis = {k: [x if isinstance(x, str) else json.dumps(x) for x in v][:12] for k, v in d.items()}
+        return json.dumps({"status": "DIAGNOSIS_RECORDED", "note": "the improver reads this; needs it cannot meet with a "
+                                                                    "playbook edit become capability requests"})
+
     def recall_memory(self) -> str:
         """Procedural memory (the active improvement-procedure version and its lineage with admission results),
         episode memory (past research episodes: procedure version, tools used, hypothesis card, locked Discovery score,
@@ -1604,12 +1811,13 @@ class AgentToolbox:
 
     def commit_forecast(self, hypothesis: str, mechanism: str, expected_observation: str, competing_explanation: str,
                         test: str, rejection_condition: str, model_class: str = "", hypothesis_family: str = "",
-                        novelty: str = "", market_insight: str = "") -> str:
+                        novelty: str = "", market_insight: str = "", bottleneck: str = "") -> str:
         """Lock the current candidate as this episode's forecast and end the episode. Requires a complete hypothesis
         card: mechanism, expected_observation, competing_explanation (a rival explanation of the same errors), test
         (the comparison that decides it) and rejection_condition (the result that would reject it). The lab scores the
         lock on Discovery and decides any Holdout evaluation after the episode. Allowed once. If no candidate beats
-        the champion, do not commit: end the episode with a short summary (a valid research outcome)."""
+        the champion, do not commit: end the episode with a short summary (a valid research outcome). bottleneck: what
+        limited this episode most (data, tools, compute, budget, ideas) and the evidence; the improver reads it."""
         if self.lock is not None:
             return json.dumps({"status": "ALREADY_LOCKED", "error": "this episode's forecast is locked; stop now"})
         card = {"mechanism": mechanism, "expected_observation": expected_observation,
@@ -1628,7 +1836,7 @@ class AgentToolbox:
             return json.dumps({"status": "COMMIT_REJECTED", "error": "; ".join(problems)[:1500]})
         meta = {"hypothesis": hypothesis[:2000], "model_class": normalize_model_class(model_class),
                 "hypothesis_family": hypothesis_family, "novelty": novelty, "builds_on_iteration": self.builds_on,
-                "market_insight": (market_insight or "")[:4000]}
+                "market_insight": (market_insight or "")[:4000], "bottleneck": (bottleneck or "")[:1500]}
         rec = self.ctrl.lock_episode_forecast(self.wb.code, card, meta, self.episode_id, self.procedure_version)
         if rec.get("locked") is False:
             return clip_json({"status": "COMMIT_REJECTED", "error": "the candidate does not run on Discovery, nothing "
@@ -1656,7 +1864,16 @@ OUTPUT: reply with exactly one JSON object (optionally in a ```json fence) and n
  "expected_behavior_change": "<observable difference in the next episode's actions or experiments>",
  "development_comparison": "<how the same-start comparison should reveal it>",
  "rejection_condition": "<the result that rejects the change>", "status": "proposed",
- "new_component_text": "<the COMPLETE replacement text of the target component>"}
+ "new_component_text": "<the COMPLETE replacement text of the target component>",
+ "capability_requests": [ {"kind": "data_source" | "tool" | "library" | "budget" | "diagnostic" | "compute" | "other",
+     "request": "<what is needed, concretely>", "evidence": ["<diagnosis ids, episode ids or measured facts>"],
+     "expected_effect": "<what it should change>", "how_to_test": "<the comparison that would show it>",
+     "url": "<data_source only: the page to snapshot>", "as_of": "<data_source only: YYYY-MM-DD>"} ]   (optional, <= 4)
+}
+capability_requests carry the scientist's needs (procedural_memory.diagnoses) that no playbook edit can satisfy. The
+lab serves data_source requests with a URL itself (a point-in-time Wayback snapshot on or before as_of, then available
+to episodes and forecasters), redirects budget requests to episode_controls, and queues everything else for the
+maintainer as a spec; repeated unmet requests stay visible in the lineage.
 research_policy is the scientist's playbook for research episodes (the lab re-inserts its LAB-PROTECTED block);
 improver_policy is the instruction set you are following now, so revising it changes how the next improvement is
 proposed. The lab admits the new version only if, from the same champion and budget, an episode run under it locks a
@@ -1670,6 +1887,18 @@ difference of the locked Discovery scores must exceed the margin by more than it
 revision cannot change an episode by itself, so the lab then asks the revised improver for one research_policy or
 episode_controls revision and tests and admits the two together. procedural_memory holds the lab-measured episode
 scores per procedure version and model class and the errors of earlier invalid revision objects."""
+
+DIAGNOSIS_PROTOCOL = """
+DIAGNOSIS PHASE (introspection; opens every generation). You are not building a forecaster now. Your job is to say,
+from evidence, what limits skill at this point and what you would need to move it: data quality in the pack
+(profile_pack, analyze_discovery), where the loss concentrates (inspect_current_state, backtest_candidate), what past
+episodes tried and how they failed (recall_memory, inspect_candidate), and which data or tools do not exist here but
+plausibly should (be concrete: what, where it would come from, how it is dated). Nothing you say is checked against
+you; the improver turns needs into capability requests and the lab serves what it safely can. End with
+submit_diagnosis. Keep reasoning short and act through tools.""".strip()
+
+NUDGE_DIAGNOSIS = ("You have not called submit_diagnosis. Call it now with your assessment (limiting_factors, "
+                   "data_quality_issues, data_needed, tools_needed, hypotheses; empty lists where nothing applies).")
 
 NUDGE_COMMIT = ("You have not called commit_forecast. If a dry-run candidate beats the champion, finish it and call "
                 "commit_forecast with the full hypothesis card; otherwise reply with a two-line summary and stop.")
@@ -1727,6 +1956,18 @@ DIGEST_SHRINK_ORDER = [("episode_memory", "drop_old"), ("evidence_memory", "drop
                        ("experiment_registry", "drop_old")]
 
 
+def compact_diagnosis(d: dict) -> dict:
+    dg = d.get("diagnosis") or {}
+    return {"diagnosis_id": d.get("diagnosis_id"), "generation": d.get("generation"),
+            "procedure_version": d.get("procedure_version"), "submitted": bool(dg),
+            **{k: [str(x)[:300] for x in (dg.get(k) or [])][:6] for k in DIAGNOSIS_FIELDS}}
+
+
+def compact_request(r: dict) -> dict:
+    return {k: (str(r.get(k))[:300] if isinstance(r.get(k), str) else r.get(k))
+            for k in ("request_id", "generation", "kind", "request", "status", "times_requested", "repeat_of", "note", "url")}
+
+
 def compact_episode(e: dict) -> dict:
     """An episode for the memory digest: the ordered tool trace becomes one short string (tool[:status] > ...)."""
     out = {k: v for k, v in e.items() if k != "trace"}
@@ -1756,7 +1997,8 @@ def _compact_lock(lock: dict | None) -> dict | None:
     if not lock:
         return None
     keep = ("procedure_version", "code_sha256", "code_file", "model_class", "hypothesis_family", "novelty",
-            "hypothesis", "hypothesis_card", "status", "error", "screen_pass", "discovery_pooled_delta", "market_insight")
+            "hypothesis", "hypothesis_card", "status", "error", "screen_pass", "discovery_pooled_delta", "market_insight",
+            "bottleneck")
     out = {k: lock.get(k) for k in keep}
     out["discovery_pooled_skill"] = (lock.get("discovery") or {}).get("pooled_skill")
     return out
@@ -1777,6 +2019,13 @@ def run_generation(ctrl: RSIController, driver, pairs: int | None = None) -> dic
     g = ctrl.next_generation()
     known = ({str(e["episode_id"]) for e in ctrl.released_episodes()}
              | {f"iter_{int(r['iteration']):03d}" for r in ctrl.experiment_registry() if r.get("iteration") is not None})
+    if hasattr(driver, "run_diagnosis"):   # introspection first: the scientist states what limits it and what it needs
+        try:
+            dtb = driver.run_diagnosis(ctrl, active, g)
+            ctrl.record_diagnosis(g, active["version"], dtb.diagnosis,
+                                  dict(collections.Counter(t["tool"] for t in dtb.trace)))
+        except Exception as e:
+            ctrl.record_diagnosis(g, active["version"], None, error=f"{type(e).__name__}: {e}"[:800])
     follow_up = None
     try:
         rev, problems = driver.propose_revision(ctrl, active, ctrl.memory_digest(), known)

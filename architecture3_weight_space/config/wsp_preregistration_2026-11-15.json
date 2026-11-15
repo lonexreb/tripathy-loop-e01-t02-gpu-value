@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "preregistration_id": "arch3-wsp1-2026-11-15",
+  "written_before": "any checkpoint-block score of the weight-space-programming candidate",
+  "technique": "weight-space programming: direct, gradient-free weight edit written by an LLM editor (Takehi et al., 2026-11-02)",
+  "editor": "Claude (claude-fable-5-2) via Claude Code, local Python kernel over the weights",
+  "base_model": "Qwen/Qwen3.5-0.8B@2fc06364715b967f1860aea9cf38778875588b17",
+  "compute": "local CPU/MPS only; no Modal, no teacher calls",
+  "hypothesis": "The actor's choice of the zero-width 'drift' action is a localized bias at one decision token; a direct edit of a small set of MLP down_proj weights flips it to 'repricing_interval', and the emitted patch passes the frozen checkpoint gate against F_0.",
+  "target_behaviour": "emit method=repricing_interval; window_days and width_scale are whatever the edited model emits; that emitted patch is the single candidate",
+  "selection_data": {
+    "choosing_origins": "2026-09-01..2026-09-24 (24 development-origin prompts)",
+    "held_out_origins": "2026-09-25..2026-09-30 (6 development-origin prompts)",
+    "proposal_origin": "2026-09-30"
+  },
+  "edit_rules": {
+    "allowed_tensors": "model.language_model.layers.*.mlp.down_proj.weight",
+    "forbidden": [
+      "embeddings / output layer",
+      "final norm",
+      "whole-tensor scaling",
+      "any optimizer or backward pass"
+    ],
+    "form": "W' = W + s * d k^T on at most 64 columns per edited layer; s is the only free number",
+    "strength_rule": "smallest s on the grid that flips every choosing prompt with a parseable patch"
+  },
+  "controls": [
+    "prompt-space: swap allowed_actions order, unedited model",
+    "random direction with matched norm, same columns and strength",
+    "locality: next-token agreement original vs edited on unrelated prompts",
+    "direct-patch: the emitted patch scored with no model"
+  ],
+  "admission": "research/PROTOCOL.md section 4, unchanged; checkpoint scored once; protected scored once only if admitted",
+  "submission_rule": "submission stays F_1 unless the candidate is admitted vs F_0 and is paired-better than F_1 on checkpoint with the 90% CI excluding zero",
+  "claim_limits": [
+    "no recursive-self-improvement claim (PROTOCOL section 9 comparison not run)",
+    "the target method was chosen after a development-block sweep of 19 actions, so development gains are selection-inflated; only checkpoint counts"
+  ],
+  "development_sweep_vs_F0_drift": {
+    "cells": 626,
+    "F0_drift_pinball": 0.023593,
+    "actor_drift_action_zero_width": {
+      "pinball": 0.028174,
+      "diff": 0.004581,
+      "coverage": 0.375
+    },
+    "repricing_interval_w60_s0.5": {
+      "pinball": 0.022099,
+      "diff": -0.001494,
+      "coverage": 0.669
+    },
+    "repricing_interval_w60_s0.75": {
+      "pinball": 0.021822,
+      "diff": -0.001771,
+      "coverage": 0.743
+    },
+    "repricing_interval_w60_s1": {
+      "pinball": 0.022309,
+      "diff": -0.001284,
+      "coverage": 0.805
+    },
+    "repricing_interval_w60_s1.5": {
+      "pinball": 0.024245,
+      "diff": 0.000652,
+      "coverage": 0.859
+    },
+    "repricing_interval_w60_s2": {
+      "pinball": 0.02664,
+      "diff": 0.003047,
+      "coverage": 0.927
+    },
+    "repricing_interval_w30_s1": {
+      "pinball": 0.022188,
+      "diff": -0.001405,
+      "coverage": 0.804
+    }
+  },
+  "amendments": [
+    {
+      "written": "after the first dose-response on the 24 choosing prompts; before any checkpoint score",
+      "observation": "the method edit flips all 24 choosing prompts to repricing_interval, but the model then emits the colon-quote token after numeric keys, so window_days is a string and the frozen patch contract rejects it; on 6 to 12 prompts it copies the template text instead of a number",
+      "change": "a second decision is edited on the same tensor: after a numeric key, promote the bare colon token over the colon-quote token. Each decision uses at most 32 columns, 64 in total, so the column limit is unchanged. The numbers that follow remain the model's own choice.",
+      "unchanged": [
+        "allowed tensors",
+        "no optimizer or backward pass",
+        "selection data",
+        "admission rule",
+        "single checkpoint evaluation",
+        "submission rule"
+      ]
+    }
+  ]
+}

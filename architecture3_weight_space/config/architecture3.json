@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "experiment_id": "01-architecture3-weight-space",
+  "linear_issue": "TRI-33",
+  "controlling_plan": "IMPLEMENTATION_PLAN.md",
+  "objective": "Update only LoRA adapter parameters on a pinned Qwen3.5-0.8B actor, then evaluate the resulting actor through the repository's frozen Track 2 protocol.",
+  "components": {
+    "actor": {
+      "model_id": "Qwen/Qwen3.5-0.8B",
+      "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+      "runtime": "Modal",
+      "trainable_parameters": "LoRA adapters only"
+    },
+    "critic": {
+      "provider": "OpenAI",
+      "model": "gpt-6.1-sol",
+      "role": "Propose structured corrections; never score forecasts or edit weights directly"
+    },
+    "research": {
+      "provider": "Exa",
+      "role": "Retrieve cutoff-eligible evidence with frozen provenance"
+    },
+    "memory": {
+      "provider": "past.dev",
+      "project": "default-project",
+      "role": "Scoped cross-episode memory; local hashed artifacts remain authoritative"
+    },
+    "training": {
+      "provider": "Modal",
+      "initial_sanity_and_g0_gpu": "L4",
+      "remaining_gpu_priority": ["H100", "B200"],
+      "hardware_amendment": "config/hardware_amendment_2026-11-15.json",
+      "volume": "tripathy-e01-arch3-weights"
+    },
+    "evaluator": {
+      "implementation": "gpu-price-pack-v0.1.1-handover/starter/scorer.py",
+      "protocol": "research/PROTOCOL.md"
+    }
+  },
+  "frozen_inputs": {
+    "pack": "gpu-price-pack-v0.1.1-handover",
+    "pack_zip_checksum": "source-downloads/ZIP.sha256",
+    "origins": "research/origins.json",
+    "targets": "research/adapted_series.txt",
+    "acceptance_rule": "research/PROTOCOL.md section 4"
+  },
+  "excluded": [
+    "Tinker",
+    "REINFORCE",
+    "PPO",
+    "DPO",
+    "full-base-model training",
+    "silent provider or model substitution"
+  ],
+  "reproduction_modes": [
+    "numerical_replay",
+    "captured_service_replay",
+    "fresh_discovery"
+  ],
+  "remote_gates": {
+    "implementation_provider_calls_authorized": true,
+    "modal_gpu_authorized": true,
+    "model_download_authorized": true,
+    "training_authorized": true
+  }
+}

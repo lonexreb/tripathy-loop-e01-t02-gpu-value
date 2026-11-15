@@ -1,0 +1,24 @@
+{
+  "amendment_id": "user-2026-11-15-h100-b200",
+  "approved_at": "2026-11-15T16:40:38Z",
+  "approved_by": "user",
+  "budget_change": false,
+  "initial_gpu": "L4",
+  "reason": "L4 scheduler delays were too long for the remaining available time.",
+  "remaining_gpu_priority": [
+    "H100",
+    "B200"
+  ],
+  "scope": [
+    "Phase 5 LoRA training retry",
+    "Phase 6 G1 adapter inference"
+  ],
+  "unchanged": [
+    "Qwen model ID and revision",
+    "LoRA rank, alpha, optimizer, learning rate, and one-step update",
+    "training example and token loss mask",
+    "official scorer and admission rule",
+    "1200 GPU-second and 1 USD authorization ceilings"
+  ],
+  "user_instruction": "lets go for h100, b200 as we are less on time so need to move a bit faster please"
+}

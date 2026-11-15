@@ -1,0 +1,68 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tripathy-architecture3-weight-space"
+version = "0.1.0"
+description = "Closed-critic to Qwen3.5-0.8B LoRA weight-space optimization"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx>=0.28,<1",
+  "pydantic>=2.12,<3",
+  "python-dotenv>=1.1,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.18,<2",
+  "pytest>=9,<10",
+  "ruff>=0.14,<1",
+]
+modal = [
+  "modal>=1.6,<2",
+]
+training = [
+  "accelerate>=1.10,<2",
+  "datasets>=4,<5",
+  "peft>=0.18,<1",
+  "safetensors>=0.6,<1",
+  "torch>=2.8,<3",
+  "transformers>=5,<6",
+  "trl>=0.24,<1",
+]
+
+[project.scripts]
+arch3-env-check = "tripathy_arch3.env_check:main"
+arch3-modal-sanity = "tripathy_arch3.modal_sanity:main"
+arch3-phase2-acceptance = "tripathy_arch3.phase2_acceptance:main"
+arch3-phase3-acceptance = "tripathy_arch3.phase3_acceptance:main"
+arch3-phase4-episode = "tripathy_arch3.phase4_episode:main"
+arch3-phase5-training = "tripathy_arch3.phase5_training:main"
+arch3-phase6-admission = "tripathy_arch3.phase6_admission:main"
+arch3-preflight = "tripathy_arch3.preflight:main"
+arch3-report = "tripathy_arch3.report:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tripathy_arch3"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["tripathy_arch3"]
+
+[[tool.mypy.overrides]]
+# wsp.py runs in the separate local torch environment (.venv-wsp), not this one.
+module = ["torch", "transformers", "numpy"]
+ignore_missing_imports = true

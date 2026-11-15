@@ -36,3 +36,9 @@ The command verifies the pack, runs unit checks, rebuilds the baseline and Cycle
 ## Lane
 
 E01 continues to use the existing GitHub history, Linear project, and Slack channel. Git history is preserved; the earlier Kalshi framing is superseded, not rewritten.
+
+## Submission
+
+- Findings: [FINDINGS.md](FINDINGS.md)
+- Forecasts: `submission/submission_head_2026-11-06.csv` (SHA-256 in `submission/SHA256SUMS`)
+- One command to rebuild them from the pack: `bash research/reproduce.sh`

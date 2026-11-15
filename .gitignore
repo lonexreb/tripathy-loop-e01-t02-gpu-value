@@ -18,9 +18,23 @@ build/
 *.key
 secrets/
 
+# Architecture 3 keeps its runtime, credentials, and generated weights local.
+architecture3_weight_space/.env
+architecture3_weight_space/.venv/
+architecture3_weight_space/artifacts/
+architecture3_weight_space/checkpoints/
+architecture3_weight_space/.hf-cache/
+
+# Architecture 2 keeps Modal runtime state, run artifacts, and checkpoints local.
+architecture2_text_reasoning/.env
+architecture2_text_reasoning/.venv/
+architecture2_text_reasoning/artifacts/
+architecture2_text_reasoning/checkpoints/
+
 # Track 2 inputs and generated artifacts stay local. The contract, published
 # checksums, and download instructions in source-downloads/ remain trackable.
 source-downloads/*.zip
 gpu-price-pack-v0.1.1-handover/
 demo_out/
 research/out/
+architecture3_weight_space/.venv-wsp/

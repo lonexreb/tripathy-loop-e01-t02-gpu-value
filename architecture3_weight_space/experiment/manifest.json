@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "experiment_id": "01-architecture3-weight-space",
+  "linear_issue": "TRI-33",
+  "status": "completed_candidate_rejected",
+  "objective": "Verify that a pinned Qwen3.5-0.8B text actor can receive a LoRA gradient update on Modal, persist and reload the adapter, and remain compatible with the frozen Track 2 evaluator.",
+  "base_model": "Qwen/Qwen3.5-0.8B",
+  "base_model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "update_space": "LoRA adapter parameters only; original base weights remain frozen",
+  "current_gate": "All authorized phases completed; the G1 LoRA child was rejected by the frozen development/checkpoint admission gate and protected truth was not scored",
+  "remote_actions_authorized": true,
+  "execution_authorization": "config/execution_authorization.json",
+  "maximum_total_budget_usd": 1.0,
+  "first_remote_gate": "One cutoff-bounded Exa request and one isolated past.dev ingest/recall acceptance",
+  "training_data_status": "one_verified_sft_example_compiled_and_used",
+  "local_acceptance": {
+    "preflight_artifact": "artifacts/preflight/latest.json",
+    "pack_files_verified": 672,
+    "behavioral_tests_passed": 31,
+    "typed_source_files_checked": 23,
+    "ruff_status": "passed",
+    "mypy_status": "passed",
+    "secret_scan": "clean",
+    "phase2": {
+      "acceptance_artifact": "artifacts/phase2/evaluations/7e8aa3bd6f9cffb6/acceptance.json",
+      "actor_bundle_id": "asof-2026-10-15-3e2b158801777922",
+      "actor_rows": 784,
+      "actor_targets": 7,
+      "max_actor_date": "2026-10-15",
+      "official_metrics_match_frozen_reference": true
+    },
+    "phase3": {
+      "acceptance_artifact": "artifacts/phase3/acceptance.json",
+      "acceptance_sha256": "dc9f7e7da41e6ba60ac60b8c1d3c17f60c28f9ea83bc77f5eb352bbf762dfea2",
+      "exa_status": "snapshot_unavailable_fail_closed",
+      "exa_admissible_records": 0,
+      "past_current_eligible_results": 5,
+      "past_historical_eligible_results": 0
+    },
+    "phase4": {
+      "modal_environment_sanity": "passed_after_preserved_initial_billing_failure",
+      "initial_failure_artifact": "artifacts/phase4/modal_environment_sanity_failure.json",
+      "preserved_model_sanity_failure_artifact": "artifacts/phase4/model_sanity/failure.json",
+      "dashboard_credit_balance_observed_usd": 251.0,
+      "dashboard_payment_method_required": false,
+      "model_downloaded": true,
+      "model_sanity_acceptance": "artifacts/phase4/model_sanity/acceptance.json",
+      "g0_acceptance": "artifacts/phase4/g0/acceptance.json"
+    },
+    "phase5": {
+      "status": "passed",
+      "acceptance_artifact": "artifacts/phase5/g1-6ccddfe047031e9c/acceptance.json",
+      "checkpoint_id": "g1-6ccddfe047031e9c",
+      "cuda_device": "NVIDIA H100 80GB HBM3",
+      "adapter_sha256": "5b399704099be2e2d61cd43b75c4f0f5c0314c728a1492adb5da691cf92985d3",
+      "base_weights_unchanged": true,
+      "reload_max_abs_diff": 0.0
+    },
+    "phase6": {
+      "status": "passed",
+      "acceptance_artifact": "artifacts/phase6/g1-6ccddfe047031e9c/acceptance.json",
+      "admission_status": "rejected",
+      "protected_scored": false,
+      "recursive_self_improvement_established": false
+    },
+    "final_report": {
+      "status": "completed",
+      "artifact": "artifacts/report/summary.json",
+      "estimated_total_usd": 0.674,
+      "gpu_seconds_reserved": 1200
+    }
+  },
+  "critic_provider": "openai",
+  "critic_model": "gpt-6.1-sol",
+  "research_provider": "exa",
+  "memory_provider": "past.dev",
+  "memory_project": "default-project",
+  "stop_condition": "Stop immediately on missing model support, non-finite loss, base-weight mutation, adapter reload mismatch, leakage, or budget breach.",
+  "artifact_directory": "artifacts",
+  "checkpoint_directory": "checkpoints"
+}

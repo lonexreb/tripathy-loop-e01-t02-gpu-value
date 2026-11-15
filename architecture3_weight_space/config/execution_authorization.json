@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "authorization_id": "user-2026-11-15-continue-to-last",
+  "authorized": true,
+  "authorized_at": "2026-11-15T11:33:33Z",
+  "authorization_source": "The user explicitly instructed the implementation to continue through the final planned phase and stated that all required permissions were granted.",
+  "scope": {
+    "provider_calls": true,
+    "modal_gpu": true,
+    "model_download": true,
+    "lora_training": true,
+    "git_commit": false,
+    "git_push": false
+  },
+  "budget": {
+    "maximum_total_usd": 1.0,
+    "maximum_modal_gpu_seconds": 1200,
+    "maximum_exa_search_calls": 2,
+    "maximum_past_write_calls": 3,
+    "maximum_past_recall_calls": 3,
+    "maximum_openai_teacher_calls": 2,
+    "maximum_modal_function_calls": 8
+  },
+  "stop_conditions": [
+    "estimated or reported total cost would exceed 1 USD",
+    "historical evidence cannot be bounded to the forecast cutoff",
+    "protected truth becomes visible outside the evaluator boundary",
+    "base-model parameters mutate",
+    "loss becomes non-finite",
+    "adapter save and reload are not equivalent",
+    "a remote response or artifact contains a secret"
+  ]
+}

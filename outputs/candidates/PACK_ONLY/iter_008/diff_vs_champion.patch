@@ -1,0 +1,112 @@
+--- champion/forecaster.py
++++ candidate/forecaster.py
+@@ -44,6 +44,12 @@
+     lags = (1, 3, 7)
+     train_days = 540
+-    vol_win = 14
++    vol_wins = (7, 14, 28)  # ensemble (iter 8): average quantiles across vol-window members;
++    vol_win = 14  # single-window fallback if a member has no valid rows
++    ens_horizons = (3, 7)  # ensemble only where the champion under-covers (h3 0.783, h7 0.751);
++    # h1 keeps the confirmed single-window + 0.95 narrowing (h1 at 0.803 coverage already)
+     min_samples = 20
++    rec_win = 60  # regime-C recent-window change quantiles (regime_change): provider repricing
++    rec_min = 30  # is non-stationary; full-history quantiles under-cover (Discovery cov 0.58-0.63)
++    tail_scale = {1: 0.95, 3: 1.0, 7: 1.0}  # h1 tail narrowing around q50 (confirmed, iter 5)
+     sticky_share = 0.5
+     kappa = 0.0
+@@ -52,6 +58,7 @@
+     def _aws_features(self, days, lv):
+         X = np.column_stack([lv - _shift(days, lv, -k) for k in self.lags])
+-        vol = pd.Series(np.abs(lv - _shift(days, lv, -1))).rolling(self.vol_win, min_periods=3).mean().to_numpy()
+-        return X, vol + 1e-4
++        vols = [pd.Series(np.abs(lv - _shift(days, lv, -1))).rolling(vw, min_periods=3).mean().to_numpy() + 1e-4
++                for vw in self.vol_wins]
++        return X, vols
+ 
+     def _aws(self, series, origin, od, horizons):
+@@ -59,17 +66,58 @@
+         rows = []
+         for h in horizons:
+-            Xs, ys, ss = [], [], []
+-            for days, lv, X, vol in feats.values():
+-                y = _shift(days, lv, h) - lv
+-                m = (days + h <= od) & (days > od - self.train_days) & np.isfinite(y) & np.isfinite(X).all(1) & np.isfinite(vol)
+-                Xs.append(X[m]); ys.append(y[m]); ss.append(vol[m])
+-            X, y, s = np.vstack(Xs), np.concatenate(ys), np.concatenate(ss)
+-            beta = np.linalg.lstsq(X, y, rcond=None)[0]
+-            z = np.quantile((y - X @ beta) / s, QS)
+-            for sid, (days, lv, Xa, vol) in feats.items():
+-                v = vol[-1] if np.isfinite(vol[-1]) else 1e-4
+-                q = lv[-1] + np.nan_to_num(Xa[-1]) @ beta + v * z
++            # One pooled-OLS member per vol window (ensemble, iter 8): the local-vol scale is
++            # the only window-sensitive part of the machinery, and the pseudo-origin OOS
++            # analysis (fit at origin-28d, score the next 28 days, 5 Discovery origins) shows
++            # averaging the three quantile sets across vol_wins beats the single 14-day
++            # member at every horizon (h3/h7 5/5 origins, +0.006/+0.006 avg skill) while
++            # moving coverage toward 0.80. train_days stays 540 (the 270-day member is
++            # mixed-to-negative at h7: beta270 over-weights the 1-day lag).
++            members = []
++            for vw in self.vol_wins:
++                Xs, ys, ss = [], [], []
++                for days, lv, X, vols in feats.values():
++                    vol = vols[self.vol_wins.index(vw)]
++                    y = _shift(days, lv, h) - lv
++                    m = (days + h <= od) & (days > od - self.train_days) & np.isfinite(y) & np.isfinite(X).all(1) & np.isfinite(vol)
++                    Xs.append(X[m]); ys.append(y[m]); ss.append(vol[m])
++                if not Xs or not np.concatenate(ss).size:
++                    continue
++                X, y, s = np.vstack(Xs), np.concatenate(ys), np.concatenate(ss)
++                beta = np.linalg.lstsq(X, y, rcond=None)[0]
++                z = np.quantile((y - X @ beta) / s, QS)
++                # h1 tail narrowing (horizon_structure, confirmed in iteration 5): the in-sample
++                # standardized tails at h=1 are too wide relative to the true 1-day-ahead
++                # distribution (Discovery h1 coverage 0.840 vs 0.80 target); scale both tails
++                # around the unchanged q50 by 0.95 at h=1 only. q50, h3 and h7 unchanged.
++                f = self.tail_scale.get(h, 1.0)
++                z = z[1] + f * (z - z[1])
++                members.append((beta, z, vw))
++            if not members or h not in self.ens_horizons:
++                # h1 (and any horizon outside ens_horizons): single-window champion machinery
++                beta, z = self._aws_single(h, feats, od)
++                members = [(beta, z, self.vol_win)]
++            for sid, (days, lv, Xa, vols) in feats.items():
++                qs = []
++                for beta, z, vw in members:
++                    v = vols[self.vol_wins.index(vw)][-1]
++                    v = v if np.isfinite(v) else 1e-4
++                    qs.append(lv[-1] + np.nan_to_num(Xa[-1]) @ beta + v * z)
++                q = np.mean(qs, axis=0)
+                 rows.append((sid, origin, h, *np.exp(np.sort(q))))
+         return rows
++
++    def _aws_single(self, h, feats, od):
++        Xs, ys, ss = [], [], []
++        for days, lv, X, vols in feats.values():
++            vol = vols[self.vol_wins.index(self.vol_win)]
++            y = _shift(days, lv, h) - lv
++            m = (days + h <= od) & (days > od - self.train_days) & np.isfinite(y) & np.isfinite(X).all(1) & np.isfinite(vol)
++            Xs.append(X[m]); ys.append(y[m]); ss.append(vol[m])
++        X, y, s = np.vstack(Xs), np.concatenate(ys), np.concatenate(ss)
++        beta = np.linalg.lstsq(X, y, rcond=None)[0]
++        z = np.quantile((y - X @ beta) / s, QS)
++        f = self.tail_scale.get(h, 1.0)
++        z = z[1] + f * (z - z[1])
++        return beta, z
+ 
+     # ------------------------------------------------------- regimes B and C: daily statistics ----
+@@ -96,5 +144,14 @@
+             ch = _shift(days, lv, h) - lv
+             ch = ch[np.isfinite(ch)]
+-            q = np.quantile(ch, QS) if len(ch) >= self.min_samples else np.zeros(3)
++            # Regime-C recent-window change quantiles (regime_change): the marketplace_ask /
++            # non-card spot series reprice in bursts (provider entries/exits), so the
++            # full-history h-day change distribution under-covers the forward window
++            # (Discovery coverage 0.58-0.63, q90 breach 25%). Use a trailing rec_win-day
++            # window when it has enough samples; fall back to the full history otherwise.
++            if not card and len(ch) >= self.rec_min:
++                ch_r = ch[-self.rec_win:]
++                q = np.quantile(ch_r, QS) if len(ch_r) >= self.min_samples else np.quantile(ch, QS)
++            else:
++                q = np.quantile(ch, QS) if len(ch) >= self.min_samples else np.zeros(3)
+             if card and zero_share >= self.sticky_share:
+                 q[1] = 0.0

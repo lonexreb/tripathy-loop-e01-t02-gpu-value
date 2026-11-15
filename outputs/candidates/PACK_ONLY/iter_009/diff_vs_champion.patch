@@ -1,0 +1,19 @@
+--- champion/forecaster.py
++++ candidate/forecaster.py
+@@ -46,10 +46,13 @@
+     vol_wins = (7, 14, 28)  # ensemble (iter 8): average quantiles across vol-window members;
+     vol_win = 14  # single-window fallback if a member has no valid rows
+-    ens_horizons = (3, 7)  # ensemble only where the champion under-covers (h3 0.783, h7 0.751);
+-    # h1 keeps the confirmed single-window + 0.95 narrowing (h1 at 0.803 coverage already)
++    ens_horizons = (1, 3, 7)  # ensemble at every horizon (iter 9): pseudo-origin OOS shows the
++    # h1 ensemble {7,14,28} + 0.90 narrowing beats the confirmed single-window + 0.95 machinery
++    # 5/5 origins (avg +0.0080 h1 skill); the 4-member {7,14,21,28} set at h3/h7 is NEGATIVE
++    # OOS (avg -0.003) and is excluded.
+     min_samples = 20
+     rec_win = 60  # regime-C recent-window change quantiles (regime_change): provider repricing
+     rec_min = 30  # is non-stationary; full-history quantiles under-cover (Discovery cov 0.58-0.63)
+-    tail_scale = {1: 0.95, 3: 1.0, 7: 1.0}  # h1 tail narrowing around q50 (confirmed, iter 5)
++    tail_scale = {1: 0.90, 3: 1.0, 7: 1.0}  # h1 tail narrowing around q50 (iter 5 confirmed 0.95
++    # single-window; iter 9: 0.90 on the ensemble re-centers the widened h1 band near the 0.80 target)
+     sticky_share = 0.5
+     kappa = 0.0

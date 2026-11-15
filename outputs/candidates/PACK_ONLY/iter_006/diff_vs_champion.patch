@@ -1,0 +1,37 @@
+--- champion/forecaster.py
++++ candidate/forecaster.py
+@@ -46,4 +46,7 @@
+     vol_win = 14
+     min_samples = 20
++    rec_win = 60  # regime-C recent-window change quantiles (regime_change): provider repricing
++    rec_min = 30  # is non-stationary; full-history quantiles under-cover (Discovery cov 0.58-0.63)
++    tail_scale = {1: 0.95, 3: 1.0, 7: 1.0}  # h1 tail narrowing around q50 (confirmed, iter 5)
+     sticky_share = 0.5
+     kappa = 0.0
+@@ -67,4 +70,10 @@
+             beta = np.linalg.lstsq(X, y, rcond=None)[0]
+             z = np.quantile((y - X @ beta) / s, QS)
++            # h1 tail narrowing (horizon_structure, confirmed in iteration 5): the in-sample
++            # standardized tails at h=1 are too wide relative to the true 1-day-ahead
++            # distribution (Discovery h1 coverage 0.840 vs 0.80 target); scale both tails
++            # around the unchanged q50 by 0.95 at h=1 only. q50, h3 and h7 unchanged.
++            f = self.tail_scale.get(h, 1.0)
++            z = z[1] + f * (z - z[1])
+             for sid, (days, lv, Xa, vol) in feats.items():
+                 v = vol[-1] if np.isfinite(vol[-1]) else 1e-4
+@@ -96,5 +105,14 @@
+             ch = _shift(days, lv, h) - lv
+             ch = ch[np.isfinite(ch)]
+-            q = np.quantile(ch, QS) if len(ch) >= self.min_samples else np.zeros(3)
++            # Regime-C recent-window change quantiles (regime_change): the marketplace_ask /
++            # non-card spot series reprice in bursts (provider entries/exits), so the
++            # full-history h-day change distribution under-covers the forward window
++            # (Discovery coverage 0.58-0.63, q90 breach 25%). Use a trailing rec_win-day
++            # window when it has enough samples; fall back to the full history otherwise.
++            if not card and len(ch) >= self.rec_min:
++                ch_r = ch[-self.rec_win:]
++                q = np.quantile(ch_r, QS) if len(ch_r) >= self.min_samples else np.quantile(ch, QS)
++            else:
++                q = np.quantile(ch, QS) if len(ch) >= self.min_samples else np.zeros(3)
+             if card and zero_share >= self.sticky_share:
+                 q[1] = 0.0

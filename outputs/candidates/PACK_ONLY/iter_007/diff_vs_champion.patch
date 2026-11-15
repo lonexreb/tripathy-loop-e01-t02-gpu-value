@@ -1,0 +1,67 @@
+--- champion/forecaster.py
++++ candidate/forecaster.py
+@@ -46,4 +46,13 @@
+     vol_win = 14
+     min_samples = 20
++    rec_win = 60  # regime-C recent-window change quantiles (regime_change): provider repricing
++    rec_min = 30  # is non-stationary; full-history quantiles under-cover (Discovery cov 0.58-0.63)
++    tail_scale = {1: 0.95, 3: 1.0, 7: 1.0}  # h1 tail narrowing around q50 (confirmed, iter 5)
++    # vol-state tail-scale floor per horizon (regime_change, calm market only; 1.0 = hot /
++    # h1 = champion-identical). h7 floor is deeper (0.93) than h3 (0.95): the h7 in-sample
++    # z (~7.8 std) over-covers more at calm origins and its narrowing is coverage-neutral
++    # (Discovery h7 slice coverage +0.0022 at floor 0.95, 0.0 at 0.93), while h1/h3
++    # narrowing costs coverage disproportionately (h1 -0.0055, h3 -0.0087 per slice).
++    state_floor = {3: 0.95, 7: 0.93}
+     sticky_share = 0.5
+     kappa = 0.0
+@@ -57,4 +66,19 @@
+     def _aws(self, series, origin, od, horizons):
+         feats = {sid: (days, lv, *self._aws_features(days, lv)) for sid, (days, lv) in series.items()}
++        # Pooled vol-state (regime_change): market-wide median of each series' current 14-day
++        # local vol relative to its own trailing 90-day median vol. When the whole market is
++        # CALM (median ratio < 1), the in-sample pooled z tails over-cover the forward window
++        # (pseudo-origin OOS: calm origins gain at every horizon, hot origins are untouched);
++        # when HOT (>= 1) the champion's z is honest, so leave it byte-identical.
++        rs = []
++        for days, lv, X, vol in feats.values():
++            i0 = len(days) - 1
++            vw = vol[max(0, i0 - 89): i0 + 1]
++            vw = vw[np.isfinite(vw)]
++            if len(vw) >= 10 and np.isfinite(vol[i0]) and np.median(vw) > 0:
++                rs.append(float(vol[i0] / np.median(vw)))
++        med_r = float(np.median(rs)) if rs else 1.0
++        state_f = {h: (float(np.clip(med_r, self.state_floor[h], 1.0)) if med_r < 1.0 else 1.0)
++                   for h in horizons if h in self.state_floor}
+         rows = []
+         for h in horizons:
+@@ -67,4 +91,14 @@
+             beta = np.linalg.lstsq(X, y, rcond=None)[0]
+             z = np.quantile((y - X @ beta) / s, QS)
++            # h1 tail narrowing (horizon_structure, confirmed in iteration 5): the in-sample
++            # standardized tails at h=1 are too wide relative to the true 1-day-ahead
++            # distribution (Discovery h1 coverage 0.840 vs 0.80 target); scale both tails
++            # around the unchanged q50 by 0.95 at h=1 only. q50, h3 and h7 unchanged.
++            f = self.tail_scale.get(h, 1.0)
++            # vol-state scaling multiplies the tails at h >= 3 only (h1 keeps the confirmed
++            # unconditional 0.95: its state-scaling costs coverage -0.0055 per slice for
++            # +0.0040 skill, the worst trade in the decomposition). Calm market -> state_f < 1
++            # narrows h3/h7; hot market -> state_f = 1 (champion-identical).
++            z = z[1] + f * state_f.get(h, 1.0) * (z - z[1])
+             for sid, (days, lv, Xa, vol) in feats.items():
+                 v = vol[-1] if np.isfinite(vol[-1]) else 1e-4
+@@ -96,5 +130,14 @@
+             ch = _shift(days, lv, h) - lv
+             ch = ch[np.isfinite(ch)]
+-            q = np.quantile(ch, QS) if len(ch) >= self.min_samples else np.zeros(3)
++            # Regime-C recent-window change quantiles (regime_change): the marketplace_ask /
++            # non-card spot series reprice in bursts (provider entries/exits), so the
++            # full-history h-day change distribution under-covers the forward window
++            # (Discovery coverage 0.58-0.63, q90 breach 25%). Use a trailing rec_win-day
++            # window when it has enough samples; fall back to the full history otherwise.
++            if not card and len(ch) >= self.rec_min:
++                ch_r = ch[-self.rec_win:]
++                q = np.quantile(ch_r, QS) if len(ch_r) >= self.min_samples else np.quantile(ch, QS)
++            else:
++                q = np.quantile(ch, QS) if len(ch) >= self.min_samples else np.zeros(3)
+             if card and zero_share >= self.sticky_share:
+                 q[1] = 0.0

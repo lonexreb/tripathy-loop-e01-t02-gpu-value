@@ -72,6 +72,47 @@ def sanity_report(fc: pd.DataFrame, last_value: pd.Series, max_abs_log_ratio: fl
     return out
 
 
+def paired_delta_stats(loss, loss_ref, base, block: int = 1, n_boot: int = BACKTEST_BOOTSTRAP, seed: int = 0) -> dict:
+    """Paired pooled-skill delta of a candidate vs a reference from per-origin loss sums (in time order), with a
+    circular moving-block bootstrap standard error over origins.
+
+    delta = (sum loss_ref - sum loss) / sum baseline loss, i.e. pooled skill(candidate) - pooled skill(reference).
+    `block` is the number of consecutive origins resampled together: origins closer than the longest horizon share
+    target dates, so resampling them one by one (block=1) understates the error of dense or long-horizon runs."""
+    arr = np.column_stack([np.asarray(x, dtype=float) for x in (loss, loss_ref, base)])
+    n = len(arr)
+    tot = arr[:, 2].sum() if n else 0.0
+    delta = float((arr[:, 1].sum() - arr[:, 0].sum()) / tot) if tot else None
+    block = max(1, min(int(block), n)) if n else 1
+    se = None
+    if n > 1 and tot:
+        rng = np.random.default_rng(seed)
+        n_blocks = -(-n // block)
+        starts = rng.integers(0, n, size=(n_boot, n_blocks))
+        idx = ((starts[:, :, None] + np.arange(block)[None, None, :]) % n).reshape(n_boot, -1)[:, :n]
+        den = arr[idx, 2].sum(1)
+        boot = (arr[idx, 1].sum(1) - arr[idx, 0].sum(1)) / np.where(den == 0, np.nan, den)
+        se = float(np.nanstd(boot, ddof=1))
+    gain = arr[:, 1] - arr[:, 0] if n else np.array([])
+    return {"pooled_skill_delta": delta, "delta_se": se, "delta_z": (delta / se) if (delta is not None and se) else None,
+            "n_origins": int(n), "block_origins": int(block), "n_independent_blocks": round(n / block, 2) if n else 0,
+            "share_origins_improved": float((gain > 0).mean()) if n else None}
+
+
+def overlap_block(origins, max_horizon_days: int) -> int:
+    """Number of consecutive origins whose target windows overlap (spacing shorter than the longest horizon)."""
+    days = sorted(pd.Timestamp(str(o)[:10]).toordinal() for o in origins)
+    if len(days) < 2:
+        return 1
+    gap = max(1, int(np.median(np.diff(days))))
+    return max(1, -(-int(max_horizon_days) // gap))
+
+
+def loss_by_origin(cells: pd.DataFrame) -> dict:
+    g = cells.groupby("origin_date")[["loss", "baseline_loss"]].sum()
+    return {str(o): {"loss_sum": float(r.loss), "baseline_sum": float(r.baseline_loss)} for o, r in g.iterrows()}
+
+
 def finite_or_none(x):
     """JSON-safe copy: non-finite floats become None (json.dumps(allow_nan=False) would otherwise crash the run)."""
     if isinstance(x, dict):
@@ -213,6 +254,7 @@ class Evaluator:
         d["mean_pinball"], d["mean_baseline_pinball"] = float(cells["loss"].mean()), float(cells["baseline_loss"].mean())
         d["skill_by_origin"] = {o: self._skill(g["loss"].mean(), g["baseline_loss"].mean())
                                 for o, g in cells.groupby("origin_date")}
+        d["loss_by_origin"] = loss_by_origin(cells)   # weights of the paired per-origin error of a skill delta
         cells = _diag_columns(cells)
         total = cells["loss"].sum()
         d["loss_decomposition"] = _components(cells)
@@ -257,6 +299,7 @@ class Evaluator:
         if not expose_diagnostics:
             agg = self.aggregates(cells)
             out = {k: agg[k] for k in HOLDOUT_KEYS}
+            self.last_loss_by_origin = loss_by_origin(cells)   # lab-only (never part of the released aggregates)
             return (out, sanity) if with_sanity else out
         d = self.diagnostics(cells)
         d["scoring"] = sinfo
@@ -285,8 +328,10 @@ class Evaluator:
             if phase == "full":
                 f = load_forecaster(forecaster_path)  # fresh instance: same Holdout numbers as the two-stage path
             hold, hs = self.evaluate(f, list(self.cfg.holdout_origins), False, with_sanity=True)
+            by_origin = self.last_loss_by_origin
             bench = self.benchmark_skill(f, self.cfg.benchmark_origin)
-            out.update(holdout=hold, holdout_sanity_ok=bool(hs["ok"]),
+            # holdout_by_origin is lab-only: the controller keeps it out of the ledger and of everything the agent sees
+            out.update(holdout=hold, holdout_sanity_ok=bool(hs["ok"]), holdout_by_origin=by_origin,
                        benchmark_2026_10_24={k: bench[k] for k in HOLDOUT_KEYS})
         out["seconds"] = round(time.time() - t0, 2)
         return out
@@ -313,17 +358,18 @@ class Evaluator:
         m["gain"] = m["loss_ref"] - m["loss"]
         base = m["baseline_loss"].sum()
         by_o = m.groupby("origin_date")[["loss", "loss_ref", "baseline_loss"]].sum()
-        rng = np.random.default_rng(0)
-        idx = rng.integers(0, len(by_o), size=(BACKTEST_BOOTSTRAP, len(by_o)))
-        arr = by_o.to_numpy()
-        boot = (arr[idx, 1].sum(1) - arr[idx, 0].sum(1)) / arr[idx, 2].sum(1)
-        delta = float(m["gain"].sum() / base) if base else None
-        se = float(boot.std(ddof=1)) if len(by_o) > 1 else None
+        by_o = by_o.sort_index()
+        # origins closer than the longest horizon share target dates: bootstrap them in blocks, not one by one
+        block = overlap_block(by_o.index, max(self.cfg.horizons))
+        st = paired_delta_stats(by_o["loss"], by_o["loss_ref"], by_o["baseline_loss"], block)
+        iid = paired_delta_stats(by_o["loss"], by_o["loss_ref"], by_o["baseline_loss"], 1)
+        delta, se = st["pooled_skill_delta"], st["delta_se"]
         out.update({
             "n_origins": len(origins), "n_cells": len(m), "origins": [origins[0], origins[-1]],
             "candidate": self.aggregates(cells["candidate"]), "reference": self.aggregates(cells["reference"]),
-            "pooled_skill_delta": delta, "delta_se_origin_bootstrap": se,
-            "delta_z": (delta / se) if (delta is not None and se) else None,
+            "pooled_skill_delta": delta, "delta_se_origin_bootstrap": se, "delta_z": st["delta_z"],
+            "bootstrap_block_origins": st["block_origins"], "n_independent_blocks": st["n_independent_blocks"],
+            "delta_se_iid_origins": iid["delta_se"],   # ignores overlapping targets; too small on dense origins
             "share_origins_improved": float((by_o["loss_ref"] > by_o["loss"]).mean()),
             "share_cells_improved": float((m["gain"] > 0).mean()),
         })

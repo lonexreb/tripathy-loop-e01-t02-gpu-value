@@ -44,7 +44,9 @@ def fake_eval(path: Path, phase: str = "full") -> dict:
     if phase in ("full", "discovery"):
         out["discovery"] = disc
     if phase in ("full", "holdout"):
-        out.update(holdout=hold, holdout_sanity_ok=True, benchmark_2026_10_24={"pooled_skill": m["pooled"]})
+        by_origin = {o: {"loss_sum": 10.0 * (1 - m["pooled"]), "baseline_sum": 10.0} for o in ("2026-09-30", "2026-10-07")}
+        out.update(holdout=hold, holdout_sanity_ok=True, benchmark_2026_10_24={"pooled_skill": m["pooled"]},
+                   holdout_by_origin=by_origin)
     return out
 
 
@@ -240,3 +242,14 @@ def test_strands_driver_wires_memory_tools(ctrl, monkeypatch):
 def test_infer_family_recognises_literal_family_names():
     assert infer_family("horizon_structure (bold): replace the direct h-day q50 with an iterated forecast") == \
         "horizon_structure"
+
+
+def test_per_origin_holdout_losses_never_reach_the_agent(ctrl):
+    """The lab keeps per-origin Holdout losses in the champion state only: not in tool results, ledger or archive."""
+    assert ctrl.champion["holdout_by_origin"]
+    r = ctrl.propose_and_test_forecaster("win", "", cand(0.34, 0.27, 0.80, "win = 1"), "regime_change", "bold")
+    assert r["status"] == "PROMOTED" and ctrl.champion["holdout_by_origin"]["2026-09-30"]["loss_sum"] == pytest.approx(6.6)
+    assert r["holdout_paired_vs_champion"]["n_origins"] == 2
+    leaked = [json.dumps(r, default=str), ctrl.cfg.ledger_path.read_text(), json.dumps(ctrl.inspect_current_state(), default=str),
+              *(p.read_text() for p in (ctrl.root / "outputs" / "candidates").rglob("result.json"))]
+    assert all("holdout_by_origin" not in x and '"loss_sum"' not in x and "baseline_sum" not in x for x in leaked)

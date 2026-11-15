@@ -408,3 +408,72 @@ def test_gate3_margin_follows_the_relative_rule():
     assert g["gate3_calibration"]["pass"] and gate_margins(g)["gate3"] >= 0
     g = evaluate_gates({**champ, "coverage_80": 0.70}, champ, LabConfig())
     assert not g["gate3_calibration"]["pass"] and gate_margins(g)["gate3"] < 0
+
+
+# ------------------------------------------------------- paired error of a skill difference ----
+def _by_origin(losses, base=10.0, start="2026-07-15", step=7):
+    d0 = dt.date.fromisoformat(start)
+    return {(d0 + dt.timedelta(days=step * i)).isoformat(): {"loss_sum": float(x), "baseline_sum": base}
+            for i, x in enumerate(losses)}
+
+
+def test_paired_delta_stats_matches_pooled_skill_delta_and_block_bootstrap_is_wider():
+    from lab.evaluator import overlap_block, paired_delta_stats
+
+    rng = np.random.default_rng(1)
+    base = np.full(40, 10.0)
+    ref = 6.0 + np.repeat(rng.normal(0, 0.5, 8), 5)            # 8 regimes of 5 adjacent origins: serial correlation
+    cand = ref - 0.1 - np.repeat(rng.normal(0, 0.3, 8), 5)
+    iid = paired_delta_stats(cand, ref, base, block=1)
+    blk = paired_delta_stats(cand, ref, base, block=5)
+    assert iid["pooled_skill_delta"] == pytest.approx((ref.sum() - cand.sum()) / base.sum())
+    assert blk["pooled_skill_delta"] == iid["pooled_skill_delta"]
+    assert blk["delta_se"] > 1.5 * iid["delta_se"]             # iid resampling of overlapping origins is over-confident
+    assert blk["n_independent_blocks"] == 8 and iid["n_independent_blocks"] == 40
+    assert paired_delta_stats([1.0], [2.0], [4.0])["delta_se"] is None
+    assert overlap_block(["2026-07-15", "2026-07-22", "2026-07-29"], 7) == 1      # weekly origins, 7-day horizon
+    assert overlap_block(["2026-07-15", "2026-07-16", "2026-07-17"], 7) == 7      # daily pseudo-origins
+    assert overlap_block(["2023-06-01", "2023-07-01", "2023-08-01"], 180) == 6    # monthly origins, 180-day horizon
+
+
+def test_compare_discovery_reports_paired_noise():
+    from lab.rsi_controller import paired_origin_stats
+
+    champ = {"pooled_skill": 0.40, "skill_by_origin": {f"o{i}": 0.40 for i in range(6)},
+             "loss_by_origin": _by_origin([6.0] * 6)}
+    noisy = {"pooled_skill": 0.41, "skill_by_origin": {f"o{i}": 0.40 + d for i, d in enumerate((.08, -.06, .07, -.05, .06, -.04))},
+             "loss_by_origin": _by_origin([5.2, 6.6, 5.3, 6.5, 5.4, 6.4])}
+    steady = {"pooled_skill": 0.41, "skill_by_origin": {f"o{i}": 0.41 + 0.001 * (i % 2) for i in range(6)},
+              "loss_by_origin": _by_origin([5.9, 5.89, 5.9, 5.89, 5.9, 5.89])}
+    n, s = compare_discovery(noisy, champ, CFG), compare_discovery(steady, champ, CFG)
+    assert abs(n["origin_delta_noise"]["z"]) < 2 < s["origin_delta_noise"]["z"]
+    assert abs(n["paired_pooled_delta"]["delta_z"]) < 2 < s["paired_pooled_delta"]["delta_z"]
+    assert s["paired_pooled_delta"]["pooled_skill_delta"] == pytest.approx(0.0105, abs=1e-6)
+    old = compare_discovery({"pooled_skill": 0.41}, {"pooled_skill": 0.40}, CFG)      # champion states without the data
+    assert old["paired_pooled_delta"] is None and old["origin_delta_noise"] is None
+    other_cells = {"loss_by_origin": _by_origin([5.9] * 6, base=11.0)}
+    assert paired_origin_stats(other_cells["loss_by_origin"], champ["loss_by_origin"], CFG) is None
+
+
+def test_gate1_is_unchanged_by_default_and_noise_aware_when_enabled():
+    from dataclasses import replace
+
+    from lab.rsi_controller import gate_descriptions, paired_origin_stats
+
+    champ = _by_origin([7.0] * 5, start="2026-09-30")
+    small = paired_origin_stats(_by_origin([6.985, 6.98, 6.985, 6.98, 6.985], start="2026-09-30"), champ, CFG)  # +0.0017, tight
+    big = paired_origin_stats(_by_origin([5.0, 8.6, 5.2, 8.7, 6.5], start="2026-09-30"), champ, CFG)            # +0.02, noisy
+    assert small["delta_z"] > 3 and big["delta_z"] < 2
+    c = _hold(pooled=0.3000)
+    assert evaluate_gates(_hold(pooled=0.3017), c, CFG, small)["gate1_pooled_gain"]["pass"] is False   # fixed +0.003 rule
+    assert evaluate_gates(_hold(pooled=0.3200), c, CFG, big)["gate1_pooled_gain"]["pass"] is True
+    z = LabConfig(gates=replace(CFG.gates, pooled_gain_z=2.0))
+    g = evaluate_gates(_hold(pooled=0.3017), c, z, small)["gate1_pooled_gain"]
+    assert g["pass"] is True and g["rule"] == "paired_z"                                               # small, consistent
+    assert evaluate_gates(_hold(pooled=0.3200), c, z, big)["gate1_pooled_gain"]["pass"] is False       # large, noise
+    assert evaluate_gates(_hold(pooled=0.2990), c, z, small)["gate1_pooled_gain"]["pass"] is False     # never a loss
+    g = evaluate_gates(_hold(pooled=0.3017), c, z, None)["gate1_pooled_gain"]                          # no paired data
+    assert g["pass"] is False and g["rule"] == "fixed"
+    few = {**small, "n_independent_blocks": 1}                                                         # overlapping targets
+    assert evaluate_gates(_hold(pooled=0.3017), c, z, few)["gate1_pooled_gain"]["rule"] == "fixed"
+    assert "paired standard errors" in gate_descriptions(z)["gate1"] and "paired" not in gate_descriptions(CFG)["gate1"]

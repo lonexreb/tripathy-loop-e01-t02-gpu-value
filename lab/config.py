@@ -51,6 +51,12 @@ class GateThresholds:
     sanity_max_abs_log_ratio: float = math.log(10.0)  # any quantile beyond 10x / 0.1x the last value is rejected
     sanity_max_invalid_share: float = 0.05            # crossing / non-positive / missing cells (baseline-filled)
     discovery_min_gain: float = 0.0                   # Discovery pooled skill must beat the champion's by more
+    # Opt-in noise-aware gate 1 (None = the fixed pooled_min_gain rule). When set, and the paired per-origin Holdout
+    # losses of candidate and champion are available with at least pooled_gain_min_blocks independent origin blocks,
+    # the required Holdout gain is pooled_gain_z paired standard errors instead of the fixed pooled_min_gain: small
+    # consistent gains pass, large noisy ones do not.
+    pooled_gain_z: float | None = None
+    pooled_gain_min_blocks: int = 4
 
 
 @dataclass(frozen=True)
@@ -128,7 +134,7 @@ def _flag(name: str, default: bool = False) -> bool:
 
 
 def load_config(**overrides) -> LabConfig:
-    """Config from the environment (LAB_ENABLE_EXA, LAB_EXA_CACHE_ONLY, LAB_ROOT, LAB_CACHE_DIR) plus overrides."""
+    """Config from the environment (LAB_ENABLE_EXA, LAB_EXA_CACHE_ONLY, LAB_ROOT, LAB_CACHE_DIR, LAB_POOLED_GAIN_Z) plus overrides."""
     kw = {"enable_exa": _flag("LAB_ENABLE_EXA"), "exa_cache_only": _flag("LAB_EXA_CACHE_ONLY")}
     if os.environ.get("LAB_ROOT"):
         kw["root"] = Path(os.environ["LAB_ROOT"]).resolve()
@@ -141,6 +147,8 @@ def load_config(**overrides) -> LabConfig:
                   gates=GateThresholds(pooled_floor=0.0))
     kw.update(overrides)
     cfg = LabConfig(**kw)
+    if os.environ.get("LAB_POOLED_GAIN_Z"):
+        cfg = cfg.with_(gates=replace(cfg.gates, pooled_gain_z=float(os.environ["LAB_POOLED_GAIN_Z"])))
     check_partition(cfg)
     return cfg
 

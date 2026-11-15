@@ -226,3 +226,36 @@ def test_lab_is_immutable(ctrl):
     with pytest.raises(PermissionError):
         ctrl.propose_and_test_forecaster("tamper", "", (FIX / "degraded_5x.py").read_text())
     assert "# tampered" not in p.read_text()
+
+
+def test_slice_gpu_family_joins_aws_targets_to_side_tables(sandbox):
+    s = sandbox.get_pack_slice("2026-09-23")
+    aws = s["targets"][s["targets"]["series_id"].str.startswith("aws_spot.")]
+    assert len(aws) == 80 and not aws["gpu_model"].isin(set(s["daily_statistics"]["gpu_model"])).any()
+    for name in ("daily_statistics", "aggregator_medians", "index_prints", "hardware_fundamentals", "capability_units"):
+        assert aws["gpu_family"].isin(set(s[name]["gpu_family"])).all(), name
+
+
+def test_paired_backtest_on_dense_pseudo_origins(evaluator):
+    from lab.evaluator import backtest_origins
+
+    o = backtest_origins(evaluator.cfg, 1, "2026-09-20", "2026-09-23")
+    r = evaluator.paired_backtest(FIX / "candidate_h123.py", SEED, o, ["does.not.exist"])
+    assert r["n_origins"] == 4 and r["n_cells"] == 4 * 3 * 97
+    assert r["pooled_skill_delta"] == pytest.approx(r["candidate"]["pooled_skill"] - r["reference"]["pooled_skill"])
+    assert r["delta_se_origin_bootstrap"] >= 0 and 0 <= r["share_origins_improved"] <= 1
+    assert set(r["delta_by_horizon"]) == {"1", "3", "7"} and r["series_cells"] == {"does.not.exist": []}
+    same = evaluator.paired_backtest(SEED, SEED, o[:2])
+    assert same["pooled_skill_delta"] == 0 and same["share_cells_improved"] == 0
+    with pytest.raises(PermissionError):
+        evaluator.paired_backtest(SEED, SEED, ["2026-09-30"])
+
+
+def test_profile_pack_slice_reports_tables_joins_and_target_quality(sandbox):
+    from lab.workbench import profile_pack_slice
+
+    p = profile_pack_slice(sandbox.get_pack_slice("2026-09-23"), "2026-09-23")
+    assert p["tables"]["series_history"]["date_range"][1] == "2026-09-23"
+    assert p["target_joins_by_gpu_family"]["daily_statistics"]["targets_with_rows"] == 97
+    assert p["missing_targets"] == [] and p["flagged_target_series"]["n_rows"] > 0
+    json.dumps(p)

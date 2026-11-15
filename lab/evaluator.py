@@ -31,6 +31,8 @@ from lab.sandbox import ExaSignals, PointInTimeSandbox
 FC_COLUMNS = ["series_id", "origin_date", "horizon_days", "q10", "q50", "q90"]
 HOLDOUT_KEYS = ("pooled_skill", "median_skill", "coverage_80", "skill_by_horizon")
 PHASES = ("full", "discovery", "holdout")
+MAX_BACKTEST_SERIES = 5        # series whose per-cell residuals a backtest returns
+BACKTEST_BOOTSTRAP = 2000
 
 
 def sanity_report(fc: pd.DataFrame, last_value: pd.Series, max_abs_log_ratio: float) -> dict:
@@ -289,6 +291,67 @@ class Evaluator:
         out["seconds"] = round(time.time() - t0, 2)
         return out
 
+    # ------------------------------------------------------------------ dense paired backtest ----
+    def paired_backtest(self, cand_path: str | Path, ref_path: str | Path, origins: list[str],
+                        series_ids: list[str] | None = None) -> dict:
+        """Candidate vs reference on dense pseudo-origins inside the Discovery window (see backtest_origins).
+
+        Same scoring as Discovery, paired cell by cell: skill delta with an origin-block bootstrap standard error, the
+        share of origins that improve, deltas by horizon / slice / series, and per-cell residuals of a few series."""
+        bad = sorted(set(origins) - set(backtest_origins(self.cfg, 1)))
+        if bad or not origins:
+            raise PermissionError(f"backtest origins must lie in the Discovery window; bad: {bad[:5]}")
+        out, cells = {}, {}
+        for tag, path in (("candidate", cand_path), ("reference", ref_path)):
+            fc, info = self.forecast(load_forecaster(path), origins)
+            cells[tag], _ = self.score(fc, origins)
+            secs = list(info["seconds_by_origin"].values())
+            out[f"{tag}_seconds_per_origin"] = {"mean": round(float(np.mean(secs)), 3), "max": round(max(secs), 3)}
+        k = ["series_id", "origin_date", "horizon_days"]
+        c = _diag_columns(cells["candidate"])
+        m = c.merge(cells["reference"][k + ["q10", "q50", "q90", "loss"]], on=k, suffixes=("", "_ref"))
+        m["gain"] = m["loss_ref"] - m["loss"]
+        base = m["baseline_loss"].sum()
+        by_o = m.groupby("origin_date")[["loss", "loss_ref", "baseline_loss"]].sum()
+        rng = np.random.default_rng(0)
+        idx = rng.integers(0, len(by_o), size=(BACKTEST_BOOTSTRAP, len(by_o)))
+        arr = by_o.to_numpy()
+        boot = (arr[idx, 1].sum(1) - arr[idx, 0].sum(1)) / arr[idx, 2].sum(1)
+        delta = float(m["gain"].sum() / base) if base else None
+        se = float(boot.std(ddof=1)) if len(by_o) > 1 else None
+        out.update({
+            "n_origins": len(origins), "n_cells": len(m), "origins": [origins[0], origins[-1]],
+            "candidate": self.aggregates(cells["candidate"]), "reference": self.aggregates(cells["reference"]),
+            "pooled_skill_delta": delta, "delta_se_origin_bootstrap": se,
+            "delta_z": (delta / se) if (delta is not None and se) else None,
+            "share_origins_improved": float((by_o["loss_ref"] > by_o["loss"]).mean()),
+            "share_cells_improved": float((m["gain"] > 0).mean()),
+        })
+        out["delta_by_horizon"] = {str(h): float(g["gain"].sum() / g["baseline_loss"].sum())
+                                   for h, g in m.groupby("horizon_days")}
+        sl = m.groupby(["instrument_class", "horizon_days"]).agg(
+            n_cells=("loss", "size"), gain_sum=("gain", "sum"), baseline_sum=("baseline_loss", "sum"),
+            coverage_80=("inside", "mean")).reset_index()
+        sl["skill_delta_within_slice"] = sl["gain_sum"] / sl["baseline_sum"]
+        sl["contribution_to_pooled_delta"] = sl["gain_sum"] / base
+        out["delta_by_slice"] = _records(sl.drop(columns=["gain_sum", "baseline_sum"]))
+        ser = m.groupby("series_id").agg(
+            instrument_class=("instrument_class", "first"), loss=("loss", "sum"), loss_ref=("loss_ref", "sum"),
+            baseline=("baseline_loss", "sum"), coverage_80=("inside", "mean"), mean_bias_rel=("bias_rel", "mean"),
+            mean_width_rel=("width_rel", "mean")).reset_index()
+        ser["skill"] = 1 - ser["loss"] / ser["baseline"].replace(0, np.nan)
+        ser["skill_ref"] = 1 - ser["loss_ref"] / ser["baseline"].replace(0, np.nan)
+        ser["contribution_to_pooled_delta"] = (ser["loss_ref"] - ser["loss"]) / base
+        ser = ser.drop(columns=["loss", "loss_ref", "baseline"]).sort_values("contribution_to_pooled_delta")
+        out["series_most_hurt"] = _records(ser.head(8))
+        out["series_most_helped"] = _records(ser.tail(8).iloc[::-1])
+        out["series_skill_quantiles"] = {q: float(ser["skill"].quantile(q)) for q in (0.1, 0.25, 0.5, 0.75, 0.9)}
+        sids = list(dict.fromkeys(series_ids or []))[:MAX_BACKTEST_SERIES]
+        cols = k + ["last_value", "y", "q10", "q50", "q90", "q10_ref", "q50_ref", "q90_ref", "loss", "loss_ref",
+                    "baseline_loss"]
+        out["series_cells"] = {sid: _records(m.loc[m["series_id"] == sid, cols]) for sid in sids}
+        return out
+
     # --------------------------------------------------------------- official scorer cross-check ----
     def official_score(self, fc: pd.DataFrame, origins: list[str]) -> dict:
         """Run starter/scorer.py on the same forecasts (frozen mode for one origin, backtest mode otherwise)."""
@@ -307,6 +370,24 @@ class Evaluator:
                 cmd += ["--history", str(self.sandbox.series_path), "--missing-as-baseline"]
             subprocess.run(cmd, check=True, capture_output=True, text=True)
             return json.loads((td / "report.json").read_text())
+
+
+def backtest_origins(cfg: LabConfig, stride_days: int = 1, start: str | None = None,
+                     end: str | None = None) -> list[str]:
+    """Dense pseudo-origins (every `stride_days`, counted back from `end`) inside the Discovery window: on or after the
+    first Discovery origin, and early enough that every target date precedes the first Holdout origin's targets."""
+    import datetime as dt
+
+    d0, d1 = dt.date.fromisoformat(cfg.discovery_origins[0]), dt.date.fromisoformat(cfg.discovery_origins[-1])
+    last_ok = dt.date.fromisoformat(cfg.holdout_origins[0]) - dt.timedelta(days=max(cfg.horizons))
+    lo = max(d0, dt.date.fromisoformat(start)) if start else d0
+    hi = min(d1, last_ok, dt.date.fromisoformat(end)) if end else min(d1, last_ok)
+    step = max(1, int(stride_days))
+    out, d = [], hi
+    while d >= lo:
+        out.append(d.isoformat())
+        d -= dt.timedelta(days=step)
+    return out[::-1]
 
 
 def _diag_columns(cells: pd.DataFrame) -> pd.DataFrame:
@@ -355,11 +436,20 @@ def main() -> int:
     ap.add_argument("--out", required=True, help="JSON result path")
     ap.add_argument("--enable-exa", action="store_true")
     ap.add_argument("--exa-cache-only", action="store_true")
-    ap.add_argument("--phase", choices=PHASES, default="full")
+    ap.add_argument("--phase", choices=PHASES + ("backtest",), default="full")
+    ap.add_argument("--reference", help="backtest: reference forecaster (default: the candidate is compared to it)")
+    ap.add_argument("--origins", default="", help="backtest: comma-separated pseudo-origins")
+    ap.add_argument("--series", default="", help="backtest: comma-separated series_ids to return per-cell residuals for")
     a = ap.parse_args()
     cfg = load_config(enable_exa=a.enable_exa, exa_cache_only=a.exa_cache_only)
     try:
-        res = {"ok": True, **finite_or_none(Evaluator(cfg).full_run(a.forecaster, a.phase))}
+        ev = Evaluator(cfg)
+        if a.phase == "backtest":
+            split = lambda x: [v.strip() for v in x.split(",") if v.strip()]
+            run = ev.paired_backtest(a.forecaster, a.reference, split(a.origins), split(a.series))
+        else:
+            run = ev.full_run(a.forecaster, a.phase)
+        res = {"ok": True, **finite_or_none(run)}
     except Exception as e:  # reported to the controller as a RUNTIME_ERROR
         tb = traceback.format_exc().splitlines()
         res = {"ok": False, "error": f"{type(e).__name__}: {e}"[:2000], "traceback_tail": "\n".join(tb[-25:])}

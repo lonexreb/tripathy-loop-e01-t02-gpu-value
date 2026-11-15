@@ -16,6 +16,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from functools import cached_property
@@ -32,6 +33,31 @@ STATIC_CATALOG_COLUMNS = [
 ]
 SERIES_COLUMNS = ["series_id", "date", "value", "n_obs", "n_providers", "is_filled", "instrument_class"]
 TIME_INDEXED = ("series_history", "daily_statistics", "aggregator_medians", "index_prints", "hardware_fundamentals")
+
+
+_GPU_VENDOR_WORDS = {"NVIDIA", "AMD", "INTEL", "TESLA", "INSTINCT", "RADEON", "GEFORCE", "HABANA", "QUADRO"}
+_GPU_FORM_WORDS = re.compile(r"^(SXM\d*|PCIE|PCLE|NVL|OAM|DGXS|\d+\s*GB|GB|ADA|GENERATION|BLACKWELL|ULTRA)$")
+
+
+def gpu_family(name) -> str:
+    """Canonical GPU family key that joins the pack's naming schemes ("NVIDIA H100", "H100 SXM 80GB",
+    "NVIDIA H100 SXM5 80GB" -> "H100"; "RTX 6000 Ada" / "NVIDIA RTX 6000 Ada Generation" -> "RTX 6000")."""
+    if not isinstance(name, str) or not name.strip():
+        return ""
+    toks = [t for t in re.sub(r"\(.*?\)", " ", name.upper()).replace("-", " ").split()
+            if t not in _GPU_VENDOR_WORDS]
+    out = []
+    for t in toks:
+        if out and _GPU_FORM_WORDS.match(t):
+            break
+        out.append(t)
+        if any(ch.isdigit() for ch in t):
+            break
+    return " ".join(out)
+
+
+GPU_NAME_COLUMNS = {"daily_statistics": "gpu_model", "aggregator_medians": "gpu_model", "index_prints": "gpu_model",
+                    "hardware_fundamentals": "accelerator", "capability_units": "gpu_generation"}
 
 
 def _iso_plus(dates: pd.Series, days: int | pd.Series) -> pd.Series:
@@ -136,8 +162,11 @@ class PointInTimeSandbox:
         units = pd.read_csv(cap / "capability_units.csv", low_memory=False)
         series = self.series_full.copy()
         series["available_date"] = series["date"]
-        return {"series_history": series, "daily_statistics": ds, "aggregator_medians": ag, "index_prints": ix,
-                "hardware_fundamentals": hw, "capability_ladder": ladder, "capability_units": units}
+        out = {"series_history": series, "daily_statistics": ds, "aggregator_medians": ag, "index_prints": ix,
+               "hardware_fundamentals": hw, "capability_ladder": ladder, "capability_units": units}
+        for name, col in GPU_NAME_COLUMNS.items():
+            out[name]["gpu_family"] = out[name][col].map(gpu_family)
+        return out
 
     # ------------------------------------------------------------------------------ slices ----
     def get_pack_slice(self, origin_date: str, target_ids: list[str] | None = None) -> dict[str, pd.DataFrame]:
@@ -153,6 +182,8 @@ class PointInTimeSandbox:
         tg = self.final_catalog if origin_date > CATALOG_AS_OF else self.catalog
         tg = pd.concat([cat, tg[STATIC_CATALOG_COLUMNS]]).drop_duplicates("series_id")
         out["targets"] = tg.loc[tg["series_id"].isin(ids)].sort_values("series_id").reset_index(drop=True)
+        for k in ("catalog", "targets"):
+            out[k]["gpu_family"] = out[k]["gpu_model"].map(gpu_family)
         assert_point_in_time(out, origin_date)
         return out
 
@@ -243,31 +274,60 @@ ALLOWED_IMPORTS = {"numpy", "pandas", "math", "statistics", "dataclasses", "typi
                    "itertools", "re", "datetime", "warnings", "__future__", "bisect", "heapq", "operator", "enum"}
 FORBIDDEN_NAMES = {"open", "eval", "exec", "compile", "__import__", "input", "breakpoint", "globals", "locals",
                    "vars", "memoryview"}
+FORBIDDEN_ATTRS = {"load", "save", "savez", "savez_compressed", "fromregex", "memmap", "DataSource", "HDFStore",
+                   "ExcelFile", "ExcelWriter"}  # numpy/pandas file readers/writers not covered by the prefixes below
 FORBIDDEN_ATTR_PREFIXES = ("read_", "to_csv", "to_parquet", "to_pickle", "to_json", "to_sql", "to_excel",
                            "to_feather", "to_hdf", "to_stata", "loadtxt", "savetxt", "fromfile", "tofile", "genfromtxt")
+# Opt-in (LAB_ALLOW_ML_IMPORTS=1) model-class libraries, minus their dataset-download / file I/O surfaces.
+ML_IMPORTS = {"scipy", "sklearn", "lightgbm"}
+ML_FORBIDDEN_MODULES = ("sklearn.datasets", "sklearn.externals", "scipy.io", "scipy.datasets", "scipy.misc")
+ML_FORBIDDEN_ATTR_PREFIXES = ("fetch_", "load_", "save_", "dump", "savemat", "loadmat", "mmread", "mmwrite")
+ML_FORBIDDEN_KEYWORDS = {"model_file", "filename", "fname", "file", "data_home", "path"}
+ML_FORBIDDEN_LGB = {"Dataset", "Booster", "train", "cv"}  # lightgbm's native API can read files; use the sklearn API
 
 
-def audit_forecaster_source(code: str) -> list[str]:
+def ml_imports_enabled() -> bool:
+    return os.environ.get("LAB_ALLOW_ML_IMPORTS", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def allowed_imports(ml: bool | None = None) -> set[str]:
+    return ALLOWED_IMPORTS | (ML_IMPORTS if (ml_imports_enabled() if ml is None else ml) else set())
+
+
+def audit_forecaster_source(code: str, allow_ml: bool | None = None) -> list[str]:
     """Information firewall for candidate code: no I/O, no network, no dynamic imports. Returns problems."""
     try:
         tree = ast.parse(code)
     except SyntaxError as e:
         return [f"SyntaxError: {e}"]
-    problems = []
+    allowed, problems = allowed_imports(allow_ml), []
+    attr_prefixes = FORBIDDEN_ATTR_PREFIXES + (ML_FORBIDDEN_ATTR_PREFIXES if ML_IMPORTS & allowed else ())
+    lgb_aliases = {a.asname or a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names
+                   if a.name.split(".")[0] == "lightgbm"}
     for node in ast.walk(tree):
+        if (isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] == "lightgbm"
+                and any(a.name in ML_FORBIDDEN_LGB for a in node.names)) or (
+                isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in lgb_aliases
+                and node.attr in ML_FORBIDDEN_LGB):
+            problems.append("lightgbm's native Dataset/Booster/train/cv API is not allowed (use LGBMRegressor)")
         if isinstance(node, ast.Import):
-            mods = [a.name.split(".")[0] for a in node.names]
+            full = [a.name for a in node.names]
         elif isinstance(node, ast.ImportFrom):
-            mods = [(node.module or "").split(".")[0]]
+            full = [node.module or ""] + [f"{node.module}.{a.name}" for a in node.names]
         else:
-            mods = []
-        problems += [f"import of '{m}' is not allowed (allowed: {sorted(ALLOWED_IMPORTS)})" for m in mods
-                     if m not in ALLOWED_IMPORTS]
+            full = []
+        problems += [f"import of '{m.split('.')[0]}' is not allowed (allowed: {sorted(allowed)})" for m in full
+                     if m.split(".")[0] not in allowed]
+        problems += [f"import of '{m}' is not allowed (dataset download / file I/O)" for m in full
+                     if any(m == b or m.startswith(b + ".") for b in ML_FORBIDDEN_MODULES)]
         if isinstance(node, ast.Name) and node.id in FORBIDDEN_NAMES:
             problems.append(f"use of '{node.id}' is not allowed")
-        if isinstance(node, ast.Attribute) and (node.attr.startswith(FORBIDDEN_ATTR_PREFIXES) or node.attr.startswith("__")
+        if isinstance(node, ast.Attribute) and (node.attr.startswith(attr_prefixes) or node.attr in FORBIDDEN_ATTRS
+                                                or node.attr.startswith("__")
                                                 and node.attr not in ("__init__", "__name__")):
             problems.append(f"attribute '.{node.attr}' is not allowed (no file I/O or dunder access)")
+        if (isinstance(node, ast.keyword) and node.arg in ML_FORBIDDEN_KEYWORDS and ML_IMPORTS & allowed):
+            problems.append(f"keyword argument '{node.arg}=' is not allowed (no file I/O)")
     has_cls = any(isinstance(n, ast.ClassDef) and n.name == "Forecaster" for n in tree.body)
     if not has_cls:
         problems.append("module must define a top-level class `Forecaster` with predict_origin(...)")

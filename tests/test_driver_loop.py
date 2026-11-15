@@ -47,6 +47,8 @@ def ctrl(tmp_path, monkeypatch):
                 return {"ok": False, "error": "ValueError: boom"}
             return {"ok": True, "discovery": _disc(0.26), "holdout": {**HOLD, "pooled_skill": 0.29},
                     "benchmark_2026_10_24": {}}
+        if module_args[:2] == ["lab.workbench", "profile"]:
+            return {"ok": True, "origin_date": module_args[-1], "tables": {}}
         return {"ok": True, "results": {o: {"n": 1} for o in module_args[module_args.index("--origins") + 1].split(",")}}
 
     monkeypatch.setattr(c, "_run_lab_child", fake_child)
@@ -320,3 +322,79 @@ def test_playbook_updates_are_budgeted_and_family_is_inferred(ctrl):
     tb.wb.write(CAND)
     r = json.loads(tb.submit_candidate_for_holdout("Per-horizon conformal widening of the q90 tail", ""))
     assert r["hypothesis_family"] == "interval_calibration"
+
+
+# ------------------------------------------------------------------------- research tools (backtest/profile) ----
+def test_backtest_origins_stay_inside_discovery_window():
+    from lab.evaluator import backtest_origins
+
+    cfg = LabConfig()
+    daily = backtest_origins(cfg)
+    assert daily[0] == DISCOVERY_ORIGINS[0] and daily[-1] == DISCOVERY_ORIGINS[-1] and len(daily) == 71
+    assert backtest_origins(cfg, 7) == list(DISCOVERY_ORIGINS)
+    assert backtest_origins(cfg, 1, "2026-09-20", "2026-12-31") == ["2026-09-20", "2026-09-21", "2026-09-22",
+                                                                      "2026-09-23"]
+    assert max(daily) < HOLDOUT_ORIGINS[0]
+
+
+def test_backtest_candidate_is_paired_dense_and_not_an_experiment(ctrl):
+    r = ctrl.backtest_candidate(CAND, series_ids=["s1"])
+    assert r["status"] == "BACKTEST_OK"
+    args = ctrl.child_calls[-1]
+    assert args[0] == "lab.evaluator" and args[args.index("--phase") + 1] == "backtest"
+    assert Path(args[args.index("--reference") + 1]).read_text() == CHAMP
+    assert len(args[args.index("--origins") + 1].split(",")) == 71 and args[args.index("--series") + 1] == "s1"
+    assert ctrl.cfg.forecaster_path.read_text() == CHAMP and ctrl.next_iteration() == 1
+    assert ctrl.backtest_candidate("import os\n" + CAND)["status"] == "BACKTEST_REJECTED"
+    assert ctrl.backtest_candidate(CAND, start_date="2026-13-01")["status"] == "BACKTEST_REJECTED"
+    assert "BACKTEST_OK" in _statuses(ctrl)
+
+
+def test_toolbox_backtest_budget_reference_and_profile(ctrl, monkeypatch):
+    monkeypatch.setenv("RSI_MAX_BACKTESTS", "1")
+    tb = AgentToolbox(ctrl)
+    assert json.loads(tb.backtest_candidate())["status"] == "BACKTEST_SKIPPED"
+    assert json.loads(tb.backtest_candidate(against_iteration=42))["status"] == "BACKTEST_REJECTED"
+    tb.edit_candidate("WIDTH = 0.05", "WIDTH = 0.07")
+    r = json.loads(tb.backtest_candidate(stride_days=7))
+    assert r["status"] == "BACKTEST_OK" and r["backtests_left"] == 0
+    assert json.loads(tb.backtest_candidate())["status"] == "BACKTEST_BUDGET_EXHAUSTED"
+    assert json.loads(tb.profile_pack(HOLDOUT_ORIGINS[0]))["status"] == "PROFILE_REJECTED"
+    assert json.loads(tb.profile_pack(DISCOVERY_ORIGINS[-1]))["status"] == "PROFILE_OK"
+    assert ctrl.child_calls[-1][:2] == ["lab.workbench", "profile"]
+    assert {"backtest_candidate", "profile_pack"} <= set(AgentToolbox.TOOL_NAMES)
+
+
+def test_ml_imports_are_opt_in_and_keep_the_io_firewall(monkeypatch):
+    from lab.sandbox import audit_forecaster_source as audit
+
+    cls = "\nclass Forecaster:\n    pass\n"
+    ok = "import lightgbm as lgb\nfrom sklearn.linear_model import QuantileRegressor\nm = lgb.LGBMRegressor()" + cls
+    monkeypatch.delenv("LAB_ALLOW_ML_IMPORTS", raising=False)
+    assert any("lightgbm" in p for p in audit(ok))
+    monkeypatch.setenv("LAB_ALLOW_ML_IMPORTS", "1")
+    assert audit(ok) == []
+    for bad in ("from sklearn.datasets import fetch_openml", "import scipy.io", "import lightgbm as lgb\nlgb.train({}, 0)",
+                "from lightgbm import Dataset", "m.booster_.save_model('x')", "lgb.LGBMRegressor().fit(X, y, filename='f')"):
+        assert audit(bad + cls), bad
+
+
+def test_numpy_pandas_file_readers_are_blocked():
+    from lab.sandbox import audit_forecaster_source as audit
+
+    cls = "\nclass Forecaster:\n    pass\n"
+    for bad in ("import numpy as np\nnp.load('x.npy')", "import numpy as np\nnp.memmap('x')",
+                "import pandas as pd\npd.HDFStore('x')", "import numpy as np\nnp.fromregex('f', 'r', float)"):
+        assert audit(bad + cls), bad
+
+
+def test_gpu_family_joins_the_pack_naming_schemes():
+    from lab.sandbox import gpu_family
+
+    for names, fam in ((("NVIDIA H100", "H100 SXM 80GB", "NVIDIA H100 SXM5 80GB", "H100 80GB"), "H100"),
+                       (("NVIDIA A100 40GB", "A100 SXM 80GB", "A100 (memory unspecified)", "NVIDIA A100 SXM4 40 GB"), "A100"),
+                       (("RTX 6000 Ada", "NVIDIA RTX 6000 Ada Generation"), "RTX 6000"),
+                       (("RTX PRO 6000", "NVIDIA RTX Pro 6000 Blackwell"), "RTX PRO 6000"),
+                       (("MI300X", "AMD Instinct MI300X"), "MI300X"), (("NVIDIA B300 (Blackwell Ultra)", "B300"), "B300")):
+        assert {gpu_family(n) for n in names} == {fam}, names
+    assert gpu_family(None) == "" and gpu_family("") == ""

@@ -30,7 +30,7 @@ from lab.memory import (HYPOTHESIS_FAMILIES, infer_family, NOVELTY_LEVELS, PROTE
                         demote_headings, diff_stats, dropped_guardrails, enforce_protected, exploration_directive,
                         family_stats, fit_json, gate_margins, is_no_op, metric_delta, near_misses, normalize_family,
                         normalize_novelty, notebook_index, registry_row, unified_diff)
-from lab.sandbox import audit_forecaster_source
+from lab.sandbox import allowed_imports, audit_forecaster_source
 from lab.workbench import CandidateWorkbench, audit_analysis_source, clip_json
 
 WORKSPACE_FILES = ("workspace/forecaster.py", "workspace/scientist_prompt.md", "workspace/theory_of_market.md")
@@ -575,6 +575,50 @@ class RSIController:
             return {"status": "ANALYSIS_ERROR", "error": res.get("error"), "traceback_tail": res.get("traceback_tail")}
         return {"status": "ANALYSIS_OK", "results": res["results"]}
 
+    def backtest_candidate(self, code: str, reference_code: str | None = None, stride_days: int = 1,
+                           series_ids: list[str] | None = None, start_date: str = "", end_date: str = "",
+                           iteration: int | None = None) -> dict:
+        """Dense paired backtest of a candidate vs a reference (default: the champion) on pseudo-origins inside the
+        Discovery window (default: every day). Never touches Holdout; not an experiment."""
+        from lab.evaluator import backtest_origins
+
+        self._check_lab_intact()
+        ref = reference_code if reference_code is not None else self.bootstrap() and self.backup_path.read_text()
+        it = self.next_iteration() if iteration is None else iteration
+        base = {"iteration": it, "code_sha256": sha256_text(code), "reference_sha256": sha256_text(ref)}
+        problems = audit_forecaster_source(code) + [f"reference: {x}" for x in audit_forecaster_source(ref)]
+        if problems:
+            return self._ledger({**base, "status": "BACKTEST_REJECTED", "error": "; ".join(problems)[:2000]})
+        try:
+            origins = backtest_origins(self.cfg, stride_days, start_date or None, end_date or None)
+        except ValueError as e:
+            return {**base, "status": "BACKTEST_REJECTED", "error": f"bad start/end date: {e}"}
+        if not origins:
+            return {**base, "status": "BACKTEST_REJECTED", "error": "no pseudo-origins in the requested window"}
+        args = ["lab.evaluator", "--forecaster", str(self._agent_file("backtest", code)), "--phase", "backtest",
+                "--reference", str(self._agent_file("backtest_ref", ref)), "--origins", ",".join(origins)]
+        if series_ids:
+            args += ["--series", ",".join(str(x) for x in series_ids)]
+        t0 = time.time()
+        res = self._run_lab_child(args, self.cfg.eval_timeout_s)
+        if not res.get("ok"):
+            return self._ledger({**base, "status": "BACKTEST_ERROR", "error": res.get("error"),
+                                 "traceback_tail": res.get("traceback_tail"), "n_origins": len(origins),
+                                 "seconds": round(time.time() - t0, 1)})
+        keys = ("n_origins", "pooled_skill_delta", "delta_se_origin_bootstrap", "delta_z", "share_origins_improved")
+        self._ledger({**base, "status": "BACKTEST_OK", **{k: res.get(k) for k in keys},
+                      "seconds": round(time.time() - t0, 1)})
+        return {**base, "status": "BACKTEST_OK", **{k: v for k, v in res.items() if k != "ok"}}
+
+    def profile_pack(self, origin_date: str) -> dict:
+        """Data-quality and table-join profile of the point-in-time pack slice at origin_date (<= last Discovery)."""
+        if origin_date > DISCOVERY_ORIGINS[-1]:
+            return {"status": "PROFILE_REJECTED", "error": f"origin_date must be <= {DISCOVERY_ORIGINS[-1]}"}
+        res = self._run_lab_child(["lab.workbench", "profile", "--origin", origin_date], ANALYSIS_TIMEOUT_S)
+        if not res.get("ok"):
+            return {"status": "PROFILE_ERROR", "error": res.get("error"), "traceback_tail": res.get("traceback_tail")}
+        return {"status": "PROFILE_OK", **{k: v for k, v in res.items() if k != "ok"}}
+
     def search_exa_signals(self, query: str, origin_date: str) -> list[dict]:
         """Agent-side research search; pinned at or before the last Discovery origin so Holdout news never leaks."""
         if not self.cfg.enable_exa:
@@ -623,15 +667,18 @@ CONTRACT FOR workspace/forecaster.py (it is loaded and called by an immutable la
   (0 < q10 <= q50 <= q90). Missing or invalid cells are filled with the last value (zero skill).
   pack_slice holds DataFrames truncated at origin_date: series_history (series_id, date, value, n_obs, n_providers,
   is_filled, instrument_class), targets and catalog (static keys: series_id, table, source_id, instrument_class,
-  statistic, gpu_model, pricing_tier, instance_type, az_global_id, members), daily_statistics (p25/median/p75/min per
-  collector), aggregator_medians (weekly, complete weeks only), index_prints, hardware_fundamentals,
-  capability_ladder, capability_units. external_signals is None in PACK_ONLY; in PACK_PLUS_EXA it is an object with
+  statistic, gpu_model, pricing_tier, instance_type, az_global_id, members, gpu_family), daily_statistics
+  (p25/median/p75/min per collector), aggregator_medians (weekly, complete weeks only), index_prints,
+  hardware_fundamentals, capability_ladder, capability_units. The tables name GPUs differently ("NVIDIA H100" vs
+  "H100 SXM 80GB"); join them on the lab's canonical gpu_family column (e.g. "H100"), never on gpu_model.
+  aws_spot_ticks is not exposed raw: it is the source of the aws_spot.* rows of series_history (daily close,
+  n_obs = ticks that day, is_filled = forward-filled day); 53 non-target AWS series (other AZs / p6) are there too.
+  external_signals is None in PACK_ONLY; in PACK_PLUS_EXA it is an object with
   .origin_date and .search(query, domains=None, num_results=8) -> list of {{title, url, published_date, highlights}},
   point-in-time (published on or before origin_date) and cached.
-  Allowed imports: numpy, pandas and the Python standard-library modules math, statistics, dataclasses, typing,
-  collections, functools, itertools, re, datetime, warnings, bisect, heapq, operator, enum. No file or network I/O,
+  Allowed imports: {", ".join(sorted(allowed_imports() - {"__future__"}))}. No file or network I/O,
   no open/eval/exec, no pandas read_*/to_* calls: the lab rejects such code (REJECTED_FIREWALL).
-  Keep the run fast (< 20 s per origin).
+  Keep the run fast (< 20 s per origin; backtest_candidate reports seconds per origin). Use fixed random seeds.
 
 PROTOCOL: Discovery origins {DISCOVERY_ORIGINS[0]}..{DISCOVERY_ORIGINS[-1]} return full diagnostics; Holdout origins
 {HOLDOUT_ORIGINS[0]}..{HOLDOUT_ORIGINS[-1]} return only 4 aggregates and decide promotion via 4 gates. Evaluation is
@@ -940,6 +987,12 @@ only (full diagnostics, paired deltas vs the champion and the pre-Holdout screen
 Holdout untouched, champion untouched, nothing promoted). A submission whose Discovery pooled skill does not beat the
 champion's, or whose outputs fail the sanity screen, is rejected before Holdout, so dry-run until would_reach_holdout
 is true before submitting.
+backtest_candidate scores the candidate against the champion (or an archived iteration) on DENSE daily pseudo-origins
+inside the Discovery window (~70 origins instead of 11): paired pooled-skill delta with an origin-bootstrap standard
+error (|delta_z| < 2 is noise), share of origins improved, deltas by horizon/slice/series and per-cell residuals
+(y, last_value, both quantile sets) for up to 5 series_ids; use it instead of hand-written pseudo-origin loops.
+profile_pack(origin_date) returns a lab-side data-quality profile: table sizes/null shares/date ranges, how many
+targets each table joins to (via gpu_family) and the stale / forward-filled / gappy target series.
 analyze_discovery runs your own `def analyze(pack_slice, origin_date)` (same import firewall as the forecaster, must
 return JSON-able data) on point-in-time Discovery slices. submit_candidate_for_holdout runs the one Holdout evaluation
 of this iteration (promote or revert); it can be called once. Keep your reasoning short and act through tools.
@@ -965,7 +1018,8 @@ class AgentToolbox:
 
     TOOL_NAMES = ("inspect_current_state", "inspect_candidate", "view_candidate", "edit_candidate", "write_candidate",
                   "load_candidate", "show_candidate_diff", "dry_run_discovery", "analyze_discovery",
-                  "submit_candidate_for_holdout", "propose_and_test_forecaster", "update_scientist_prompt")
+                  "backtest_candidate", "profile_pack", "submit_candidate_for_holdout", "propose_and_test_forecaster",
+                  "update_scientist_prompt")
 
     def __init__(self, ctrl: RSIController, max_dry_runs: int | None = None, max_analyses: int | None = None,
                  max_submissions: int = 1):
@@ -976,6 +1030,8 @@ class AgentToolbox:
         self.max_dry_runs = (max_dry_runs if max_dry_runs is not None
                              else int(os.environ.get("RSI_MAX_DRY_RUNS", ctrl.cfg.max_discovery_probes)))
         self.max_analyses = max_analyses if max_analyses is not None else int(os.environ.get("RSI_MAX_ANALYSES", "6"))
+        self.max_backtests = int(os.environ.get("RSI_MAX_BACKTESTS", "4"))
+        self.n_backtests = 0
         self.max_submissions = max_submissions
         self.n_dry_runs = self.n_analyses = self.n_playbook_updates = 0
         self.max_playbook_updates = int(os.environ.get("RSI_MAX_PLAYBOOK_UPDATES", "2"))
@@ -1037,6 +1093,32 @@ class AgentToolbox:
             return json.dumps({"status": "ANALYSIS_BUDGET_EXHAUSTED", "error": f"{self.max_analyses} analyses used"})
         self.n_analyses += 1
         return clip_json(self.ctrl.run_discovery_analysis(analysis_code, origins, iteration=self.iteration), 20000)
+
+    def backtest_candidate(self, stride_days: int = 1, series_ids: list[str] | None = None, against_iteration: int = -1,
+                           start_date: str = "", end_date: str = "") -> str:
+        """Paired backtest of the current candidate vs the champion (or vs archived iteration `against_iteration`) on
+        daily pseudo-origins inside the Discovery window (stride_days thins them; start/end_date narrow them). Returns
+        pooled-skill delta + origin-bootstrap SE, deltas by horizon/slice/series and per-cell residuals of up to 5
+        series_ids. Holdout is never touched."""
+        if self.n_backtests >= self.max_backtests:
+            return json.dumps({"status": "BACKTEST_BUDGET_EXHAUSTED", "error": f"{self.max_backtests} backtests used"})
+        ref = None
+        if against_iteration is not None and int(against_iteration) >= 0:
+            p = self.ctrl.candidates_dir / f"iter_{int(against_iteration):03d}" / "forecaster.py"
+            if not p.exists():
+                return json.dumps({"status": "BACKTEST_REJECTED", "error": f"no archived candidate {against_iteration}"})
+            ref = p.read_text()
+        if self.wb.code == (ref if ref is not None else self.wb.base_code):
+            return json.dumps({"status": "BACKTEST_SKIPPED", "error": "candidate is identical to the reference"})
+        self.n_backtests += 1
+        r = self.ctrl.backtest_candidate(self.wb.code, ref, stride_days, series_ids or [], start_date, end_date,
+                                         iteration=self.iteration)
+        return clip_json({**r, "backtests_left": self.max_backtests - self.n_backtests}, 30000)
+
+    def profile_pack(self, origin_date: str) -> str:
+        """Data-quality / table-join profile of the point-in-time pack slice at origin_date (<= last Discovery
+        origin): table sizes, null shares, date ranges, target coverage per table and stale/filled target series."""
+        return clip_json(self.ctrl.profile_pack(origin_date), 20000)
 
     def submit_candidate_for_holdout(self, hypothesis: str, theory_update_md: str, hypothesis_family: str = "",
                                      novelty: str = "", builds_on_iteration: int = -1) -> str:

@@ -2,6 +2,7 @@
 
 * CandidateWorkbench: a draft copy of the champion that the agent edits with small exact-match str-replace
   edits (or rewrites), so a 120-250 line forecaster never has to be re-emitted as one giant tool argument.
+* `python -m lab.workbench profile`: lab-side data-quality / table-join profile of one point-in-time slice.
 * `python -m lab.workbench analyze`: runs agent analysis code `analyze(pack_slice, origin_date)` on point-in-time
   Discovery slices under the same source firewall as forecasters (no I/O, no network, allowed imports only).
 The CLI runs in a child process started by RSIController with a timeout; only firewalled JSON comes back.
@@ -132,13 +133,86 @@ def run_analysis(code_path: Path, origins: list[str], cfg) -> dict:
     return {"results": out}
 
 
+DATE_COLUMNS = ("available_date", "date", "week_start", "print_date", "release_date")
+
+
+def profile_pack_slice(sl: dict, origin_date: str) -> dict:
+    """Lab-side data-quality / table-usage profile of one point-in-time pack slice (what is there, what joins to
+    the targets, which target series are stale, filled or gappy)."""
+    import numpy as np
+    import pandas as pd
+
+    od = pd.Timestamp(origin_date)
+    tables = {}
+    for name, df in sl.items():
+        info = {"rows": len(df), "columns": list(df.columns)}
+        nulls = df.isna().mean() if len(df) else pd.Series(dtype=float)
+        info["null_share"] = {c: round(float(v), 3) for c, v in nulls.items() if v > 0}
+        dc = next((c for c in DATE_COLUMNS if c in df.columns), None)
+        if dc and len(df):
+            info["date_range"] = [str(df[dc].min()), str(df[dc].max())]
+        tables[name] = info
+    t, h = sl["targets"], sl["series_history"]
+    fam = t.set_index("series_id")["gpu_family"] if "gpu_family" in t.columns else pd.Series(dtype=str)
+    joins = {}
+    for name, df in sl.items():
+        if name in ("targets", "catalog") or "gpu_family" not in df.columns:
+            continue
+        have = set(df["gpu_family"])
+        dc = next((c for c in DATE_COLUMNS if c in df.columns), None)
+        recent = df[pd.to_datetime(df[dc], errors="coerce") > od - pd.Timedelta(days=28)] if dc else df
+        joins[name] = {"targets_with_rows": int(fam.isin(have).sum()), "n_targets": len(fam),
+                       "targets_with_rows_last_28d": int(fam.isin(set(recent["gpu_family"])).sum()),
+                       "rows_last_28d_for_target_families": int(recent["gpu_family"].isin(set(fam)).sum())}
+    ht = h[h["series_id"].isin(t["series_id"])].copy()
+    ht["d"] = pd.to_datetime(ht["date"])
+    rows = []
+    for sid, g in ht.sort_values(["series_id", "d"]).groupby("series_id"):
+        v, d = g["value"].to_numpy(float), g["d"]
+        r90 = g[d > od - pd.Timedelta(days=90)]
+        span = int((d.iloc[-1] - d.iloc[0]).days) + 1
+        ch = np.flatnonzero(np.diff(v) != 0)
+        lr = np.diff(np.log(r90["value"].to_numpy(float))) if len(r90) > 1 else np.array([])
+        rows.append({"series_id": sid, "n_days": len(g), "first_date": str(d.iloc[0].date()),
+                     "days_stale": int((od - d.iloc[-1]).days), "missing_days_in_span": span - len(g),
+                     "filled_share_90d": float(r90["is_filled"].astype(float).mean()) if len(r90) else None,
+                     "days_since_change": int((od - d.iloc[ch[-1] + 1]).days) if len(ch) else span,
+                     "n_changes_90d": int((lr != 0).sum()), "max_abs_log_jump_90d": float(np.abs(lr).max()) if len(lr) else 0.0,
+                     "median_n_obs_90d": float(r90["n_obs"].median()) if len(r90) else None})
+    per = pd.DataFrame(rows)
+    if len(per):
+        per = per.merge(t[["series_id", "instrument_class"]], on="series_id", how="left")
+        num = [c for c in per.columns if c not in ("series_id", "instrument_class", "first_date")]
+        by_cls = per.groupby("instrument_class")[num].median().round(3)
+        by_cls["n_series"] = per.groupby("instrument_class").size()
+        per["flag"] = ((per["days_stale"] > 2).astype(int) + (per["filled_share_90d"].fillna(0) > 0.2).astype(int)
+                       + (per["missing_days_in_span"] > 30).astype(int) + (per["n_changes_90d"] == 0).astype(int))
+        flagged = per.sort_values(["flag", "days_stale", "filled_share_90d"], ascending=False).head(12)
+    else:
+        by_cls, flagged = pd.DataFrame(), per
+    return {"origin_date": origin_date, "tables": tables, "target_joins_by_gpu_family": joins,
+            "missing_targets": sorted(set(t["series_id"]) - set(ht["series_id"])),
+            "targets_by_instrument_class": to_jsonable(by_cls.reset_index()),
+            "flagged_target_series": to_jsonable(flagged)}
+
+
+def run_profile(origin: str, cfg) -> dict:
+    from lab.sandbox import PointInTimeSandbox
+
+    if origin > cfg.discovery_origins[-1]:
+        raise PermissionError(f"profile origin must be <= the last Discovery origin {cfg.discovery_origins[-1]}")
+    return profile_pack_slice(PointInTimeSandbox(cfg).get_pack_slice(origin), origin)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("analyze")
     a.add_argument("--code", required=True)
     a.add_argument("--origins", required=True, help="comma-separated Discovery origins")
-    for p in (a,):
+    pr = sub.add_parser("profile")
+    pr.add_argument("--origin", required=True)
+    for p in (a, pr):
         p.add_argument("--out", required=True)
         p.add_argument("--enable-exa", action="store_true")
         p.add_argument("--exa-cache-only", action="store_true")
@@ -148,7 +222,11 @@ def main() -> int:
 
     cfg = load_config(enable_exa=args.enable_exa, exa_cache_only=args.exa_cache_only)
     try:
-        res = {"ok": True, **run_analysis(Path(args.code), [o.strip() for o in args.origins.split(",") if o.strip()], cfg)}
+        if args.cmd == "profile":
+            res = {"ok": True, **run_profile(args.origin, cfg)}
+        else:
+            res = {"ok": True, **run_analysis(Path(args.code), [o.strip() for o in args.origins.split(",") if o.strip()],
+                                              cfg)}
     except Exception as e:
         tb = traceback.format_exc().splitlines()
         res = {"ok": False, "error": f"{type(e).__name__}: {e}"[:2000], "traceback_tail": "\n".join(tb[-25:])}

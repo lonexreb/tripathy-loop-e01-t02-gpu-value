@@ -233,6 +233,7 @@ class RSIController:
         self.playbooks_dir = self.cfg.outputs_dir / "playbooks" / self.cfg.stage
         self.procedures = ProcedureRegistry(self.cfg.outputs_dir / "procedures" / self.cfg.stage)
         self.locks_dir = self.cfg.outputs_dir / "locks" / self.cfg.stage
+        self.variants_dir = self.cfg.outputs_dir / "variants" / self.cfg.stage
         self.memory_dir = self.cfg.outputs_dir / "memory" / self.cfg.stage
         self.iteration_budget: dict | None = None  # {"planned": N, "first_iteration": i} set by the run loop
         self._pending_archive = self._pending_discovery = None
@@ -630,11 +631,12 @@ class RSIController:
         problems = audit_analysis_source(code)
         if problems:
             return {"status": "ANALYSIS_REJECTED", "error": "; ".join(problems)[:2000]}
+        t0 = time.time()
         res = self._run_lab_child(["lab.workbench", "analyze", "--code", str(self._agent_file("analysis", code)),
                                    "--origins", ",".join(origins)], ANALYSIS_TIMEOUT_S)
         it = self.next_iteration() if iteration is None else iteration
         self._ledger({"status": "ANALYSIS", "iteration": it, "code_sha256": sha256_text(code), "origins": origins,
-                      "ok": bool(res.get("ok")), "error": res.get("error")})
+                      "ok": bool(res.get("ok")), "error": res.get("error"), "seconds": round(time.time() - t0, 1)})
         if not res.get("ok"):
             return {"status": "ANALYSIS_ERROR", "error": res.get("error"), "traceback_tail": res.get("traceback_tail")}
         return {"status": "ANALYSIS_OK", "results": res["results"]}
@@ -716,8 +718,9 @@ class RSIController:
         immutable lock: code / champion / pack hashes, procedure version, hypothesis card and the Discovery result."""
         champ = self.bootstrap()
         r = self.dry_run_discovery(code)
-        if not r.get("discovery"):
-            return {"locked": False, "status": r.get("status"), "error": r.get("error")}
+        if r.get("status") != "DRY_RUN_OK":  # a candidate that does not run is never locked: the agent can fix it
+            return {"locked": False, "status": r.get("status"), "error": r.get("error"),
+                    "traceback_tail": r.get("traceback_tail")}
         d, cd = r.get("discovery") or {}, champ.get("discovery") or {}
         a, b = d.get("pooled_skill"), cd.get("pooled_skill")
         delta = a - b if isinstance(a, (int, float)) and isinstance(b, (int, float)) else None
@@ -1142,12 +1145,18 @@ class StrandsAgentDriver:
         explore = model_class_exploration_required(registry)
         prompt = (f"Research episode {episode_id} (stage {ctrl.cfg.stage}, procedure {version['version']}). Lab directive: "
                   f"{exploration_directive(registry, None)}\nFollow your research policy (system prompt). Start with "
-                  "inspect_current_state and recall_memory. Before building, decide one hypothesis card (mechanism, "
-                  "expected observation, competing explanation, test, rejection condition). Budget: "
-                  f"{tb.max_dry_runs} dry runs, {tb.max_backtests} backtests, "
+                  "inspect_current_state and recall_memory. Before proposing, decompose the champion's Discovery "
+                  "loss (loss_decomposition, by_horizon, slices, largest_loss_series in the state; analyze_discovery "
+                  "for anything finer) and aim at the largest share of it; the size of the change should match the "
+                  "size of that share (a new model or feature set is allowed). Then decide one hypothesis card "
+                  "(mechanism, expected observation, competing explanation, test, rejection condition). Budget: "
+                  f"{tb.max_dry_runs} dry runs (a crashing candidate or analysis is refunded), {tb.max_analyses} analyses, "
+                  f"{tb.max_backtests} backtests, "
                   f"{tb.max_exa if ctrl.cfg.enable_exa else 0} Exa searches. "
                   + ("This episode must compare forecasters of at least two different model classes (save_variant "
                      "each). " if explore else "")
+                  + (f"Variants carried over from earlier episodes (load_variant): {sorted(tb.variants)}. "
+                     if tb.variants else "")
                   + "End with commit_forecast for the best candidate, or end without committing if nothing beats "
                   "the champion.")
         if ctrl.cfg.enable_exa:
@@ -1249,10 +1258,23 @@ EXA_STAGE_DIRECTIVE = (
     "a search returns nothing). At least one dry run this iteration should test such a signal (family "
     "exogenous_signals).")
 CONTINUE_AFTER_MAX_TOKENS = ("Your previous response hit the output-token limit before a tool call was made. Do not "
-                             "restate your analysis. Make the next tool call now; prefer small edit_candidate edits over "
-                             "write_candidate, then dry_run_discovery or submit_candidate_for_holdout.")
+                             "restate your analysis. Make the next tool call now; use edit_candidate for a refinement, or "
+                             "write_candidate in pieces (a short skeleton first, then edits) for a new model, then dry_run_discovery or submit_candidate_for_holdout.")
 NUDGE_SUBMIT = ("You have not called submit_candidate_for_holdout yet. Finish the candidate with edit_candidate if needed, "
                 "call submit_candidate_for_holdout exactly once, then update_scientist_prompt.")
+
+
+def fit_backtest(r: dict, max_chars: int) -> dict:
+    """Keep a backtest result inside the tool-output budget by thinning series_cells evenly over origins (every
+    summary field survives); clip_json alone would cut the JSON mid-record and drop everything after it."""
+    cells = r.get("series_cells") or {}
+    n = max((len(v) for v in cells.values()), default=0)
+    while n > 3 and len(json.dumps(r, default=str)) > max_chars:
+        n = n * 2 // 3
+        r = {**r, "series_cells": {k: v[:: -(-len(v) // n)] for k, v in cells.items()},
+             "series_cells_note": f"thinned by the lab to <= {n} of {max(len(v) for v in cells.values())} cells per "
+                                  "series (even spacing); narrow start_date/end_date or pass fewer series_ids for all"}
+    return r
 
 
 class AgentToolbox:
@@ -1283,18 +1305,30 @@ class AgentToolbox:
         default_dry = (int(os.environ.get("RSI_EXPLORE_DRY_RUNS", 2 * ctrl.cfg.max_discovery_probes))
                        if self.model_class_exploration else ctrl.cfg.max_discovery_probes)
         if mode == "episode":
-            default_dry = int(os.environ.get("RSI_EPISODE_DRY_RUNS", "3"))
+            default_dry = int(os.environ.get("RSI_EPISODE_DRY_RUNS", "6"))
         self.max_dry_runs = (max_dry_runs if max_dry_runs is not None
                              else int(os.environ.get("RSI_MAX_DRY_RUNS", default_dry)))
         self.variants: dict[str, dict] = {}
+        if mode == "episode":
+            self._carry_variants()
         self.max_analyses = max_analyses if max_analyses is not None else int(os.environ.get("RSI_MAX_ANALYSES", "6"))
         self.max_backtests = int(os.environ.get("RSI_MAX_BACKTESTS", "4"))
         self.n_backtests = 0
         self.max_submissions = max_submissions
-        self.n_dry_runs = self.n_analyses = self.n_playbook_updates = 0
+        self.n_dry_runs = self.n_analyses = self.n_playbook_updates = self.n_refunds = 0
         self.max_playbook_updates = int(os.environ.get("RSI_MAX_PLAYBOOK_UPDATES", "2"))
         self.builds_on: int | None = None
         self.results: list[dict] = []
+
+    def _carry_variants(self, keep: int = 4) -> None:
+        """Variants saved by episodes of EARLIER generations (newest first, at most `keep`) start in this episode's
+        variant store as "<episode>__<name>", so unfinished work is not rebuilt. Same-generation episodes are
+        excluded: both arms of an admission comparison start from the same set."""
+        gen = self.episode_id.split("_")[0]
+        files = [p for p in sorted(self.ctrl.variants_dir.glob("*__*.py"), reverse=True)
+                 if not p.name.startswith(gen + "_")] if self.ctrl.variants_dir.exists() else []
+        for p in files[:keep]:
+            self.variants[p.stem[:40]] = {"code": p.read_text(), "builds_on": None, "carried": True}
 
     def inspect_current_state(self) -> str:
         """Return the exploration directive, the full experiment registry (every experiment with family and gate
@@ -1322,9 +1356,12 @@ class AgentToolbox:
         key = re.sub(r"[^A-Za-z0-9_-]+", "_", name or "").strip("_")[:40]
         if not key:
             return json.dumps({"ok": False, "error": "give the variant a name"})
-        if key not in self.variants and len(self.variants) >= 8:
+        if key not in self.variants and sum(not v.get("carried") for v in self.variants.values()) >= 8:
             return json.dumps({"ok": False, "error": "at most 8 variants per iteration"})
         self.variants[key] = {"code": self.wb.code, "builds_on": self.builds_on}
+        if self.mode == "episode" and self.episode_id:  # kept for later generations (see _carry_variants)
+            self.ctrl.variants_dir.mkdir(parents=True, exist_ok=True)
+            (self.ctrl.variants_dir / f"{self.episode_id}__{key}.py").write_text(self.wb.code)
         return json.dumps({"ok": True, "saved": key, "variants": sorted(self.variants)})
 
     def load_variant(self, name: str) -> str:
@@ -1336,8 +1373,8 @@ class AgentToolbox:
         return json.dumps(self.wb.write(v["code"]))
 
     def list_variants(self) -> str:
-        """Saved variants with their size and diff vs the champion."""
-        return json.dumps({k: {"lines": v["code"].count("\n") + 1,
+        """Saved variants with their size and diff vs the champion ("carried": saved by an earlier episode)."""
+        return json.dumps({k: {"lines": v["code"].count("\n") + 1, "carried": bool(v.get("carried")),
                                "diff_vs_champion_lines": diff_stats(unified_diff(self.wb.base_code, v["code"]))}
                            for k, v in self.variants.items()})
 
@@ -1350,7 +1387,7 @@ class AgentToolbox:
         return json.dumps(self.wb.replace(old_str, new_str))
 
     def write_candidate(self, new_forecaster_code: str) -> str:
-        """Replace the whole candidate forecaster (only for large rewrites; prefer edit_candidate)."""
+        """Replace the whole candidate forecaster (use it for a new model class or a large rewrite; edit_candidate for refinements)."""
         return json.dumps(self.wb.write(new_forecaster_code))
 
     def show_candidate_diff(self) -> str:
@@ -1367,6 +1404,11 @@ class AgentToolbox:
                                "error": f"{self.max_dry_runs} dry runs used; submit_candidate_for_holdout or stop"})
         self.n_dry_runs += 1
         r = self.ctrl.dry_run_discovery(self.wb.code, iteration=self.iteration)
+        if r.get("status") != "DRY_RUN_OK" and self.n_refunds < self.max_dry_runs + self.max_analyses:
+            # a candidate that did not run produced no evidence: refund it (bounded, so a crash loop still ends)
+            self.n_dry_runs -= 1
+            self.n_refunds += 1
+            r = {**r, "refunded": True}
         return clip_json({**r, "dry_runs_left": self.max_dry_runs - self.n_dry_runs}, 30000)
 
     def analyze_discovery(self, analysis_code: str, origins: list[str]) -> str:
@@ -1375,7 +1417,12 @@ class AgentToolbox:
         if self.n_analyses >= self.max_analyses:
             return json.dumps({"status": "ANALYSIS_BUDGET_EXHAUSTED", "error": f"{self.max_analyses} analyses used"})
         self.n_analyses += 1
-        return clip_json(self.ctrl.run_discovery_analysis(analysis_code, origins, iteration=self.iteration), 20000)
+        r = self.ctrl.run_discovery_analysis(analysis_code, origins, iteration=self.iteration)
+        if r.get("status") != "ANALYSIS_OK" and self.n_refunds < self.max_dry_runs + self.max_analyses:
+            self.n_analyses -= 1  # failed analysis code returned no information: refunded (bounded, shared counter)
+            self.n_refunds += 1
+            r = {**r, "refunded": True}
+        return clip_json({**r, "analyses_left": self.max_analyses - self.n_analyses}, 20000)
 
     def backtest_candidate(self, stride_days: int = 1, series_ids: list[str] | None = None, against_iteration: int = -1,
                            start_date: str = "", end_date: str = "") -> str:
@@ -1396,7 +1443,7 @@ class AgentToolbox:
         self.n_backtests += 1
         r = self.ctrl.backtest_candidate(self.wb.code, ref, stride_days, series_ids or [], start_date, end_date,
                                          iteration=self.iteration)
-        return clip_json({**r, "backtests_left": self.max_backtests - self.n_backtests}, 30000)
+        return clip_json(fit_backtest({**r, "backtests_left": self.max_backtests - self.n_backtests}, 30000), 30000)
 
     def profile_pack(self, origin_date: str) -> str:
         """Data-quality / table-join profile of the point-in-time pack slice at origin_date (<= last Discovery
@@ -1494,8 +1541,9 @@ class AgentToolbox:
                 "market_insight": (market_insight or "")[:4000]}
         rec = self.ctrl.lock_episode_forecast(self.wb.code, card, meta, self.episode_id, self.procedure_version)
         if rec.get("locked") is False:
-            return json.dumps({"status": "COMMIT_REJECTED", "error": "the candidate does not run on Discovery, nothing "
-                               f"was locked; fix it and commit again: {str(rec.get('error'))[:1200]}"})
+            return clip_json({"status": "COMMIT_REJECTED", "error": "the candidate does not run on Discovery, nothing "
+                              "was locked; fix it (or load_variant a working one) and commit again: "
+                              f"{str(rec.get('error'))[:1200]}", "traceback_tail": rec.get("traceback_tail")}, 6000)
         self.lock = rec
         return clip_json({"status": "LOCKED", **{k: self.lock.get(k) for k in ("screen_pass", "discovery_pooled_delta",
                                                                                "error", "discovery")},

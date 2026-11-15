@@ -163,3 +163,53 @@ def test_generation_admits_candidate_procedure_and_spends_one_holdout_shot(lab):
     assert "REVISION_INVALID" in [r["status"] for r in lab.ledger_entries()]
     assert [e["episode_id"] for e in lab.released_episodes()][-1] == "g002_frozen"
     assert "g002_frozen" in (lab.procedures.root / "lineage.md").read_text()
+
+
+def test_episode_crashes_are_refunded_and_never_locked(lab, monkeypatch):
+    """A candidate or analysis that does not run costs no budget (bounded) and commit_forecast refuses to lock it."""
+    tb = AgentToolbox(lab, mode="episode", episode_id="g001_frozen", procedure_version="v000")
+    assert tb.max_dry_runs == 6
+    ok = lab._run_lab_child
+    monkeypatch.setattr(lab, "_run_lab_child", lambda a, t: {"ok": False, "error": "ValueError: boom"})
+    tb.write_candidate(CAND)
+    out = json.loads(tb.dry_run_discovery())
+    assert out["status"] == "DRY_RUN_ERROR" and out["refunded"] and out["dry_runs_left"] == 6
+    out = json.loads(tb.analyze_discovery("def analyze(pack_slice, origin_date):\n    return {}\n", ["2026-07-15"]))
+    assert out["status"] == "ANALYSIS_ERROR" and out["refunded"] and out["analyses_left"] == tb.max_analyses
+    out = json.loads(tb.commit_forecast("wider bands", **CARD))
+    assert out["status"] == "COMMIT_REJECTED" and "boom" in out["error"] and tb.lock is None
+    assert not (lab.locks_dir / "g001_frozen.json").exists()
+    for _ in range(40):  # refunds are bounded: a crash loop still exhausts the budget
+        last = json.loads(tb.dry_run_discovery())
+    assert last["status"] == "DRY_RUN_BUDGET_EXHAUSTED"
+    monkeypatch.setattr(lab, "_run_lab_child", ok)
+    assert json.loads(tb.commit_forecast("wider bands", **CARD))["status"] == "LOCKED"
+    rows = [r for r in lab.ledger_entries(lab.cfg.stage) if r["status"] == "ANALYSIS"]
+    assert rows and "seconds" in rows[0]
+
+
+def test_variants_carry_to_later_generations_only(lab):
+    tb = AgentToolbox(lab, mode="episode", episode_id="g001_frozen", procedure_version="v000")
+    tb.write_candidate(CAND)
+    assert json.loads(tb.save_variant("wide bands"))["saved"] == "wide_bands"
+    same_gen = AgentToolbox(lab, mode="episode", episode_id="g001_candidate", procedure_version="v001")
+    assert same_gen.variants == {}  # both arms of one admission comparison start from the same state
+    nxt = AgentToolbox(lab, mode="episode", episode_id="g002_frozen", procedure_version="v000")
+    assert json.loads(nxt.list_variants())["g001_frozen__wide_bands"]["carried"]
+    assert json.loads(nxt.load_variant("g001_frozen__wide_bands"))["ok"] and nxt.wb.code == CAND
+    assert AgentToolbox(lab).variants == {}  # the legacy Holdout loop is unchanged
+
+
+def test_backtest_output_keeps_summary_when_cells_overflow():
+    from lab.rsi_controller import fit_backtest
+    from lab.workbench import clip_json
+    cell = {"origin_date": "2026-08-01", "horizon_days": 7, "y": 1.2345, "q10": 1.0, "q50": 1.2, "q90": 1.4,
+            "loss": 0.0123, "loss_ref": 0.0234, "baseline_loss": 0.03}
+    r = {"status": "BACKTEST_OK", "pooled_skill_delta": 0.01, "series_cells": {f"s{i}": [cell] * 210 for i in range(5)},
+         "backtests_left": 3}
+    assert json.loads(clip_json(r, 30000)).get("truncated")  # what the agent used to get: a cut string
+    out = json.loads(clip_json(fit_backtest(r, 30000), 30000))
+    assert out["backtests_left"] == 3 and out["pooled_skill_delta"] == 0.01 and "thinned" in out["series_cells_note"]
+    assert all(3 <= len(v) < 210 for v in out["series_cells"].values())
+    small = {"status": "BACKTEST_OK", "series_cells": {"s": [cell] * 5}}
+    assert fit_backtest(small, 30000) is small

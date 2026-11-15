@@ -899,6 +899,8 @@ class StrandsAgentDriver:
                   f"{tb.max_dry_runs} dry runs), submit_candidate_for_holdout exactly once with one falsifiable "
                   "hypothesis, its family and novelty, and finally call update_scientist_prompt with your revised "
                   "playbook (keep the lab-protected block; record what you learned and rank untried directions).")
+        if ctrl.cfg.enable_exa:
+            prompt += ("\n" + EXA_STAGE_DIRECTIVE)
         retries = int(os.environ.get("LLM_MAX_TOKEN_RETRIES", "2"))
         for attempt in range(retries + 2):
             try:
@@ -943,6 +945,14 @@ return JSON-able data) on point-in-time Discovery slices. submit_candidate_for_h
 of this iteration (promote or revert); it can be called once. Keep your reasoning short and act through tools.
 """.strip()
 
+EXA_STAGE_DIRECTIVE = (
+    "Stage PACK_PLUS_EXA exists to test exogenous web signals; pack-only levers were already explored in Stage 1. "
+    "Use search_exa_signals (point-in-time, origin_date <= the last Discovery origin) to find signals that "
+    "plausibly move GPU rental prices (capacity announcements, price cuts, new GPU launches, provider outages), then "
+    "make the forecaster use them through external_signals.search(query) inside predict_origin (results are "
+    "point-in-time per origin and cached; keep queries few and fixed, and fall back to the champion's forecast when "
+    "a search returns nothing). At least one dry run this iteration should test such a signal (family "
+    "exogenous_signals).")
 CONTINUE_AFTER_MAX_TOKENS = ("Your previous response hit the output-token limit before a tool call was made. Do not "
                              "restate your analysis. Make the next tool call now; prefer small edit_candidate edits over "
                              "write_candidate, then dry_run_discovery or submit_candidate_for_holdout.")

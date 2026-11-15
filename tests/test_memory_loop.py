@@ -235,3 +235,8 @@ def test_strands_driver_wires_memory_tools(ctrl, monkeypatch):
     assert PROTECTED_BLOCK in seen["system_prompt"] and "Lab directive" in seen["msg"]
     assert "scientist_prompt_md" not in seen["state"]                    # playbook is not sent twice
     assert seen["cand"]["forecaster_py"].endswith("s = 1\n")
+
+
+def test_infer_family_recognises_literal_family_names():
+    assert infer_family("horizon_structure (bold): replace the direct h-day q50 with an iterated forecast") == \
+        "horizon_structure"

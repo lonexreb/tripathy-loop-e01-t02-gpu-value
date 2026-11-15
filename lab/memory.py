@@ -80,6 +80,9 @@ _FAMILY_KEYWORDS = (
 def infer_family(hypothesis: str | None) -> str:
     """Best-effort family for legacy ledger rows that predate family tags."""
     h = re.split(r"[.:;]\s", (hypothesis or "").lower(), maxsplit=1)[0][:160]
+    for fam in HYPOTHESIS_FAMILIES:
+        if fam != "other" and re.search(rf"\b{fam}\b", h):
+            return fam
     for fam, pat in _FAMILY_KEYWORDS:
         if re.search(pat, h):
             return fam

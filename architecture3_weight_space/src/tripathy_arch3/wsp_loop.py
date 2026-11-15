@@ -693,7 +693,7 @@ def run(arm: str, cycles: int, editor_mode: str, score_checkpoint: bool) -> None
         "kind": "improver",
         "status": "control" if arm == "i0" else "candidate",
         "method": "headless LLM editor proposing closed-form weight edits; "
-        + ("empty notebook at start" if arm == "i0" else "starts with I_wsp0's notebook"),
+        + ("starts with I_wsp0's notebook" if arm == "i1" else "empty notebook at start"),
         "cycles": len(notebook) - inherited,
         "accepted_edits": len(accepted),
         "head_run_id": parent_id,

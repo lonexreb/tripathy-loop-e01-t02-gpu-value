@@ -464,11 +464,14 @@ class StrandsAgentDriver:
         self.name = f"strands_{provider}"
         if provider == "modal":
             from strands.models.openai import OpenAIModel
-            base = os.environ.get("MODAL_LLM_URL", "").rstrip("/")
-            if not base or not os.environ.get("MODAL_LLM_API_KEY"):
-                raise RuntimeError("set MODAL_LLM_URL and MODAL_LLM_API_KEY (see infra/modal_vllm.py)")
-            wait_for_health(base, os.environ["MODAL_LLM_API_KEY"])
-            self.model = OpenAIModel(client_args={"api_key": os.environ["MODAL_LLM_API_KEY"], "base_url": base + "/v1",
+            base = os.environ.get("MODAL_LLM_URL", DEFAULT_MODAL_LLM_URL).rstrip("/")
+            headers = modal_proxy_headers()
+            api_key = os.environ.get("MODAL_LLM_API_KEY", "EMPTY")
+            wait_for_health(base, api_key, headers)
+            if not os.environ.get("STRANDS_MODEL_ID"):
+                model_id = discover_model_id(base, api_key, headers)
+            self.name = f"strands_modal:{model_id}"
+            self.model = OpenAIModel(client_args={"api_key": api_key, "base_url": base + "/v1", "default_headers": headers,
                                                   "timeout": 1800, "max_retries": 2},
                                      model_id=model_id, params={"temperature": 0.2, "max_tokens": 12000})
         elif provider == "litellm":
@@ -522,20 +525,43 @@ class StrandsAgentDriver:
         return results[-1]
 
 
-def wait_for_health(base: str, key: str, timeout_s: int = 1500) -> None:
-    """Block until a (possibly cold-starting) Modal vLLM endpoint answers /health."""
+DEFAULT_MODAL_LLM_URL = "https://ananthbashyam1--ep-glm-5-3-flash-server.us-west.modal.direct"
+
+
+def modal_proxy_headers() -> dict:
+    """Modal proxy-auth headers for a protected endpoint (MODAL_PROXY_KEY / MODAL_PROXY_SECRET in .env)."""
+    k = os.environ.get("MODAL_PROXY_KEY") or os.environ.get("MODAL_PROXY_TOKEN_ID")
+    s = os.environ.get("MODAL_PROXY_SECRET") or os.environ.get("MODAL_PROXY_TOKEN_SECRET")
+    if not (k and s):
+        raise RuntimeError("set MODAL_PROXY_TOKEN_ID and MODAL_PROXY_TOKEN_SECRET (a Modal proxy auth token) in .env")
+    return {"Modal-Key": k, "Modal-Secret": s}
+
+
+def wait_for_health(base: str, key: str, headers: dict, timeout_s: int = 1500) -> None:
+    """Block until a (possibly cold-starting) Modal endpoint answers /v1/models."""
     import httpx
 
     t0 = time.time()
     while time.time() - t0 < timeout_s:
         try:
-            if httpx.get(base + "/health", headers={"Authorization": f"Bearer {key}"}, timeout=60).status_code == 200:
+            r = httpx.get(base + "/v1/models", headers={**headers, "Authorization": f"Bearer {key}"}, timeout=120)
+            if r.status_code == 200:
                 return
+            if r.status_code in (401, 403):
+                raise PermissionError(f"LLM endpoint rejected credentials ({r.status_code}): {r.text[:200]}")
         except httpx.HTTPError:
             pass
         print("[modal] waiting for the LLM endpoint to warm up...", file=sys.stderr)
         time.sleep(20)
     raise TimeoutError(f"LLM endpoint {base} not healthy after {timeout_s}s")
+
+
+def discover_model_id(base: str, key: str, headers: dict) -> str:
+    import httpx
+
+    r = httpx.get(base + "/v1/models", headers={**headers, "Authorization": f"Bearer {key}"}, timeout=120)
+    r.raise_for_status()
+    return r.json()["data"][0]["id"]
 
 
 def load_dotenv(path: Path) -> None:

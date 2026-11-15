@@ -3,7 +3,7 @@
 # of every recorded champion, ablation table, frozen 2026-11-06 submission (validated by starter/scorer.py),
 # valuation and findings report. No LLM and no network calls (Exa is read from outputs/exa_cache.jsonl only).
 # Usage: bash reproduce.sh            (offline)
-#        bash reproduce.sh --live N   (also runs N live RSI iterations of Stage 1 with the Modal-hosted LLM, see .env)
+#        bash reproduce.sh --live N   (also runs N live RSI iterations of Stage 1 with the Modal GLM endpoint; needs MODAL_PROXY_TOKEN_ID/SECRET in .env)
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 PACK=gpu-price-pack-v0.1.1-handover
@@ -28,7 +28,7 @@ $PY -c "from lab.sandbox import PointInTimeSandbox as S; S().ensure_series_cache
 $PY -B -m pytest -q -p no:cacheprovider tests
 
 if [ "${1:-}" = "--live" ]; then
-  echo "== 2b. live RSI (Stage 1, Modal-hosted LLM via Strands)"
+  echo "== 2b. live RSI (Stage 1, Strands + Modal GLM endpoint)"
   $PY -B -m lab.rsi_controller run --stage pack_only --driver modal --iterations "${2:-3}"
 fi
 

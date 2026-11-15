@@ -287,3 +287,12 @@ def test_improver_digest_stays_valid_json_and_carries_measured_procedural_knowle
     rec = json.loads(AgentToolbox(lab, mode="episode", episode_id="e").recall_memory())
     assert rec["procedural_memory"]["episode_scores_by_model_class"] and "experiment_registry" in rec
     assert str(MAX_COMPONENT_CHARS) in REVISION_PROTOCOL and "episode_controls" in REVISION_PROTOCOL
+
+
+def test_evaluator_children_get_bounded_thread_caps():
+    from lab.rsi_controller import eval_thread_env
+    assert eval_thread_env(cpu_count=8, env={}) == {"OMP_NUM_THREADS": "4", "MKL_NUM_THREADS": "4",
+                                                     "OPENBLAS_NUM_THREADS": "4"}
+    assert eval_thread_env(cpu_count=1, env={})["OMP_NUM_THREADS"] == "1"
+    out = eval_thread_env(cpu_count=8, env={"LAB_EVAL_THREADS": "2", "MKL_NUM_THREADS": "6"})
+    assert out == {"OMP_NUM_THREADS": "2", "MKL_NUM_THREADS": "6", "OPENBLAS_NUM_THREADS": "2"}

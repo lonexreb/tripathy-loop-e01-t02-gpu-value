@@ -101,6 +101,18 @@ STATE_SHRINK_ORDER = [("theory_of_market_tail_md", "tail"), ("scientist_prompt_m
                       ("experiment_registry", "drop_old"), ("champion_forecaster_py", "head")]
 
 
+
+EVAL_THREAD_VARS = ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
+
+
+def eval_thread_env(cpu_count: int | None = None, env: dict | None = None) -> dict:
+    """Thread caps for evaluator children. sklearn/lightgbm/torch default to every core, so two concurrent
+    evaluations (e.g. two stages, or a backtest beside a dry run) oversubscribe the box many times over and a
+    90-second dry run can take 40 minutes. LAB_EVAL_THREADS overrides; explicit *_NUM_THREADS are respected."""
+    src = os.environ if env is None else env
+    n = src.get("LAB_EVAL_THREADS") or max(1, (cpu_count or os.cpu_count() or 2) // 2)
+    return {k: src.get(k) or str(n) for k in EVAL_THREAD_VARS}
+
 def utc_now() -> str:
     return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -346,6 +358,7 @@ class RSIController:
                                    self.cfg.eval_timeout_s)
 
     def _run_lab_child(self, module_args: list[str], timeout_s: int) -> dict:
+        """Evaluate a forecaster in a child interpreter with BLAS/OpenMP threads capped (see eval_thread_env)."""
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "result.json"
             cmd = [sys.executable, "-B", "-m", *module_args, "--out", str(out)]
@@ -354,6 +367,7 @@ class RSIController:
             if self.cfg.exa_cache_only:
                 cmd.append("--exa-cache-only")
             env = {**os.environ, "PYTHONPATH": str(self.root), "PYTHONDONTWRITEBYTECODE": "1", "LAB_ROOT": str(self.root),
+                   **eval_thread_env(),
                    "LAB_TRACK": self.cfg.track}
             if self.cfg.cache_dir:
                 env["LAB_CACHE_DIR"] = str(self.cfg.cache_dir)

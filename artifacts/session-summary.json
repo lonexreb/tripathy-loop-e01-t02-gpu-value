@@ -1,20 +1,40 @@
 {
   "schema_version": 1,
   "experiment_id": "01",
-  "status": "planning",
-  "active_linear_issue": null,
-  "git_sha": null,
-  "objective": "Validate the Track 02 Kalshi/H100 thesis before implementation",
+  "status": "cycle_1_complete",
+  "active_linear_issue": "TRI-33",
+  "git_sha": "ce9cfd77f0ca5dd7ce70f892c1f7353f5bc8c42f",
+  "objective": "Improve leakage-safe 1/3/7-day GPU rental-price quantile forecasts over drift under the frozen protocol",
   "subagents": [],
-  "runs": [],
-  "result": null,
+  "runs": [
+    {
+      "id": "cycle-1-offline-i0",
+      "baseline": "F_0 drift",
+      "candidates": ["F_1_c1 repricing_mixture", "F_1_c2 conformal_trailing"],
+      "accepted": "F_1_c2"
+    }
+  ],
+  "result": {
+    "checkpoint_skill_f0": 0.089106,
+    "checkpoint_skill_f1": 0.118592,
+    "checkpoint_coverage_f0": 0.665517,
+    "checkpoint_coverage_f1": 0.713793,
+    "paired_mean_diff": -0.000957,
+    "paired_90ci": [-0.001539, -0.000315]
+  },
   "cost_usd": 0,
   "latency_seconds": null,
   "blockers": [
-    "Settled Kalshi H100 market inventory and historical probability access are unverified",
-    "Forecast timestamp and market-baseline timing are not fixed",
-    "Budget and stop condition await independent review"
+    "Cycle 2 common-start comparison of I_0 and I_1 is not yet implemented",
+    "Checkpoint interval coverage remains below the 0.8 target",
+    "The official post-cutoff truth file is not present in the participant pack"
   ],
-  "next_decision": "Compare Claude and ChatGPT reviews, then accept, revise or kill the provisional start-gate fields",
-  "updated_at": "2026-11-14T15:45:00-08:00"
+  "next_decision": "Implement Cycle 2 and compare I_0 versus I_1 from a common start on the protected block",
+  "links": {
+    "repository": "https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value",
+    "pull_request": "https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value/pull/1",
+    "linear_issue": "https://linear.app/tripathy/issue/TRI-33/e01-track-2-gpu-value-cycle-1-complete-cycle-2-common-start-test",
+    "slack_update": "https://research-hackathon.slack.com/archives/C0CHNFW0DB7/p1794720630666949"
+  },
+  "updated_at": "2026-11-14T23:30:00-08:00"
 }

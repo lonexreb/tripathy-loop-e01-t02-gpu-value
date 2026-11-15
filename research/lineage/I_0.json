@@ -1,0 +1,57 @@
+{
+  "id": "I_0",
+  "generation": 0,
+  "parent": null,
+  "kind": "improver",
+  "status": "control",
+  "description": "fixed rule-based improver, offline, no model, no retrieval (also the fixed-improver and no-Exa control)",
+  "rules": {
+    "R1_interval_width": "if development coverage inside [q10,q90] < 0.75, the error is interval width: propose the two width-targeting library members (repricing_mixture window=60, conformal_trailing window=45)",
+    "R2_median_signal": "if the parent's development pinball minus last_value_empirical's is > -0.0005, the drift median adds nothing: every candidate keeps q50 = last value",
+    "R3_budget": "at most two candidates per cycle; a rule that would add a third is logged as deferred"
+  },
+  "library": [
+    {
+      "method": "repricing_mixture",
+      "params": {
+        "window": 60
+      },
+      "targets": "interval_width"
+    },
+    {
+      "method": "conformal_trailing",
+      "params": {
+        "window": 45
+      },
+      "targets": "interval_width"
+    }
+  ],
+  "source": "research/scientist/improver_i0.py",
+  "source_sha256": "06ba62974d78695772752364f459e89c5335ac05887e5da35bb9a3e7495b5b83",
+  "budget": {
+    "max_candidates": 2,
+    "queries": 0
+  },
+  "cycle1": {
+    "diagnosis": {
+      "block_read": "development",
+      "coverage_within": 0.587859,
+      "coverage_below_q10": 0.159744,
+      "coverage_above_q90": 0.252396,
+      "coverage_by_horizon": {
+        "1": 0.731,
+        "3": 0.591,
+        "7": 0.443
+      },
+      "parent_pinball": 0.023593,
+      "last_value_empirical_pinball": 0.023359,
+      "median_signal": 0.000234
+    },
+    "rules_fired": [
+      "R1_interval_width",
+      "R2_median_signal",
+      "R3_budget"
+    ],
+    "n_proposed": 2
+  }
+}

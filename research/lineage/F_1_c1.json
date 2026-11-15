@@ -1,0 +1,312 @@
+{
+  "id": "F_1_c1",
+  "generation": 1,
+  "parent": "F_0",
+  "kind": "forecaster",
+  "status": "rejected",
+  "decision_reason": "checkpoint paired diff +0.000124 CI [-0.000141, 0.000395] does not exclude zero on the right side",
+  "improver": "I_0",
+  "method": "repricing_mixture",
+  "params": {
+    "window": 60
+  },
+  "hypothesis": "posted prices reprice in steps; recent repricing frequency, not the full-history frequency, sets the width",
+  "chain": {
+    "error": "80% interval covers 0.588 of development truths (target 0.80); below q10 0.160, above q90 0.252",
+    "unresolved_question": "is the miss a width problem (volatility understated) or a location problem (median off)?",
+    "evidence": "median_signal=+0.000234 (drift median vs flat median); coverage by horizon {'1': 0.731, '3': 0.591, '7': 0.443}",
+    "hypothesis": "posted prices reprice in steps; recent repricing frequency, not the full-history frequency, sets the width",
+    "executable_change": "forecaster.py --method repricing_mixture --params '{\"window\": 60}'"
+  },
+  "forecaster": {
+    "script": "research/scientist/forecaster.py",
+    "method": "repricing_mixture",
+    "params": {
+      "window": 60
+    }
+  },
+  "budget_used": {
+    "evaluations": 2,
+    "blocks_read": [
+      "development",
+      "checkpoint"
+    ],
+    "wall_clock_s": 1.4
+  },
+  "scores": {
+    "development": {
+      "n_cells": 626,
+      "pinball": 0.023417,
+      "skill_pooled": 0.168846,
+      "skill_median_of_series": 0.108039,
+      "coverage": {
+        "below_q10": 0.153355,
+        "within_q10_q90": 0.607029,
+        "above_q90": 0.239617
+      }
+    },
+    "checkpoint": {
+      "n_cells": 290,
+      "pinball": 0.029683,
+      "skill_pooled": 0.085292,
+      "skill_median_of_series": 0.145683,
+      "coverage": {
+        "below_q10": 0.051724,
+        "within_q10_q90": 0.717241,
+        "above_q90": 0.231034
+      }
+    }
+  },
+  "paired_vs_parent": {
+    "development": {
+      "overall": {
+        "n_cells": 626,
+        "pinball_a": 0.023417,
+        "pinball_b": 0.023593,
+        "mean_diff": -0.000176,
+        "skill_a_vs_b": 0.007465,
+        "share_a_better": 0.210863,
+        "share_tied": 0.464856,
+        "coverage_a_q10_q90": 0.607029
+      },
+      "n_origins": 30,
+      "bootstrap_90ci_mean_diff": [
+        -0.000351,
+        1.1e-05
+      ],
+      "ci_excludes_zero": false,
+      "by_horizon": {
+        "1": {
+          "n_cells": 208,
+          "pinball_a": 0.009923,
+          "pinball_b": 0.00999,
+          "mean_diff": -6.7e-05,
+          "skill_a_vs_b": 0.006739,
+          "share_a_better": 0.139423,
+          "share_tied": 0.668269,
+          "coverage_a_q10_q90": 0.730769
+        },
+        "3": {
+          "n_cells": 208,
+          "pinball_a": 0.019192,
+          "pinball_b": 0.019306,
+          "mean_diff": -0.000114,
+          "skill_a_vs_b": 0.00592,
+          "share_a_better": 0.235577,
+          "share_tied": 0.3125,
+          "coverage_a_q10_q90": 0.625
+        },
+        "7": {
+          "n_cells": 210,
+          "pinball_a": 0.040968,
+          "pinball_b": 0.041313,
+          "mean_diff": -0.000345,
+          "skill_a_vs_b": 0.008354,
+          "share_a_better": 0.257143,
+          "share_tied": 0.414286,
+          "coverage_a_q10_q90": 0.466667
+        }
+      },
+      "by_series": {
+        "afhubbard.hyperscaler_spot.A100_40GB.spot.median": {
+          "n_cells": 88,
+          "pinball_a": 0.013062,
+          "pinball_b": 0.012513,
+          "mean_diff": 0.000549,
+          "skill_a_vs_b": -0.043877,
+          "share_a_better": 0.113636,
+          "share_tied": 0.556818,
+          "coverage_a_q10_q90": 0.806818
+        },
+        "afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median": {
+          "n_cells": 88,
+          "pinball_a": 0.012638,
+          "pinball_b": 0.013741,
+          "mean_diff": -0.001103,
+          "skill_a_vs_b": 0.080259,
+          "share_a_better": 0.204545,
+          "share_tied": 0.318182,
+          "coverage_a_q10_q90": 0.670455
+        },
+        "gpurentalprices.marketplace_ask.H100_80GB.spot.median": {
+          "n_cells": 90,
+          "pinball_a": 0.063476,
+          "pinball_b": 0.063994,
+          "mean_diff": -0.000518,
+          "skill_a_vs_b": 0.008088,
+          "share_a_better": 0.477778,
+          "share_tied": 0.022222,
+          "coverage_a_q10_q90": 0.922222
+        },
+        "gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median": {
+          "n_cells": 90,
+          "pinball_a": 0.027614,
+          "pinball_b": 0.027641,
+          "mean_diff": -2.7e-05,
+          "skill_a_vs_b": 0.000992,
+          "share_a_better": 0.044444,
+          "share_tied": 0.822222,
+          "coverage_a_q10_q90": 0.544444
+        },
+        "gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median": {
+          "n_cells": 90,
+          "pinball_a": 0.009683,
+          "pinball_b": 0.009677,
+          "mean_diff": 6e-06,
+          "skill_a_vs_b": -0.000633,
+          "share_a_better": 0.044444,
+          "share_tied": 0.8,
+          "coverage_a_q10_q90": 0.466667
+        },
+        "gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median": {
+          "n_cells": 90,
+          "pinball_a": 0.013098,
+          "pinball_b": 0.013148,
+          "mean_diff": -5e-05,
+          "skill_a_vs_b": 0.003772,
+          "share_a_better": 0.422222,
+          "share_tied": 0.033333,
+          "coverage_a_q10_q90": 0.533333
+        },
+        "gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median": {
+          "n_cells": 90,
+          "pinball_a": 0.023878,
+          "pinball_b": 0.023973,
+          "mean_diff": -9.5e-05,
+          "skill_a_vs_b": 0.003962,
+          "share_a_better": 0.166667,
+          "share_tied": 0.7,
+          "coverage_a_q10_q90": 0.311111
+        }
+      }
+    },
+    "checkpoint": {
+      "overall": {
+        "n_cells": 290,
+        "pinball_a": 0.029683,
+        "pinball_b": 0.029559,
+        "mean_diff": 0.000124,
+        "skill_a_vs_b": -0.004187,
+        "share_a_better": 0.334483,
+        "share_tied": 0.158621,
+        "coverage_a_q10_q90": 0.717241
+      },
+      "n_origins": 15,
+      "bootstrap_90ci_mean_diff": [
+        -0.000141,
+        0.000395
+      ],
+      "ci_excludes_zero": false,
+      "by_horizon": {
+        "1": {
+          "n_cells": 100,
+          "pinball_a": 0.014807,
+          "pinball_b": 0.014813,
+          "mean_diff": -6e-06,
+          "skill_a_vs_b": 0.000425,
+          "share_a_better": 0.24,
+          "share_tied": 0.27,
+          "coverage_a_q10_q90": 0.77
+        },
+        "3": {
+          "n_cells": 95,
+          "pinball_a": 0.029895,
+          "pinball_b": 0.029938,
+          "mean_diff": -4.4e-05,
+          "skill_a_vs_b": 0.001464,
+          "share_a_better": 0.4,
+          "share_tied": 0.063158,
+          "coverage_a_q10_q90": 0.684211
+        },
+        "7": {
+          "n_cells": 95,
+          "pinball_a": 0.04513,
+          "pinball_b": 0.044702,
+          "mean_diff": 0.000428,
+          "skill_a_vs_b": -0.009581,
+          "share_a_better": 0.368421,
+          "share_tied": 0.136842,
+          "coverage_a_q10_q90": 0.694737
+        }
+      },
+      "by_series": {
+        "afhubbard.hyperscaler_spot.A100_40GB.spot.median": {
+          "n_cells": 45,
+          "pinball_a": 0.00661,
+          "pinball_b": 0.006346,
+          "mean_diff": 0.000264,
+          "skill_a_vs_b": -0.041571,
+          "share_a_better": 0.111111,
+          "share_tied": 0.577778,
+          "coverage_a_q10_q90": 0.822222
+        },
+        "afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median": {
+          "n_cells": 45,
+          "pinball_a": 0.010512,
+          "pinball_b": 0.011519,
+          "mean_diff": -0.001007,
+          "skill_a_vs_b": 0.087408,
+          "share_a_better": 0.222222,
+          "share_tied": 0.177778,
+          "coverage_a_q10_q90": 0.866667
+        },
+        "gpurentalprices.marketplace_ask.H100_80GB.spot.median": {
+          "n_cells": 40,
+          "pinball_a": 0.05313,
+          "pinball_b": 0.053018,
+          "mean_diff": 0.000111,
+          "skill_a_vs_b": -0.002094,
+          "share_a_better": 0.275,
+          "share_tied": 0.05,
+          "coverage_a_q10_q90": 0.875
+        },
+        "gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median": {
+          "n_cells": 40,
+          "pinball_a": 0.050067,
+          "pinball_b": 0.048076,
+          "mean_diff": 0.001991,
+          "skill_a_vs_b": -0.041421,
+          "share_a_better": 0.075,
+          "share_tied": 0.125,
+          "coverage_a_q10_q90": 0.875
+        },
+        "gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median": {
+          "n_cells": 40,
+          "pinball_a": 0.020259,
+          "pinball_b": 0.02091,
+          "mean_diff": -0.000651,
+          "skill_a_vs_b": 0.031114,
+          "share_a_better": 0.7,
+          "share_tied": 0.1,
+          "coverage_a_q10_q90": 0.2
+        },
+        "gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median": {
+          "n_cells": 40,
+          "pinball_a": 0.034303,
+          "pinball_b": 0.034423,
+          "mean_diff": -0.00012,
+          "skill_a_vs_b": 0.003475,
+          "share_a_better": 0.625,
+          "share_tied": 0.025,
+          "coverage_a_q10_q90": 0.7
+        },
+        "gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median": {
+          "n_cells": 40,
+          "pinball_a": 0.038181,
+          "pinball_b": 0.037779,
+          "mean_diff": 0.000401,
+          "skill_a_vs_b": -0.010618,
+          "share_a_better": 0.375,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.65
+        }
+      }
+    }
+  },
+  "cells": {
+    "development": "research/out/cells_development_F_1_c1.csv",
+    "checkpoint": "research/out/cells_checkpoint_F_1_c1.csv"
+  },
+  "evidence_ids": [],
+  "created_utc": "2026-11-15T05:20:40+00:00"
+}

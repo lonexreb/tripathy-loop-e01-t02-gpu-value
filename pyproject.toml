@@ -3,9 +3,9 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tripathy_loop_e01_t02_kalshi"
+name = "tripathy_loop_e01_t02_gpu_value"
 version = "0.1.0"
-description = "Tripathy Loop E01 Track 02 Kalshi GPU forecasting research lane"
+description = "Tripathy Loop E01 Track 02 self-improving GPU rental-price research lane"
 requires-python = ">=3.11"
 dependencies = []
 
@@ -23,6 +23,9 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# The research scripts are frozen experiment artifacts whose exact source hashes
+# are recorded in lineage. They have their own executable tests and reproduce gate.
+extend-exclude = ["research"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

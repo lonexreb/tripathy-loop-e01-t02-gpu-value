@@ -1,0 +1,10 @@
+# Adapted series: every headline-tier H100/A100 posted-rental series with daily (Sunday-scorable) truth.
+# Selection rule: tier == headline, not aws_spot, gpu_model H100*/A100*, in the catalog built from the pack at as_of 2026-11-06
+# (research/out/series_catalog.csv; identical selection at the demo as_of 2026-10-24). Frozen 2026-11-14.
+afhubbard.hyperscaler_spot.A100_40GB.spot.median
+afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median
+gpurentalprices.marketplace_ask.H100_80GB.spot.median
+gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median
+gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median
+gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median
+gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median

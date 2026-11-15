@@ -195,13 +195,14 @@ def test_firewall_rejects_file_io(ctrl):
     assert ctrl.propose_and_test_forecaster("peek at truth", "", code)["status"] == "REJECTED_FIREWALL"
 
 
-def test_degraded_forecaster_reverted_by_gate3(ctrl):
+def test_degraded_forecaster_screened_before_holdout(ctrl):
     before = ctrl.cfg.forecaster_path.read_text()
     r = ctrl.propose_and_test_forecaster("5x wider bands", "notes", (FIX / "degraded_5x.py").read_text())
-    assert r["status"] == "REVERTED"
-    assert r["gates"]["gate3_calibration"]["pass"] is False and r["gates"]["gate3_calibration"]["value"] > 0.86
+    assert r["status"] == "REJECTED_DISCOVERY"                  # worse on Discovery: never spends a Holdout evaluation
+    assert r["screen"]["failed"] == ["discovery_gain"] and "gates" not in r and "holdout" not in r
+    assert r["discovery_diagnostics"]["coverage_80"] > 0.86 and r["discovery_diagnostics"]["sanity"]["ok"]
     assert ctrl.cfg.forecaster_path.read_text() == before
-    assert _ledger_last(ctrl)["status"] == "REVERTED"
+    assert _ledger_last(ctrl)["status"] == "REJECTED_DISCOVERY"
 
 
 def test_improved_candidate_promoted_and_committed(ctrl):

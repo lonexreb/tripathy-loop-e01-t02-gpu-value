@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 import os
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -29,9 +30,17 @@ class GateThresholds:
     pooled_floor: float = 0.200          # Gate 1: beat the starter's drift demo skill ...
     pooled_min_gain: float = 0.003       # ... and the champion by at least this much
     median_tolerance: float = 0.005      # Gate 2: median-of-series skill may not drop more than this
-    coverage_low: float = 0.74           # Gate 3: empirical [q10, q90] coverage band
+    coverage_low: float = 0.74           # Gate 3: empirical [q10, q90] coverage band ...
     coverage_high: float = 0.86
+    coverage_target: float = 0.80        # ... or no worse calibrated than the champion (|cov - target| within
+    coverage_tolerance: float = 0.005    #     champion's distance + tolerance; ~7 of 1416 Holdout cells) ...
+    coverage_hard_low: float = 0.70      # ... but never outside this hard band (bounds any ratchet)
+    coverage_hard_high: float = 0.90
     horizon_floor: float = -0.020        # Gate 4: every horizon's pooled skill
+    # Pre-Holdout screen (two-stage evaluation; lab-side only, scoring is unchanged):
+    sanity_max_abs_log_ratio: float = math.log(10.0)  # any quantile beyond 10x / 0.1x the last value is rejected
+    sanity_max_invalid_share: float = 0.05            # crossing / non-positive / missing cells (baseline-filled)
+    discovery_min_gain: float = 0.0                   # Discovery pooled skill must beat the champion's by more
 
 
 @dataclass(frozen=True)
@@ -41,6 +50,7 @@ class LabConfig:
     exa_cache_only: bool = False          # True: never call the network, read outputs/exa_cache.jsonl only
     cache_dir: Path | None = None         # derived series cache (defaults to <root>/outputs/cache)
     eval_timeout_s: int = 900
+    max_discovery_probes: int = 4         # Discovery-only probes the agent may run per iteration
     gates: GateThresholds = field(default_factory=GateThresholds)
     discovery_origins: tuple[str, ...] = DISCOVERY_ORIGINS
     holdout_origins: tuple[str, ...] = HOLDOUT_ORIGINS

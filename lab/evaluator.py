@@ -5,12 +5,15 @@ against the truth dated origin + horizon; baseline = last value on or before the
 skill = 1 - mean cell loss / mean baseline cell loss; series skill excludes series whose baseline loss
 is 0; missing or invalid forecast cells are filled with the baseline (zero skill for that cell).
 Discovery runs expose full diagnostics; Holdout runs expose only the four gate aggregates.
+A lab-side sanity report (non-finite, crossing, non-positive and absurd quantiles versus the last value) is computed
+on the raw forecasts; it never alters scoring, the controller uses it to reject a candidate before Holdout.
 """
 from __future__ import annotations
 
 import argparse
 import importlib.util
 import json
+import math
 import subprocess
 import sys
 import tempfile
@@ -27,6 +30,54 @@ from lab.sandbox import ExaSignals, PointInTimeSandbox
 
 FC_COLUMNS = ["series_id", "origin_date", "horizon_days", "q10", "q50", "q90"]
 HOLDOUT_KEYS = ("pooled_skill", "median_skill", "coverage_80", "skill_by_horizon")
+PHASES = ("full", "discovery", "holdout")
+
+
+def sanity_report(fc: pd.DataFrame, last_value: pd.Series, max_abs_log_ratio: float) -> dict:
+    """Lab-side output checks on raw forecast rows (scoring is unaffected).
+
+    last_value is indexed by (series_id, origin_date) and holds the last observed value on or before the origin.
+    Fatal: any non-finite quantile, or any quantile with |log(q / last value)| > max_abs_log_ratio. Crossing and
+    non-positive rows are reported (the scorer fills them with the baseline) so the controller can bound their share.
+    """
+    q = fc[["q10", "q50", "q90"]].apply(pd.to_numeric, errors="coerce").to_numpy(dtype=float)
+    n = len(fc)
+    finite = np.isfinite(q)
+    row_finite = finite.all(axis=1)
+    with np.errstate(invalid="ignore"):
+        crossing = row_finite & ((q[:, 0] > q[:, 1]) | (q[:, 1] > q[:, 2]))
+        nonpos = row_finite & (q[:, 0] <= 0)
+    keys = pd.MultiIndex.from_arrays([fc["series_id"].astype(str), fc["origin_date"].astype(str).str[:10]])
+    lv = last_value.reindex(keys).to_numpy(dtype=float)
+    ok_ref = row_finite & ~nonpos & np.isfinite(lv) & (lv > 0)
+    ratio = np.full(n, np.nan)
+    if ok_ref.any():
+        ratio[ok_ref] = np.abs(np.log(q[ok_ref] / lv[ok_ref, None])).max(axis=1)
+    extreme = np.nan_to_num(ratio, nan=0.0) > max_abs_log_ratio
+    dup = int(fc.duplicated(["series_id", "origin_date", "horizon_days"]).sum()) if n else 0
+    ex = fc.loc[(~row_finite) | extreme, ["series_id", "origin_date", "horizon_days", "q10", "q50", "q90"]].head(5)
+    ex = ex.assign(last_value=lv[((~row_finite) | extreme)][:len(ex)])
+    out = {
+        "n_rows": int(n), "n_nonfinite_rows": int((~row_finite).sum()), "n_crossing_rows": int(crossing.sum()),
+        "n_nonpositive_rows": int(nonpos.sum()), "n_extreme_rows": int(extreme.sum()), "n_duplicate_rows": dup,
+        "max_abs_log_ratio_vs_last": (round(float(np.nanmax(ratio)), 4) if np.isfinite(ratio).any() else None),
+        "limit_abs_log_ratio": round(float(max_abs_log_ratio), 4),
+        "examples": [{k: (v if not isinstance(v, float) or math.isfinite(v) else str(v)) for k, v in r.items()}
+                     for r in ex.astype(object).to_dict("records")],
+    }
+    out["ok"] = out["n_nonfinite_rows"] == 0 and out["n_extreme_rows"] == 0
+    return out
+
+
+def finite_or_none(x):
+    """JSON-safe copy: non-finite floats become None (json.dumps(allow_nan=False) would otherwise crash the run)."""
+    if isinstance(x, dict):
+        return {k: finite_or_none(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [finite_or_none(v) for v in x]
+    if isinstance(x, (float, np.floating)):
+        return float(x) if math.isfinite(x) else None
+    return x
 
 
 def starter_modules(cfg: LabConfig):
@@ -79,6 +130,20 @@ class Evaluator:
             frames.append(fc)
             timing[o] = round(time.time() - t0, 3)
         return pd.concat(frames, ignore_index=True), {"seconds_by_origin": timing}
+
+    def sanity(self, fc: pd.DataFrame) -> dict:
+        c = self._c
+        pairs = fc[["series_id", "origin_date"]].astype(str).drop_duplicates()
+        vals = {}
+        for sid, o in pairs.itertuples(index=False):
+            lv = self.truth.last_value(sid, c.day_of(c.parse_date(o[:10])))
+            vals[(sid, o[:10])] = np.nan if lv is None else float(lv[0])
+        lvs = pd.Series(vals, dtype=float)
+        if len(lvs):
+            lvs.index = pd.MultiIndex.from_tuples(lvs.index)
+        else:
+            lvs.index = pd.MultiIndex.from_arrays([[], []])
+        return sanity_report(fc, lvs, self.cfg.gates.sanity_max_abs_log_ratio)
 
     # ----------------------------------------------------------------------------- scoring ----
     def score(self, fc: pd.DataFrame, origins, ids: list[str] | None = None) -> tuple[pd.DataFrame, dict]:
@@ -139,55 +204,81 @@ class Evaluator:
         d["mean_pinball"], d["mean_baseline_pinball"] = float(cells["loss"].mean()), float(cells["baseline_loss"].mean())
         d["skill_by_origin"] = {o: self._skill(g["loss"].mean(), g["baseline_loss"].mean())
                                 for o, g in cells.groupby("origin_date")}
-        cells = cells.assign(excess=cells["loss"] - cells["baseline_loss"],
-                             inside=(cells["y"] >= cells["q10"]) & (cells["y"] <= cells["q90"]))
+        cells = _diag_columns(cells)
+        total = cells["loss"].sum()
+        d["loss_decomposition"] = _components(cells)
+        hz = cells.groupby("horizon_days")
+        bh = hz.agg(n_cells=("loss", "size"), loss=("loss", "mean"), baseline_loss=("baseline_loss", "mean"),
+                    loss_sum=("loss", "sum"), coverage_80=("inside", "mean"), q10_breach_rate=("below", "mean"),
+                    q90_breach_rate=("above", "mean"), mean_width_rel=("width_rel", "mean"),
+                    median_width_rel=("width_rel", "median"), mean_bias_rel=("bias_rel", "mean"))
+        bh["skill"] = 1 - bh["loss"] / bh["baseline_loss"].replace(0, np.nan)
+        bh["share_of_total_loss"] = bh["loss_sum"] / total if total else np.nan
+        d["by_horizon"] = {str(h): {**_records(bh.loc[[h]].drop(columns=["loss_sum"]))[0],
+                                    "loss_components": _components(g)} for h, g in hz}
         sl = cells.groupby(["instrument_class", "pricing_tier", "horizon_days"]).agg(
             n_cells=("loss", "size"), loss=("loss", "mean"), baseline_loss=("baseline_loss", "mean"),
-            excess_loss_sum=("excess", "sum"), coverage_80=("inside", "mean")).reset_index()
+            excess_loss_sum=("excess", "sum"), coverage_80=("inside", "mean"), q10_breach_rate=("below", "mean"),
+            q90_breach_rate=("above", "mean"), mean_width_rel=("width_rel", "mean"),
+            mean_bias_rel=("bias_rel", "mean")).reset_index()
         sl["skill"] = 1 - sl["loss"] / sl["baseline_loss"].replace(0, np.nan)
-        sl["share_of_total_loss"] = sl["loss"] * sl["n_cells"] / cells["loss"].sum()
+        sl["share_of_total_loss"] = sl["loss"] * sl["n_cells"] / total
         d["slices"] = _records(sl.sort_values("excess_loss_sum", ascending=False))
         d["worst_slices"] = d["slices"][:6]
         ser = cells.groupby("series_id").agg(
             instrument_class=("instrument_class", "first"), pricing_tier=("pricing_tier", "first"),
             n_cells=("loss", "size"), loss=("loss", "mean"), baseline_loss=("baseline_loss", "mean"),
-            excess_loss_sum=("excess", "sum"), coverage_80=("inside", "mean"),
+            loss_sum=("loss", "sum"), excess_loss_sum=("excess", "sum"), coverage_80=("inside", "mean"),
             mean_level=("last_value", "mean"), mean_q50_error=("q50", "mean"), mean_y=("y", "mean"),
-            mean_width_rel=("q90", "mean")).reset_index()
+            mean_width_rel=("width_rel", "mean")).reset_index()
         ser["mean_q50_error"] = ser["mean_q50_error"] - ser["mean_y"]
-        ser["mean_width_rel"] = (cells.groupby("series_id").apply(
-            lambda g: ((g["q90"] - g["q10"]) / g["last_value"]).mean(), include_groups=False)).to_numpy()
         ser["skill"] = 1 - ser["loss"] / ser["baseline_loss"].replace(0, np.nan)
+        ser["share_of_total_loss"] = ser["loss_sum"] / total
+        ser = ser.drop(columns=["loss_sum"])
         d["worst_series"] = _records(ser.sort_values("excess_loss_sum", ascending=False).head(5))
         d["best_series"] = _records(ser.sort_values("excess_loss_sum").head(3))
+        d["largest_loss_series"] = _records(ser.sort_values("share_of_total_loss", ascending=False).head(5))
         return d
 
     # ---------------------------------------------------------------------------- top level ----
-    def evaluate(self, forecaster, origins, expose_diagnostics: bool) -> dict:
+    def evaluate(self, forecaster, origins, expose_diagnostics: bool, with_sanity: bool = False):
         fc, info = self.forecast(forecaster, origins)
+        sanity = self.sanity(fc) if with_sanity or expose_diagnostics else None
         cells, sinfo = self.score(fc, origins)
         if not expose_diagnostics:
             agg = self.aggregates(cells)
-            return {k: agg[k] for k in HOLDOUT_KEYS}
+            out = {k: agg[k] for k in HOLDOUT_KEYS}
+            return (out, sanity) if with_sanity else out
         d = self.diagnostics(cells)
         d["scoring"] = sinfo
         d["runtime"] = info
-        return d
+        d["sanity"] = sanity
+        return (d, sanity) if with_sanity else d
 
     def benchmark_skill(self, forecaster, origin: str = BENCHMARK_ORIGIN) -> dict:
         fc, _ = self.forecast(forecaster, [origin])
         cells, _ = self.score(fc, [origin])
         return self.aggregates(cells)
 
-    def full_run(self, forecaster_path: str | Path) -> dict:
-        """Discovery (diagnostics) + Holdout (firewalled) + lab-only benchmark origin, one process."""
+    def full_run(self, forecaster_path: str | Path, phase: str = "full") -> dict:
+        """Discovery (diagnostics) and/or Holdout (firewalled) + lab-only benchmark origin, one process.
+
+        phase="discovery" never touches Holdout; phase="holdout" never computes Discovery diagnostics.
+        """
+        if phase not in PHASES:
+            raise ValueError(f"phase must be one of {PHASES}")
         f = load_forecaster(forecaster_path)
         t0 = time.time()
-        disc = self.evaluate(f, list(self.cfg.discovery_origins), True)
-        hold = self.evaluate(f, list(self.cfg.holdout_origins), False)
-        bench = self.benchmark_skill(f)
-        return {"discovery": disc, "holdout": hold, "benchmark_2026_10_24": {k: bench[k] for k in HOLDOUT_KEYS},
-                "stage": self.cfg.stage, "seconds": round(time.time() - t0, 2)}
+        out = {"stage": self.cfg.stage, "phase": phase}
+        if phase in ("full", "discovery"):
+            out["discovery"] = self.evaluate(f, list(self.cfg.discovery_origins), True)
+        if phase in ("full", "holdout"):
+            hold, hs = self.evaluate(f, list(self.cfg.holdout_origins), False, with_sanity=True)
+            bench = self.benchmark_skill(f)
+            out.update(holdout=hold, holdout_sanity_ok=bool(hs["ok"]),
+                       benchmark_2026_10_24={k: bench[k] for k in HOLDOUT_KEYS})
+        out["seconds"] = round(time.time() - t0, 2)
+        return out
 
     # --------------------------------------------------------------- official scorer cross-check ----
     def official_score(self, fc: pd.DataFrame, origins: list[str]) -> dict:
@@ -207,6 +298,30 @@ class Evaluator:
                 cmd += ["--history", str(self.sandbox.series_path), "--missing-as-baseline"]
             subprocess.run(cmd, check=True, capture_output=True, text=True)
             return json.loads((td / "report.json").read_text())
+
+
+def _diag_columns(cells: pd.DataFrame) -> pd.DataFrame:
+    """Per-cell diagnostic columns: band position, relative width / bias and the five pinball components.
+
+    cell loss = mean over q10/q50/q90 of pinball; each tail quantile's pinball splits into a breach part (truth outside
+    that quantile, weight 0.9) and a width part (truth inside, weight 0.1), so the components sum to 3 x loss.
+    """
+    y, lv = cells["y"], cells["last_value"].where(cells["last_value"] != 0)
+    below, above = y < cells["q10"], y > cells["q90"]
+    e10, e90 = y - cells["q10"], y - cells["q90"]
+    return cells.assign(
+        excess=cells["loss"] - cells["baseline_loss"], inside=~below & ~above, below=below, above=above,
+        width_rel=(cells["q90"] - cells["q10"]) / lv, bias_rel=(cells["q50"] - y) / lv,
+        c_q10_breach=np.where(below, -0.9 * e10, 0.0), c_q10_width=np.where(below, 0.0, 0.1 * e10),
+        c_q50=np.maximum(0.5 * (y - cells["q50"]), -0.5 * (y - cells["q50"])),
+        c_q90_width=np.where(above, 0.0, -0.1 * e90), c_q90_breach=np.where(above, 0.9 * e90, 0.0))
+
+
+def _components(cells: pd.DataFrame) -> dict:
+    """Share of the pinball loss coming from each component (sums to 1)."""
+    parts = {k: float(cells[f"c_{k}"].sum()) for k in ("q10_breach", "q10_width", "q50", "q90_width", "q90_breach")}
+    tot = sum(parts.values())
+    return {k: (round(v / tot, 4) if tot > 0 and math.isfinite(tot) else None) for k, v in parts.items()}
 
 
 def _records(df: pd.DataFrame) -> list[dict]:
@@ -231,10 +346,11 @@ def main() -> int:
     ap.add_argument("--out", required=True, help="JSON result path")
     ap.add_argument("--enable-exa", action="store_true")
     ap.add_argument("--exa-cache-only", action="store_true")
+    ap.add_argument("--phase", choices=PHASES, default="full")
     a = ap.parse_args()
     cfg = load_config(enable_exa=a.enable_exa, exa_cache_only=a.exa_cache_only)
     try:
-        res = {"ok": True, **Evaluator(cfg).full_run(a.forecaster)}
+        res = {"ok": True, **finite_or_none(Evaluator(cfg).full_run(a.forecaster, a.phase))}
     except Exception as e:  # reported to the controller as a RUNTIME_ERROR
         tb = traceback.format_exc().splitlines()
         res = {"ok": False, "error": f"{type(e).__name__}: {e}"[:2000], "traceback_tail": "\n".join(tb[-25:])}

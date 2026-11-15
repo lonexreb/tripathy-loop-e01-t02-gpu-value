@@ -41,8 +41,8 @@
       "last_month": "2026-10",
       "first_price": 8.603,
       "last_price": 3.552,
-      "decay_per_year_full": 0.47935469934475633,
-      "decay_per_year_pre_2026": 0.6306130952919339,
+      "decay_per_year_full": 0.4793546993448929,
+      "decay_per_year_pre_2026": 0.630613095291476,
       "monthly": {
         "2023-07": 8.603,
         "2023-08": 8.603,
@@ -88,8 +88,8 @@
       "last_month": "2026-10",
       "first_price": 2.428,
       "last_price": 2.12,
-      "decay_per_year_full": 0.08338639724990105,
-      "decay_per_year_pre_2026": 0.1771640590674507,
+      "decay_per_year_full": 0.08338639724990805,
+      "decay_per_year_pre_2026": 0.17716405906744803,
       "monthly": {
         "2022-05": 2.428,
         "2022-06": 1.8589,

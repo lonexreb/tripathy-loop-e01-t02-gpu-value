@@ -27,8 +27,13 @@ MANIFEST.sha256: all 672 listed files verify. `starter/run_demo.sh` step 5 (un-t
 | PACK_ONLY | 2 | REVERTED | strands_modal:zai-org/GLM-5.3 | -1007932314689887422814739516810811039235850400212380750539463314588815332154435174400.0000 | -977524655035510016.0000 | +0.1699 | +0.7182 | -213036.2532 | Local split-conformal calibration: residual tails are heterogeneous across AZ series and n |
 | PACK_ONLY | 3 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4404 | +0.2970 | +0.2576 | +0.7380 | +0.3145 | Split-conformal tail-widening calibration (regime A only). The champion's full-window in-s |
 | PACK_ONLY | 4 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4428 | +0.2966 | +0.2552 | +0.7408 | +0.3138 | Regime-A momentum shrinkage (iteration 4, champion + ONE change). The champion's pooled mo |
+| PACK_ONLY | 5 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4434 | +0.2971 | +0.2562 | +0.7380 | +0.3143 | Per-horizon tail-width reallocation, h1-only narrowing (horizon_structure family, bold). D |
+| PACK_ONLY | 6 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4432 | +0.2976 | +0.2586 | +0.7436 | +0.3157 | Regime-C recency + confirmed h1 narrowing (regime_change family, bold; builds on iteration |
+| PACK_ONLY | 7 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4466 | +0.2969 | +0.2561 | +0.7429 | +0.3157 | Pooled vol-state tail scaling at h3/h7, stacked on the iteration-6 confirmed stack (regime |
+| PACK_ONLY | 8 | PROMOTED | strands_modal:zai-org/GLM-5.3 | +0.4462 | +0.3088 | +0.2745 | +0.7514 | +0.3252 | Vol-window parameter-perturbation ensemble at h3/h7, stacked on the iteration-6 confirmed  |
+| PACK_ONLY | 9 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4471 | +0.3102 | +0.2754 | +0.7500 | +0.3258 | Extend the confirmed vol-window ensemble to h1 with a 0.90 tail-narrowing re-center (ensem |
 
-**PACK_ONLY champion** (iteration 1, code `f0bd7cdf3ac1`): Discovery pooled +0.443, Holdout pooled +0.297 / median +0.255 / coverage 0.741 / by horizon h1 +0.398, h3 +0.324, h7 +0.267; 2026-10-24: pooled +0.314, coverage 0.735.
+**PACK_ONLY champion** (iteration 8, code `f30eed6c5ce0`): Discovery pooled +0.446, Holdout pooled +0.309 / median +0.275 / coverage 0.751 / by horizon h1 +0.403, h3 +0.337, h7 +0.280; 2026-10-24: pooled +0.325, coverage 0.753.
 
 Seed `drift` clone for comparison: Discovery +0.149, Holdout +0.231 (coverage 0.698, which fails Gate 3), 2026-10-24 +0.2004.
 
@@ -52,11 +57,32 @@ Agent notebook verdicts (latest last):
 - [PACK_ONLY] iteration 3: REVERTED (2026-11-15T10:49:34Z): 
 - [PACK_ONLY] iteration 3: candidate proposed (split-conformal tail-widening calibration, regime A only): holdout pooled 0.297 (need > 0.2996), median 0.2576 (need >= 0.2502), coverage 0.738 (band 0.74-0.86), horizons {'1': 0.4016, '3': 0.3221, '7': 0.2681}.
 - [PACK_ONLY] iteration 4: REVERTED (2026-11-15T10:50:13Z): holdout pooled 0.2966 (need > 0.2996), median 0.2552 (need >= 0.2502), coverage 0.7408 (band 0.74-0.86), horizons {'1': 0.3983, '3': 0.3244, '7': 0.2668}.
+- [PACK_ONLY] iteration 5: REVERTED (2026-11-15T15:33:06Z): holdout pooled 0.2971 (need > 0.2996), median 0.2562 (need >= 0.2502), coverage 0.738 (band [0.74, 0.86], or within 0.0642 of 0.80), horizons {'1': 0.403, '3': 0.3244, '7': 0.2668}. Gate margins {'gate1': -0.0025, 'gate2': 0.006, 'gate3': 0.0022, 'gate4': 0.28
+- [PACK_ONLY] iteration 6: REVERTED (2026-11-15T15:43:03Z): holdout pooled 0.2976 (need > 0.2996), median 0.2586 (need >= 0.2502), coverage 0.7436 (band [0.74, 0.86], or within 0.0642 of 0.80), horizons {'1': 0.403, '3': 0.3242, '7': 0.2677}. Gate margins {'gate1': -0.002, 'gate2': 0.0084, 'gate3': 0.0078, 'gate4': 0.2
+- [PACK_ONLY] iteration 7: REVERTED [regime_change] (2026-11-15T15:55:55Z): holdout pooled 0.2969 (need > 0.2996), median 0.2561 (need >= 0.2502), coverage 0.7429 (band [0.74, 0.86], or within 0.0642 of 0.80), horizons {'1': 0.403, '3': 0.3239, '7': 0.2667}. Gate margins {'gate1': -0.0027, 'gate2': 0.0059, 'gate3': 0.0071, 'gate4': 0.
+- [PACK_ONLY] iteration 8: PROMOTED (2026-11-15T16:00:20Z): holdout pooled 0.3088 (need > 0.2996), median 0.2745 (need >= 0.2502), coverage 0.7514 (band [0.74, 0.86], or within 0.0642 of 0.80), horizons {'1': 0.403, '3': 0.3369, '7': 0.2801}. Gate margins {'gate1': 0.0092, 'gate2': 0.0243, 'gate3': 0.0156, 'gate4': 0.3
+- [PACK_ONLY] iteration 9: REVERTED [ensemble] (2026-11-15T16:02:52Z): holdout pooled 0.3102 (need > 0.3118), median 0.2754 (need >= 0.2695), coverage 0.75 (band [0.74, 0.86], or within 0.0536 of 0.80), horizons {'1': 0.4164, '3': 0.3369, '7': 0.2801}. Gate margins {'gate1': -0.0016, 'gate2': 0.0059, 'gate3': 0.01, 'gate4': 0.300
 
 Current research playbook (`workspace/scientist_prompt.md`, evolved by the agent):
 
 ```markdown
-# AI Scientist research playbook (mutable; rewritten by the agent each iteration)
+# Scientist Playbook — GPU cloud rental price forecaster (stage PACK_ONLY)
+
+<!-- LAB-PROTECTED:BEGIN (owned by the lab; rewrites cannot remove or edit this block) -->
+## Lab rules (protected)
+- The lab, not you, decides when research stops. "Accept/freeze the champion" is never a valid plan: every
+  iteration must test a real, falsifiable change. A string of reverts means the explored families are exhausted,
+  not that the problem is solved; move to an untried family (see the experiment registry) or make a bolder change.
+- Every hypothesis is tagged with one family and a novelty (incremental | bold). Do not spend more than two
+  consecutive experiments in one family without a promotion; after two reverts in a row, the next one is bold.
+- Near-misses are assets: reverted candidates are archived with their code, diff and diagnostics
+  (inspect_candidate). Prefer building on the closest near-miss over restarting from the champion.
+- A candidate whose Holdout aggregates equal the champion's (NO_OP) changed nothing that is scored: its
+  selection rule never fired. Make changes that act unconditionally or show on Discovery that they fire.
+- Guardrails are only removed with evidence: cite the iteration that falsified them in the rationale.
+- Keep this playbook a distilled strategy (heuristics, guardrails, ranked ideas). The full experiment history
+  is rendered by the lab from the ledger; do not copy the notebook into the playbook.
+<!-- LAB-PROTECTED:END -->
 
 ## Mission
 Beat the champion on the four Holdout gates (pooled skill, breadth, calibrated 80% band, no bad horizon)
@@ -67,57 +93,40 @@ with forecasts that would also be honest at the frozen 2026-11-06 origin.
   single series with width_rel 1e86 drove pooled skill to -1e84). Read `slices[].share_of_total_loss`
   and `worst_series` first; ~95% of champion loss is AWS hyperscaler_spot (h7 60%, h3 25%, h1 9%).
 - Fix the regime that carries the loss. A gain on a 1% slice cannot move the pooled skill.
-- **Read `mean_q50_error` vs `mean_width_rel` in worst_series before blaming the point forecast.**
-  Iteration 4 showed the worst calm-zone series (p5 use1 az1/az4, skill -0.99) have q50 error of only
-  -0.006 with coverage 0.97: their loss is WIDTH (over-coverage), not q50 bias. Diagnose the error
-  channel (bias vs width) before choosing a lever.
+- **Gate 1 needs pooled > champion + 0.003.** A lever confined to h1 (~10% of loss share) cannot clear it
+  alone even when it transfers perfectly (iteration 9: h1 holdout +0.0134, pooled only +0.0013, shortfall
+  0.0016). Single-horizon levers must be stacked with a second confirmed lever before submission, or
+  target h7 (60% of loss) directly.
+- **Read `mean_q50_error`/`bias_rel` vs `mean_width_rel` before choosing a lever.** h7 under-coverage was a
+  CENTERING problem (bias_rel -0.012 at h7), not a width problem; the calm-zone worst series lose on WIDTH
+  (coverage 0.97), not q50 bias.
 
 ## Method
-1. Diagnose from Discovery only: per-slice skill, q10/q90 breach asymmetry, worst series (bias vs width).
-2. State ONE falsifiable hypothesis with a mechanism (why prices behave that way) and a predicted sign.
+1. Diagnose from Discovery only: per-slice skill, breach asymmetry, worst series (bias vs width).
+2. State ONE falsifiable hypothesis with a mechanism and a predicted sign.
 3. Change one thing at a time so the ledger attributes the effect; keep everything else identical.
-4. Record the result in the notebook, including negative results and their magnitude.
+   (Exception: when stacking CONFIRMED levers, submit the stack and attribute via the per-lever deltas
+   already measured on Holdout — iterations 6 and 8 did this cleanly.)
+4. Record the result, including negative results and their magnitude. Use analyze_discovery to measure
+   out-of-sample BEFORE spending a dry run or a submission (budget: ~6 analyses, 4 dry runs per iteration).
+   NOTE: the analysis budget exhausts fast; plan analyses to answer several questions per call.
+5. **Pseudo-origin OOS analysis (fit at origin-28d, score the next 28 days inside Discovery) is the strongest
+   pre-screen available.** Iteration 8 is the decisive positive case: its 5/5-origin OOS gains transferred to
+   Holdout at ~5x their Discovery magnitude. Iteration 7 is the negative case: calm-origin WIDTH-conditioning
+   gains did not transfer. Iteration 9 confirms the pre-screen again (OOS 5/5 origins -> holdout +0.0134 h1).
+   Prefer unconditional smoothing over conditional rescaling.
+6. **In-sample Discovery diagnostics LIE about the median when a lever widens bands**: iteration 8's
+   Discovery in-sample median dropped -0.0146 while the holdout median ROSE +0.0193. The champion's
+   in-sample pooled z is optimal in-sample by construction, so any widening looks bad in-sample. Trust the
+   pseudo-origin OOS per-series median, not the in-sample median, when the lever changes width.
 
-## HARD guardrails (learned the hard way — iterations 2, 3 AND 4 reverted)
+## HARD guardrails (all measured; cite the falsifying iteration to remove any of them)
 - **Bound every output.** Clip per-series z to a small multiple of pooled z AND clip final log-quantiles to
   a sane band around the last value (log q within +/- 1 of log last). Iteration 2's explosion (h7 pooled
   -1e18) came from unbounded per-series z on a sticky series.
 - **Never touch the LOWER quantile with a "max".** Iteration 3 falsified "elementwise max of pooled z is
-  widening-only": max widens the upper side but RAISES q10 (less-negative z10), narrowing the lower band.
-  Result: q10 breach 10.1% -> 10.9%, holdout coverage 0.7408 -> 0.7380, Gate 3 fail. Any upper-tail
-  widening experiment must leave z10 byte-identical to the champion.
-- **Recent-window residuals do NOT estimate forward tails (falsified twice).** Iteration 2: per-series
-  recent-window z narrowed bands and exploded. Iteration 3: pooled split-conformal recent-90-day z,
-  even taken as max with the full-window z, moved q90 breach only 11.9% -> 11.6% and gained just +0.0004
-  pooled. The champion's full-window in-sample pooled z is already honest on the upper side.
-- **Validation-selected parameter changes that can also select "no change" tend to degenerate to the
-  champion on holdout** (iteration 4: shrinkage s=1.0 chosen at every holdout origin -> holdout aggregates
-  byte-identical -> Gate 1 fails by construction). If a lever needs a *gain*, it must change something
-  unconditionally or its selection rule must be shown (on Discovery) to actually fire.
-- **Holdout coverage 0.7408 is 0.0008 above the Gate-3 floor.** Any change that lowers coverage even
-  slightly fails Gate 3. Coverage-neutral-or-widening changes only; never narrow.
-- Point-in-time only: use rows dated on or before the origin; never hard-code dates or per-origin constants.
-- Pool parameters across series where per-series histories are short (< 60 days).
-- Code: numpy/pandas only, vectorised, < 20 s per origin; guard empty histories and NaNs; always return
-  every target series; enforce q10 <= q50 <= q90 and positivity.
-
-## Current champion state (iteration 1, promoted; iterations 2, 3, 4 reverted against it)
-Discovery pooled 0.4429, median 0.2977, coverage 0.7795, breaches 10.1%/11.9% (upper tail slightly
-under-covered). Holdout pooled 0.2966, median 0.2552, coverage 0.7408, horizons 0.398/0.324/0.267.
-Regimes: A AWS spot = pooled momentum OLS on 1/3/7-day log changes + local-vol conformal (full-window
-in-sample pooled z); B rate cards = empirical change quantiles + stickiness pin + IQR width; C
-marketplace = drift, cross-collector pull disabled (kappa = 0, falsified in iteration 1).
-
-## What the levers are worth (all measured, all small or dead)
-- Upper-tail widening via max(full-window, recent split-conformal) z: +0.0004 pooled, -0.0028 coverage.
-  Dead lever — do not retry recent-window conformal in any form.
-- Per-series local calibration: catastrophic (iteration 2). Dead lever.
-- **Momentum-beta shrinkage toward zero, validation-selected (iteration 4): DEAD.** Holdout aggregates
-  byte-identical to champion (validation always picked s = 1.0); where it fired on Discovery h1 it
-  slightly hurt (h1 0.4294 vs 0.4300, pooled 0.44279 vs 0.44285). The pooled OLS beta is already at the
-  out-of-sample optimum — the "calm zones mean-revert so shrunk betas help q50" mechanism is FALSIFIED.
-  The calm-zone worst series lose on WIDTH (coverage 0.97), not q50 bias.
-- Cross-collector pull (kappa > 0) and cross-AZ consensus: falsified in itera
+  widening-only": max widens the upper side but RAISES q10, narrowing the lower band. Result: q10 breach
+  10.1% -> 10.9%, holdout coverage 0.7
 ```
 
 ## 6. Exa ablation (PACK_ONLY vs PACK_PLUS_EXA)

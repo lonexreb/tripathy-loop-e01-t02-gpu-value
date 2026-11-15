@@ -50,3 +50,15 @@ def test_long_commit_requires_market_insight(lab, monkeypatch):  # noqa: F811
     assert out["status"] == "LOCKED"
     lock = json.loads((lab.locks_dir / "g001_frozen.json").read_text())
     assert lock["market_insight"] == INSIGHT
+
+
+def test_commit_of_crashing_candidate_writes_no_lock(lab, monkeypatch):  # noqa: F811
+    tb = AgentToolbox(lab, mode="episode", episode_id="g009_frozen", procedure_version="v000")
+    tb.write_candidate(CAND)
+    real = lab._run_lab_child
+    monkeypatch.setattr(lab, "_run_lab_child", lambda a, t: {"ok": False, "error": "TypeError: boom"})
+    out = json.loads(tb.commit_forecast("crash", **CARD))
+    assert out["status"] == "COMMIT_REJECTED" and "boom" in out["error"]
+    assert not (lab.locks_dir / "g009_frozen.json").exists() and tb.lock is None
+    monkeypatch.setattr(lab, "_run_lab_child", real)
+    assert json.loads(tb.commit_forecast("fixed", **CARD))["status"] == "LOCKED"

@@ -20,7 +20,7 @@ COMPONENTS = ("research_policy", "improver_policy")
 REVISION_FIELDS = ("parent_version", "target_component", "proposed_by", "change", "supporting_episode_ids",
                    "expected_behavior_change", "development_comparison", "rejection_condition", "status")
 HYPOTHESIS_CARD_FIELDS = ("mechanism", "expected_observation", "competing_explanation", "test", "rejection_condition")
-MIN_COMPONENT_CHARS, MAX_COMPONENT_CHARS = 200, 12_000
+MIN_COMPONENT_CHARS, MAX_COMPONENT_CHARS = 200, 24_000
 ADMISSION_MARGIN = 0.001   # candidate episode must beat the frozen episode's locked score by this much (pooled skill)
 
 SEED_IMPROVER_POLICY = """# Improver policy (I_g, improver component)
@@ -76,7 +76,8 @@ def validate_revision(rev: dict | None, active: dict, known_episode_ids: set[str
         new = normalize_component(target, rev.get("new_component_text") or "")
         extra = len(PROTECTED_BLOCK) if target == "research_policy" else 0
         if not (MIN_COMPONENT_CHARS + extra <= len(new) <= MAX_COMPONENT_CHARS + extra):
-            p.append(f"new_component_text must be {MIN_COMPONENT_CHARS}..{MAX_COMPONENT_CHARS} characters")
+            p.append(f"new_component_text must be {MIN_COMPONENT_CHARS}..{MAX_COMPONENT_CHARS} characters excluding the "
+                     f"LAB-PROTECTED block (got {len(new) - extra}); send the complete revised component text")
         elif new == active["components"][target]:
             p.append("new_component_text is identical to the active component (no change)")
     return p

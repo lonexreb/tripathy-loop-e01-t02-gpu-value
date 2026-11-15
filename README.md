@@ -39,6 +39,7 @@ E01 continues to use the existing GitHub history, Linear project, and Slack chan
 
 ## Submission
 
+- Two-minute demo, no GPU or network: `python3 demo.py`
 - Findings: [FINDINGS.md](FINDINGS.md)
 - Forecasts: `submission/submission_head_2026-11-06.csv` (SHA-256 in `submission/SHA256SUMS`)
 - One command to rebuild them from the pack: `bash research/reproduce.sh`

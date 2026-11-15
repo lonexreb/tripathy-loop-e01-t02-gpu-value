@@ -123,3 +123,30 @@ def test_html_to_text_strips_markup():
     html = "<html><head><style>p{}</style><script>x=1</script></head><body><h1>Pricing</h1><p>p5.48xlarge &amp; " \
            "<b>$98.32</b>/hr</p><!-- c --><table><tr><td>a</td></tr></table></body></html>"
     assert html_to_text(html) == "Pricing\np5.48xlarge & $98.32 /hr\na"
+
+
+def test_leakage_screen_blocks_evaluation_window_literals_at_lock_time(lab):  # noqa: F811
+    from lab.rsi_controller import evaluate_gates
+    tb = AgentToolbox(lab, mode="episode", episode_id="g006_frozen", procedure_version="v000")
+    tb.write_candidate(CAND.replace("class Forecaster:", 'SURGE = "2026-09-30"\nclass Forecaster:'))
+    out = json.loads(tb.commit_forecast("date-keyed surge", **CARD))
+    assert out["status"] == "COMMIT_REJECTED" and "benchmark-specific" in out["error"] and "2026-09-30" in out["error"]
+    tb.write_candidate(CAND.replace("class Forecaster:", 'GAP_START = "2026-03-01"\nclass Forecaster:'))
+    assert json.loads(tb.commit_forecast("gap-aware", **CARD))["status"] == "LOCKED"      # pre-window date is fine
+    h = {"pooled_skill": 0.33, "median_skill": 0.30, "coverage_80": 0.80, "skill_by_horizon": {"1": 0.4, "3": 0.3, "7": 0.3}}
+    ch = {**h, "pooled_skill": 0.30}
+    g = evaluate_gates(h, ch, lab.cfg, None, {"candidate": 12.0, "champion": 2.0})     # 6x for +0.03: allowed 2 + 3 = 5x
+    assert g["gate5_cost"]["pass"] is False and g["all_pass"] is False
+    g = evaluate_gates(h, ch, lab.cfg, None, {"candidate": 9.0, "champion": 2.0})
+    assert g["gate5_cost"]["pass"] is True
+    assert evaluate_gates(h, ch, lab.cfg, None, {"candidate": 9.0, "champion": None})["gate5_cost"]["pass"] is True
+
+
+def test_maintainer_resolution_updates_latest_request_status(lab):  # noqa: F811
+    lab.record_capability_requests([{**REQ, "kind": "tool", "url": None, "as_of": None}], "improver_v000", 1)
+    rec = lab.resolve_capability_request("cr001", "served", "per-series breach rates added to dry-run diagnostics")
+    assert rec["status"] == "served" and rec["resolution_of"] == "cr001"
+    assert [r["status"] for r in lab.memory_digest()["procedural_memory"]["capability_requests"]] == ["served"]
+    lab.write_procedure_report()
+    md = (lab.procedures.root / "lineage.md").read_text()
+    assert md.count("| cr001 |") == 1 and "| served |" in md

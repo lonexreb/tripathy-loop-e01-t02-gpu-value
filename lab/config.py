@@ -47,6 +47,10 @@ class GateThresholds:
     coverage_hard_low: float = 0.70      # ... but never outside this hard band (bounds any ratchet)
     coverage_hard_high: float = 0.90
     horizon_floor: float = -0.020        # Gate 4: every horizon's pooled skill
+    # Gate 5 (complexity-aware acceptance, RRSI-style): a promoted forecaster may cost more compute per origin than
+    # the champion only in proportion to its measured Holdout gain: cost_ratio - 1 <= cost_beta0 + cost_beta1 * gain.
+    cost_beta0: float = 1.0              # up to 2x the champion's seconds/origin for free ...
+    cost_beta1: float = 100.0            # ... plus 1x more per +0.01 pooled skill
     # Pre-Holdout screen (two-stage evaluation; lab-side only, scoring is unchanged):
     sanity_max_abs_log_ratio: float = math.log(10.0)  # any quantile beyond 10x / 0.1x the last value is rejected
     sanity_max_invalid_share: float = 0.05            # crossing / non-positive / missing cells (baseline-filled)

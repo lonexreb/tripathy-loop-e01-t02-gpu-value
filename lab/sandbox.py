@@ -398,6 +398,35 @@ def import_policy_text() -> str:
             "save/load/read_/to_* file APIs, and eval/exec/getattr-style dynamic access")
 
 
+SERIES_ID_RE = re.compile(r"^(aws_spot|hyperscaler|neocloud|marketplace|rate_card|index)[._][A-Za-z0-9._-]+$")
+ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def audit_benchmark_specific(code: str, evolve_start: str, evolve_end: str | None = None, series_ids=None) -> list[str]:
+    """Leakage critic (deterministic part): a forecaster may not carry evaluation-set-specific logic. Flags string
+    literals that are calendar dates inside the evaluation window [first Discovery origin, last Holdout target]
+    (date-keyed regime switches memorise the evolve set), and literals that name individual scored series (per-series
+    hand-tuning). Dates outside the window (a known hardware launch, a documented data gap) are allowed."""
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as e:
+        return [f"SyntaxError: {e}"]
+    ids = set(series_ids or [])
+    problems: list[str] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Constant) and isinstance(node.value, str)):
+            continue
+        v = node.value.strip()
+        if ISO_DATE_RE.match(v) and v >= evolve_start and (evolve_end is None or v <= evolve_end):
+            problems.append(f"benchmark-specific: date literal '{v}' falls inside the evaluation window "
+                            f"[{evolve_start}, {evolve_end or 'open'}]; "
+                            "derive regimes from the data instead of keying them to evaluation dates")
+        elif (v in ids) or (not ids and SERIES_ID_RE.match(v) and v.count(".") >= 2):
+            problems.append(f"benchmark-specific: scored series named literally ('{v}'); per-series rules must come from "
+                            "pack columns or learned parameters")
+    return sorted(set(problems))
+
+
 def audit_forecaster_source(code: str, allow_ml: bool | None = None) -> list[str]:
     """Information firewall for candidate code (deny-list): no I/O, no network, no dynamic execution."""
     del allow_ml  # kept for call-site compatibility; every non-forbidden library is allowed

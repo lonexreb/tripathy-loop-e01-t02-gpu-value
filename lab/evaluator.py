@@ -281,7 +281,8 @@ class Evaluator:
             n_cells=("loss", "size"), loss=("loss", "mean"), baseline_loss=("baseline_loss", "mean"),
             loss_sum=("loss", "sum"), excess_loss_sum=("excess", "sum"), coverage_80=("inside", "mean"),
             mean_level=("last_value", "mean"), mean_q50_error=("q50", "mean"), mean_y=("y", "mean"),
-            mean_width_rel=("width_rel", "mean")).reset_index()
+            mean_width_rel=("width_rel", "mean"), q10_breach_rate=("below", "mean"),
+            q90_breach_rate=("above", "mean")).reset_index()
         ser["mean_q50_error"] = ser["mean_q50_error"] - ser["mean_y"]
         ser["skill"] = 1 - ser["loss"] / ser["baseline_loss"].replace(0, np.nan)
         ser["share_of_total_loss"] = ser["loss_sum"] / total
@@ -289,6 +290,12 @@ class Evaluator:
         d["worst_series"] = _records(ser.sort_values("excess_loss_sum", ascending=False).head(5))
         d["best_series"] = _records(ser.sort_values("excess_loss_sum").head(3))
         d["largest_loss_series"] = _records(ser.sort_values("share_of_total_loss", ascending=False).head(5))
+        # Capability request cr001 (LONG_HORIZON gen 3): per-series tail-breach attribution without an analysis call.
+        br = ser.assign(breach=ser["q10_breach_rate"] + ser["q90_breach_rate"]).sort_values("breach", ascending=False)
+        d["series_breach"] = {"note": f"all {len(ser)} series sorted by q10+q90 breach rate; top {min(60, len(ser))} shown",
+                              "series": _records(br.head(60)[["series_id", "instrument_class", "q10_breach_rate",
+                                                              "q90_breach_rate", "coverage_80", "share_of_total_loss",
+                                                              "skill"]])}
         return d
 
     # ---------------------------------------------------------------------------- top level ----

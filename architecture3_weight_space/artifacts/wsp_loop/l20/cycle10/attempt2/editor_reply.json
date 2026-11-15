@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.15 are the most volatile stretches, and always-narrow beats medium on that series (0.0560 vs 0.0616). This is a strict subset of the rejected marketplace_ask class, selected by move size instead of unchanged_fraction, so it is not a duplicate. It keeps the neocloud H100_80GB origins (q80 below 0.003) out of the class, which made earlier broader cutoffs not programmable.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.15,
+  "promote": "narrow"
+ }
+}

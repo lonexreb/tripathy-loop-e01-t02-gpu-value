@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Series with zero daily move (relative_q80 < 0.0001) are flat with rare jumps, so medium is too narrow. Always-wide gains 0.0008 on A100_40GB spot and 0.0023 on A100_SXM_80GB spot. It loses about 0.0005 and 0.0008 on the two flat neocloud A100 series, so the net is about +0.0017. This is a move-size regime test, not an instrument_class or gpu_model test, so it selects a different set of decisions from the rejected hyperscaler-only edit.",
+  "feature": "relative_q80",
+  "op": "<",
+  "value": 0.0001,
+  "promote": "wide"
+ }
+}

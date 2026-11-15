@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Decisions with relative_q80 >= 0.002 are the H100 marketplace-ask origins plus the most active H100_80GB neocloud and H100_SXM origins (q80 up to 0.0026). Always-narrow beats medium on marketplace (0.0560 vs 0.0616) and on H100_80GB neocloud (0.0126 vs 0.0136). The 0.002 cutoff is higher than the 0.0005 and 0.001 cutoffs that were not programmable, so it should add only a few neocloud origins to the marketplace class. That makes it a different set from every earlier proposal. It leaves the flat A100 and hyperscaler series untouched.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.002,
+  "promote": "narrow"
+ }
+}

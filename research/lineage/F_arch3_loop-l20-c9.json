@@ -1,0 +1,122 @@
+{
+  "id": "F_arch3_loop-l20-c9",
+  "generation": 9,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "not_programmable",
+  "improver": "I_wsp_l20",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Origins with at least 95% unchanged days in the last 60 are the flattest stretches. They are mostly A100_40GB hyperscaler spot origins plus fully flat neocloud A100 origins. In these stretches the rare jump is not covered by the medium band. Always-wide gains 0.0008 on A100_40GB spot (0.01122 vs 0.01206). The cutoff selects a tighter, different set of decisions than the rejected instrument_class and relative_q80 < 0.0001 edits, and it avoids the lower-flatness A100_SXM and H100 origins. The neocloud A100 series lose a little under wide, so the gain is small and uncertain.",
+        "feature": "unchanged_fraction",
+        "op": ">=",
+        "value": 0.95,
+        "promote": "wide"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 53,
+        "other_size_choosing": 115,
+        "class_margin_before": -0.4728,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.509,
+            "others_moved": 0.009
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 0.66,
+            "others_moved": 0.061
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 0.698,
+            "others_moved": 0.122
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 0.736,
+            "others_moved": 0.374
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 0.849,
+            "others_moved": 0.435
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 0.849,
+            "others_moved": 0.591
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    },
+    {
+      "spec": {
+        "hypothesis": "Origins with at least 90% unchanged days in the last 60 are flat stretches, where rare jumps fall outside the medium band. Always-wide gains on A100_40GB spot (0.01122 vs 0.01206) and on A100_SXM_80GB spot at its flatter origins. The neocloud A100 series lose a little. The 0.9 cutoff is looser than the 0.95 test that was not programmable, and it is a different decision set from the rejected instrument_class and relative_q80 edits.",
+        "feature": "unchanged_fraction",
+        "op": ">=",
+        "value": 0.9,
+        "promote": "wide"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 83,
+        "other_size_choosing": 85,
+        "class_margin_before": -0.4785,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.602,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 0.783,
+            "others_moved": 0.235
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 0.807,
+            "others_moved": 0.329
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 0.807,
+            "others_moved": 0.341
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 0.807,
+            "others_moved": 0.341
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 0.819,
+            "others_moved": 0.353
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T19:03:04.004671+00:00"
+}

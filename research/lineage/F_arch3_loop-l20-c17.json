@@ -1,0 +1,122 @@
+{
+  "id": "F_arch3_loop-l20-c17",
+  "generation": 17,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "not_programmable",
+  "improver": "I_wsp_l20",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Decisions with relative_q80 >= 0.0015 are the H100 marketplace-ask origins plus the more active H100_80GB neocloud origins. Always-narrow beats medium on both series (0.0560 vs 0.0616, and 0.0126 vs 0.0136). The cutoff sits between the programmed 0.002 edit and the 0.001 edit that was not programmable. It should add some neocloud H100_80GB origins to the 0.002 class, so it selects a different set. The flat A100 and hyperscaler series stay untouched.",
+        "feature": "relative_q80",
+        "op": ">=",
+        "value": 0.0015,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 38,
+        "other_size_choosing": 130,
+        "class_margin_before": -0.6371,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.553,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.215
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.262
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.408
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.631
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.631
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    },
+    {
+      "spec": {
+        "hypothesis": "Within the H100 marketplace-ask series, the most volatile origins (relative_q80 >= 0.18) are where narrow beats medium most (0.0560 vs 0.0616 on the series). This is a tighter subset than the programmed 0.17 cutoff (9 decisions), so it selects different decisions. It keeps the neocloud origins (q80 below 0.003) out, which blocked the broader cutoffs. The gain is small but should be concentrated in the highest-signal slice.",
+        "feature": "relative_q80",
+        "op": ">=",
+        "value": 0.18,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 4,
+        "other_size_choosing": 164,
+        "class_margin_before": -0.5733,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.5,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.122
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.152
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.384
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.415
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.415
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T19:06:34.722202+00:00"
+}

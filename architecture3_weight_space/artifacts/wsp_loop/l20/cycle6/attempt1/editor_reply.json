@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Only instrument_class edits have been programmable so far, and the marketplace_ask-narrow and hyperscaler_spot-wide edits both failed on held-out origins. Summed over the seven series, always-narrow scores 0.1544 against 0.1558 for medium and 0.1858 for wide. Narrow wins big on the two H100_80GB series. It loses about 0.0006 to 0.002 on the flat series. A single global shift is a clean decision set (all), so it should be programmable. It is the only unrejected option with a positive net expected gain, though a small one.",
+  "feature": "all",
+  "op": "==",
+  "value": "all",
+  "promote": "narrow"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "H100_80GB series reprice often (unchanged fraction 2-34%). Always-narrow beats medium on both: marketplace ask 0.0560 vs 0.0616 and neocloud rate card 0.0126 vs 0.0136. Selecting by gpu_model == H100_80GB covers both and differs from the rejected marketplace-only edit. It avoids the unchanged_fraction threshold that was not programmable. It leaves H100_SXM_80GB alone, where narrow loses.",
+  "feature": "gpu_model",
+  "op": "==",
+  "value": "H100_80GB",
+  "promote": "narrow"
+ }
+}

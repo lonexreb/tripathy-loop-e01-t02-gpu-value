@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "A100_40GB series are mostly unchanged days with rare jumps, so medium is too narrow. Always-wide scores 0.01122 vs 0.01206 on hyperscaler spot, a gain of 0.00084. It scores 0.02663 vs 0.02614 on the neocloud rate card, a loss of 0.00049. The net gain is small but positive. This is a different decision set from the rejected instrument_class edits and from the A100_SXM_80GB edit.",
+  "feature": "gpu_model",
+  "op": "==",
+  "value": "A100_40GB",
+  "promote": "wide"
+ }
+}

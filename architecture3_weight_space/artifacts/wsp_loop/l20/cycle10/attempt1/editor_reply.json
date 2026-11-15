@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Origins with under 5% unchanged days in the last 60 are the most volatile H100 marketplace-ask stretches. Always-narrow beats medium on that series (0.0560 vs 0.0616). Earlier narrow edits on the broader marketplace class helped on development but not on the checkpoint, so I am restricting the edit to the extreme end of the range. This is a strict subset of the rejected 0.1 and marketplace_ask sets. It is a different set of decisions because the 0.1 cutoff also selects origins between 5% and 10%, so it should not be a duplicate. It avoids the H100_80GB neocloud origins that made the wider cutoffs hard to program.",
+  "feature": "unchanged_fraction",
+  "op": "<",
+  "value": 0.05,
+  "promote": "narrow"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Origins with unchanged_fraction < 0.08 are the most actively repricing H100 marketplace-ask stretches. Always-narrow beats medium on that series (0.0560 vs 0.0616). This is a strict subset of the rejected marketplace_ask class that drops its calmest origins (0.08-0.12), so it should differ from the 0.05 and 0.1 cutoffs. It keeps neocloud H100_80GB origins (unchanged 0.28+) out, which is what made the broader cutoffs not programmable.",
+  "feature": "unchanged_fraction",
+  "op": "<",
+  "value": 0.08,
+  "promote": "narrow"
+ }
+}

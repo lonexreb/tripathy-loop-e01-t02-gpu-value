@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Origins with unchanged_fraction < 0.29 are the H100 marketplace-ask origins plus the few H100_80GB neocloud origins with the lowest unchanged share. Always-narrow beats medium on both series (0.0560 vs 0.0616, and 0.0126 vs 0.0136). The cutoff sits between the programmed 0.285 and 0.3 edits, so it should select a slightly different set of decisions. It stays well below the 0.32 and 0.5 cutoffs that were not programmable. It leaves the flat A100 and H100_SXM series untouched.",
+  "feature": "unchanged_fraction",
+  "op": "<",
+  "value": 0.29,
+  "promote": "narrow"
+ }
+}

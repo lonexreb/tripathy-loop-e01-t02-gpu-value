@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Decisions where fewer than 10% of the last 60 days were unchanged are almost all H100 marketplace-ask origins, with a few at the high end of the range falling outside the class. Always-narrow scores 0.0560 against 0.0616 for medium on that series, and the gain should come from the origins with the most repricing. The test selects a subset of the origins in the rejected marketplace_ask edit, so it is not a duplicate. It also avoids mixing in the neocloud H100_80GB series, which made the earlier 0.5 threshold not programmable.",
+  "feature": "unchanged_fraction",
+  "op": "<",
+  "value": 0.1,
+  "promote": "narrow"
+ }
+}

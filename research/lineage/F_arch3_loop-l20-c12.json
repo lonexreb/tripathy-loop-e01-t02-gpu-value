@@ -1,0 +1,143 @@
+{
+  "id": "F_arch3_loop-l20-c12",
+  "generation": 12,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "duplicate_of_cycle 1 attempt 1",
+  "improver": "I_wsp_l20",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Decisions with relative_q80 >= 0.0005 are the repricing H100 series: marketplace ask and H100_80GB neocloud, plus some H100_SXM origins. Always-narrow beats medium on the two clearest series, 0.0560 vs 0.0616 and 0.0126 vs 0.0136. The 0.0005 cutoff differs from the earlier 0.001 test, so it selects a different set of decisions. It leaves the flat A100 and hyperscaler series (q80 = 0) untouched.",
+        "feature": "relative_q80",
+        "op": ">=",
+        "value": 0.0005,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 48,
+        "other_size_choosing": 120,
+        "class_margin_before": -0.6348,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.458,
+            "others_moved": 0.008
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.2
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.2
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.592
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.6
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.6
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    },
+    {
+      "spec": {
+        "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.14 are the volatile stretches, where always-narrow beats medium (0.0560 vs 0.0616). The cutoff sits between the earlier 0.13 and 0.15 cutoffs, so it selects a different set of decisions. It keeps the neocloud H100 origins (q80 below 0.003) out, which blocked the broader cutoffs.",
+        "feature": "relative_q80",
+        "op": ">=",
+        "value": 0.14,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "programmed",
+        "class_size_choosing": 22,
+        "other_size_choosing": 146,
+        "class_margin_before": -0.6288,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.591,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.014
+          }
+        ],
+        "held_out": {
+          "class_on_target": 1.0,
+          "others_moved": 0.027
+        }
+      },
+      "random_direction_control_dose_response": [
+        {
+          "multiple": 0.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 2.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 3.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 4.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 6.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        }
+      ],
+      "outcome": "duplicate_of_cycle 1 attempt 1"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T19:04:27.839082+00:00"
+}

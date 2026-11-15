@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Marketplace-ask H100 series are noisy with frequent repricing, but the medium band is too wide. Always-narrow scores 0.0560 against 0.0616 for medium, which is the largest single-series gain in the brief. I expect narrow to win on unseen origins.",
+  "feature": "instrument_class",
+  "op": "==",
+  "value": "marketplace_ask",
+  "promote": "narrow"
+ }
+}

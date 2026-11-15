@@ -100,6 +100,8 @@ EDITOR_SYSTEM = (
     "Lower pinball loss is better. Use the development evidence in the brief, do not repeat a "
     "proposal that already failed, and prefer the change with the largest expected gain. "
     "Numeric features change from origin to origin, so a threshold applies per decision. "
+    "A proposal that selects the same decisions as an earlier one is discarded as a duplicate, "
+    "however it is worded. Edits accepted so far stay in place and later edits stack on them. "
     "Answer only with the structured output."
 )
 
@@ -484,6 +486,10 @@ def _scripted(brief: dict[str, Any], tried: set[str]) -> EditSpec:
     return best[1]
 
 
+def _improver_id(arm: str) -> str:
+    return {"i0": "I_wsp0", "i1": "I_wsp1"}.get(arm, f"I_wsp_{arm}")
+
+
 def _spec_key(spec: EditSpec) -> str:
     return f"{spec.feature}{spec.op}{spec.value}->{spec.promote}"
 
@@ -573,6 +579,8 @@ def run(arm: str, cycles: int, editor_mode: str, score_checkpoint: bool) -> None
     accepted: list[dict[str, Any]] = []
     parent_id, parent_dev = "loop-base", base_dev
     tried: set[str] = set()
+    # Proposals are identified by the decisions they produce, not by their wording.
+    seen = {hashlib.sha256(str(base_choices).encode()).hexdigest(): "the unedited actor"}
     stop_reason = "cycles completed"
 
     for cycle in range(1, cycles + 1):
@@ -604,6 +612,11 @@ def run(arm: str, cycles: int, editor_mode: str, score_checkpoint: bool) -> None
             record["random_direction_control_dose_response"] = control["dose_response"]
             run_id = f"loop-{arm}-c{cycle}a{attempt}"
             candidate = kernel.choices([*accepted, edit])
+            decision_key = hashlib.sha256(str(candidate).encode()).hexdigest()
+            if decision_key in seen:
+                record["outcome"] = f"duplicate_of_{seen[decision_key]}"
+                continue
+            seen[decision_key] = f"cycle {cycle} attempt {attempt}"
             _, dev_cells, dev_paired = _score(kernel, run_id, candidate, "development", parent_dev)
             assert dev_paired is not None
             record["development_vs_parent"] = _gate_numbers(dev_paired)
@@ -647,7 +660,7 @@ def run(arm: str, cycles: int, editor_mode: str, score_checkpoint: bool) -> None
             "parent": parent_before,
             "kind": "forecaster",
             "status": entry["outcome"],
-            "improver": f"I_wsp{arm[-1]}",
+            "improver": _improver_id(arm),
             "method": "band actor with stacked last-MLP edits (wsp_loop)",
             "attempts": attempts,
             "accepted_edits_so_far": len(accepted),
@@ -676,7 +689,7 @@ def run(arm: str, cycles: int, editor_mode: str, score_checkpoint: bool) -> None
     }
     (out / "head.json").write_text(json.dumps(head, indent=1) + "\n", encoding="utf-8")
     improver = {
-        "id": f"I_wsp{arm[-1]}",
+        "id": _improver_id(arm),
         "kind": "improver",
         "status": "control" if arm == "i0" else "candidate",
         "method": "headless LLM editor proposing closed-form weight edits; "
@@ -687,7 +700,7 @@ def run(arm: str, cycles: int, editor_mode: str, score_checkpoint: bool) -> None
         "created_utc": datetime.now(UTC).isoformat(),
     }
     if arm != "smoke":
-        (REPO_ROOT / "research" / "lineage" / f"I_wsp{arm[-1]}.json").write_text(
+        (REPO_ROOT / "research" / "lineage" / f"{_improver_id(arm)}.json").write_text(
             json.dumps(improver, indent=2) + "\n", encoding="utf-8"
         )
     print(json.dumps({k: v for k, v in head.items() if k != "accepted_edits"}, indent=1))
@@ -730,18 +743,51 @@ def protected() -> None:
     print(json.dumps(result, indent=1))
 
 
+def protected_arm(arm: str) -> None:
+    """One protected-block score for a later arm's final actor, against drift and the base."""
+    kernel = Kernel(_rows())
+    head = json.loads((ROOT / arm / "head.json").read_text(encoding="utf-8"))
+    result: dict[str, Any] = {"accepted_edits": len(head["accepted_edits"])}
+    if head["accepted_edits"]:
+        run_id = f"loop-{arm}-head"
+        drift = REPO_ROOT / "research" / "out" / "cells_protected_drift.csv"
+        _, cells, paired = _score(
+            kernel, run_id, kernel.choices(head["accepted_edits"]), "protected", drift, "F0_drift"
+        )
+        assert paired is not None
+        result["head_vs_F0_drift"] = _gate_numbers(paired)
+        base = RUN_ROOT / "loop-i0-head" / "evaluations" / "protected" / "forecast_cells.csv"
+        result["head_vs_unedited_actor"] = _gate_numbers(
+            _run_paired(
+                block="protected",
+                candidate_cells=cells,
+                run_id=run_id,
+                parent_cells=base,
+                label="unedited_actor",
+            )
+        )
+    else:
+        result["note"] = "final actor is the unedited actor, already scored on protected"
+    (ROOT / f"protected_result_{arm}.json").write_text(
+        json.dumps(result, indent=1) + "\n", encoding="utf-8"
+    )
+    print(json.dumps(result, indent=1))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     runner = commands.add_parser("run")
-    runner.add_argument("--arm", choices=("i0", "i1", "smoke"), required=True)
+    runner.add_argument("--arm", choices=("i0", "i1", "l20", "smoke"), required=True)
     runner.add_argument("--cycles", type=int, default=3)
     runner.add_argument("--editor", choices=("claude", "scripted"), default="claude")
     runner.add_argument("--no-checkpoint", action="store_true")
-    commands.add_parser("protected")
+    commands.add_parser("protected").add_argument("--arm", default=None)
     args = parser.parse_args()
     if args.command == "run":
         run(args.arm, args.cycles, args.editor, not args.no_checkpoint)
+    elif args.arm:
+        protected_arm(args.arm)
     else:
         protected()
 

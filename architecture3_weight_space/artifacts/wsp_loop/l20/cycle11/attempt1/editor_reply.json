@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.17 are the most volatile stretches. Always-narrow beats medium on that series (0.0560 vs 0.0616). This is a tighter subset than the rejected >=0.15 edit, so it selects different decisions. It keeps the neocloud H100_80GB origins out, which blocked the broader cutoffs. The expected gain is small, but it is the highest-signal slice that can be programmed.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.17,
+  "promote": "narrow"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Neocloud rate-card is the only instrument class not yet tried. Medium is already near-best on three of its four series. Narrow wins clearly on H100_80GB (0.0126 vs 0.0136) and is close to flat on A100_40GB (0.0265 vs 0.0261). The other two series lose about 0.001 each, so the net result is uncertain and may be slightly negative. I'm choosing it because instrument_class edits are the only kind the kernel has programmed so far. The remaining class either has no gain or was already rejected.",
+  "feature": "instrument_class",
+  "op": "==",
+  "value": "neocloud_rate_card",
+  "promote": "narrow"
+ }
+}

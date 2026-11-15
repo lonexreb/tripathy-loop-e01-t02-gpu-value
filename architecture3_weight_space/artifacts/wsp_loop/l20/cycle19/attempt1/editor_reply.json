@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Origins with at least 93% unchanged days in the last 60 are the flattest stretches. They are mostly A100_40GB hyperscaler spot origins and fully flat neocloud A100 origins. Always-wide beats medium on A100_40GB spot (0.01122 vs 0.01206). The neocloud A100 series lose a little under wide, so the net gain is small and uncertain. The 0.93 cutoff is higher than the 0.9 and 0.95 cutoffs that were not programmable, so it selects a different set of decisions. It excludes the repricing H100 and marketplace origins.",
+  "feature": "unchanged_fraction",
+  "op": ">=",
+  "value": 0.93,
+  "promote": "wide"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Origins with at least 96% unchanged days in the last 60 are the flattest hyperscaler spot stretches, mostly A100_40GB spot plus a few fully flat neocloud A100 origins. The medium band is too narrow for the rare jumps. Always-wide beats medium on A100_40GB spot (0.01122 vs 0.01206). The 0.96 cutoff is above the 0.95 cutoff that was not programmable, so it selects a smaller and different set. It leaves the H100 repricing series and the lower-flatness A100_SXM origins alone.",
+  "feature": "unchanged_fraction",
+  "op": ">=",
+  "value": 0.96,
+  "promote": "wide"
+ }
+}

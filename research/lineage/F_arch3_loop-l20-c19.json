@@ -1,0 +1,122 @@
+{
+  "id": "F_arch3_loop-l20-c19",
+  "generation": 19,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "not_programmable",
+  "improver": "I_wsp_l20",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Origins with at least 93% unchanged days in the last 60 are the flattest stretches. They are mostly A100_40GB hyperscaler spot origins and fully flat neocloud A100 origins. Always-wide beats medium on A100_40GB spot (0.01122 vs 0.01206). The neocloud A100 series lose a little under wide, so the net gain is small and uncertain. The 0.93 cutoff is higher than the 0.9 and 0.95 cutoffs that were not programmable, so it selects a different set of decisions. It excludes the repricing H100 and marketplace origins.",
+        "feature": "unchanged_fraction",
+        "op": ">=",
+        "value": 0.93,
+        "promote": "wide"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 76,
+        "other_size_choosing": 92,
+        "class_margin_before": -0.476,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.658,
+            "others_moved": 0.239
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 0.737,
+            "others_moved": 0.293
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 0.803,
+            "others_moved": 0.304
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 0.816,
+            "others_moved": 0.359
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 0.816,
+            "others_moved": 0.359
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 0.816,
+            "others_moved": 0.37
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    },
+    {
+      "spec": {
+        "hypothesis": "H100_SXM_80GB neocloud rate-card series reprice moderately (75-97% unchanged days, q80 up to 0.0025). Its drift baseline (0.02397) is worse than medium (0.02097), so the series is not a pure random walk. Always-narrow scores 0.02214 vs 0.02097 for medium, so this is a likely loss on this series. It is the only gpu_model class not yet tried that is a single-series, single-regime test. I propose it only because the gpu_model == A100 tests and the H100_80GB test were not programmable, and I want to check whether this one programs.",
+        "feature": "gpu_model",
+        "op": "==",
+        "value": "H100_SXM_80GB",
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 24,
+        "other_size_choosing": 144,
+        "class_margin_before": -0.632,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.708,
+            "others_moved": 0.125
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.333
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.333
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.382
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.403
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.521
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T19:07:46.111343+00:00"
+}

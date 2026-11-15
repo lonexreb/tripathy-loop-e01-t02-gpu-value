@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Within the H100 marketplace-ask series, the most volatile origins (relative_q80 >= 0.18) are where narrow beats medium most (0.0560 vs 0.0616 on the series). This is a tighter subset than the programmed 0.17 cutoff (9 decisions), so it selects different decisions. It keeps the neocloud origins (q80 below 0.003) out, which blocked the broader cutoffs. The gain is small but should be concentrated in the highest-signal slice.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.18,
+  "promote": "narrow"
+ }
+}

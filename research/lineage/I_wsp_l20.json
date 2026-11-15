@@ -1,0 +1,10 @@
+{
+  "id": "I_wsp_l20",
+  "kind": "improver",
+  "status": "candidate",
+  "method": "headless LLM editor proposing closed-form weight edits; starts with I_wsp0's notebook",
+  "cycles": 20,
+  "accepted_edits": 0,
+  "head_run_id": "loop-base",
+  "created_utc": "2026-11-15T19:08:10.312117+00:00"
+}

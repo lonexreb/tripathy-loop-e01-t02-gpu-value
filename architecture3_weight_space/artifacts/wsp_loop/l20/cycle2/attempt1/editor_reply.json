@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Hyperscaler spot series are almost always unchanged (81-97% unchanged days, zero q80 move), but the actor's medium band is too narrow for the rare jumps. Always-wide scores 0.01122 vs 0.01206 on A100_40GB and 0.01238 vs 0.01466 on A100_SXM_80GB, and it beats drift on both. Promote wide for the hyperscaler_spot class. This is a different class from the rejected marketplace_ask edit.",
+  "feature": "instrument_class",
+  "op": "==",
+  "value": "hyperscaler_spot",
+  "promote": "wide"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "arm": "l20",
+ "head_run_id": "loop-base",
+ "accepted_edits": [],
+ "stop_reason": "cycles completed",
+ "readout_error": 0.0,
+ "base_choice_counts": {
+  "medium": 420
+ },
+ "head_choice_counts": {
+  "medium": 420
+ }
+}

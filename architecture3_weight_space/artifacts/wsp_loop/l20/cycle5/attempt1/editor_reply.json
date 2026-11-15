@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Series with a non-trivial daily move (relative_q80 >= 0.001) are the H100 marketplace ask and the H100_80GB neocloud rate card. Always-narrow beats medium on both: 0.0560 vs 0.0616, and 0.0126 vs 0.0136. The flat A100 and hyperscaler series (q80 = 0) stay untouched. This is a different test from the rejected marketplace-only edit. It uses the continuous move-size feature instead of the unchanged_fraction and gpu_model tests that were not programmable.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.001,
+  "promote": "narrow"
+ }
+}

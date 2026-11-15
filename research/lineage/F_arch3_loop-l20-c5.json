@@ -1,0 +1,122 @@
+{
+  "id": "F_arch3_loop-l20-c5",
+  "generation": 5,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "not_programmable",
+  "improver": "I_wsp_l20",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Series with a non-trivial daily move (relative_q80 >= 0.001) are the H100 marketplace ask and the H100_80GB neocloud rate card. Always-narrow beats medium on both: 0.0560 vs 0.0616, and 0.0126 vs 0.0136. The flat A100 and hyperscaler series (q80 = 0) stay untouched. This is a different test from the rejected marketplace-only edit. It uses the continuous move-size feature instead of the unchanged_fraction and gpu_model tests that were not programmable.",
+        "feature": "relative_q80",
+        "op": ">=",
+        "value": 0.001,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 48,
+        "other_size_choosing": 120,
+        "class_margin_before": -0.6348,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.458,
+            "others_moved": 0.008
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.2
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.2
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.592
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.6
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.6
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    },
+    {
+      "spec": {
+        "hypothesis": "Neocloud rate-card is the only instrument class not yet tried. Medium is already near-best on three of its four series. Narrow wins clearly on H100_80GB (0.0126 vs 0.0136) and is close to flat on A100_40GB (0.0265 vs 0.0261). The other two series lose about 0.001 each, so the net result is uncertain and may be slightly negative. I'm choosing it because instrument_class edits are the only kind the kernel has programmed so far. The remaining class either has no gain or was already rejected.",
+        "feature": "instrument_class",
+        "op": "==",
+        "value": "neocloud_rate_card",
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 96,
+        "other_size_choosing": 72,
+        "class_margin_before": -0.5788,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.573,
+            "others_moved": 0.181
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.333
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.333
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.333
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.333
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.333
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T19:01:33.618975+00:00"
+}

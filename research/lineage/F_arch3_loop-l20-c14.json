@@ -1,0 +1,158 @@
+{
+  "id": "F_arch3_loop-l20-c14",
+  "generation": 14,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "rejected",
+  "improver": "I_wsp_l20",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Decisions with unchanged_fraction < 0.32 are the H100 marketplace-ask origins plus most of the H100_80GB neocloud origins (their unchanged fraction runs 0.28 to 0.34). Always-narrow beats medium on both series: 0.0560 vs 0.0616 on marketplace and 0.0126 vs 0.0136 on neocloud. The 0.32 cutoff sits above the programmed 0.3 edit and below the 0.5 edit that was not programmable. It adds the neocloud H100_80GB origins that the 0.3 edit left out, so it selects a different set of decisions. The flat A100 and H100_SXM series stay untouched.",
+        "feature": "unchanged_fraction",
+        "op": "<",
+        "value": 0.32,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 36,
+        "other_size_choosing": 132,
+        "class_margin_before": -0.6305,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.583,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 0.972,
+            "others_moved": 0.212
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.273
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.409
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.629
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 1.0,
+            "others_moved": 0.636
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    },
+    {
+      "spec": {
+        "hypothesis": "Origins with unchanged_fraction < 0.285 are the H100 marketplace-ask origins plus the few H100_80GB neocloud origins with the lowest unchanged share. Always-narrow beats medium on both series (0.0560 vs 0.0616, and 0.0126 vs 0.0136). The cutoff sits just below the programmed 0.3 edit (26 decisions) and above the 0.1 and 0.05 edits (24). It should select a slightly different set, probably 25 decisions. The edit is narrow and in the regime where narrow wins. It keeps clear of the 0.32 cutoff that was not programmable.",
+        "feature": "unchanged_fraction",
+        "op": "<",
+        "value": 0.285,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "programmed",
+        "class_size_choosing": 25,
+        "other_size_choosing": 143,
+        "class_margin_before": -0.6337,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.64,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 0.96,
+            "others_moved": 0.007
+          }
+        ],
+        "held_out": {
+          "class_on_target": 1.0,
+          "others_moved": 0.028
+        }
+      },
+      "random_direction_control_dose_response": [
+        {
+          "multiple": 0.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 2.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 3.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 4.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 6.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        }
+      ],
+      "development_vs_parent": {
+        "diff": -0.000766,
+        "ci90": [
+          -0.001231,
+          -0.000263
+        ],
+        "coverage": 0.779553
+      },
+      "checkpoint_vs_parent": {
+        "diff": 7.4e-05,
+        "ci90": [
+          -0.000873,
+          0.00129
+        ]
+      },
+      "outcome": "rejected"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T19:05:28.302627+00:00"
+}

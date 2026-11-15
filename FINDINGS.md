@@ -176,6 +176,18 @@ Rates are at the chosen strength for programmable edits and at the strongest str
 - *Descriptive, not an admission:* the redesigned actor's unedited default (medium band everywhere) was the loop's starting point, not a gated candidate. On checkpoint it is −0.001109 [−0.001826, −0.000424] against drift with coverage 0.755, and ties F_1 (−0.000152 [−0.000995, +0.000618]). The submission stays F_1.
 - *For someone pricing these instruments:* on development, the volatile marketplace ask wanted a **narrower** band than one typical daily move and the near-constant hyperscaler spot series wanted a **wider** one — rare jumps in quiet series cost more than routine churn in noisy ones. Neither held on the following two weeks, so treat both as hypotheses, not rules.
 
+**A 20-cycle run confirmed the pattern.** One further unattended run of 20 cycles from the unedited actor (amendment `config/wsp_loop_amendment_20cycles_2026-11-15.json`, written first), with duplicates now detected by the decisions a proposal produces instead of by its wording:
+
+| Outcome of 36 editor proposals | Count |
+|---|---:|
+| Could not be programmed without moving other series | 15 |
+| Duplicate of an earlier candidate (discarded, no score spent) | 12 |
+| Reached checkpoint and rejected | 8 |
+| Failed the development screen | 1 |
+| **Admitted** | **0** |
+
+The eight checkpoint differences against the unedited actor range from −0.000143 to +0.000753; none has an interval below zero. The final actor is the unedited one, so no further protected score was spent. After cycle 2 the editor mostly re-proposed thresholds that isolate the marketplace ask (the largest development gain), and from cycle 11 on two thirds of its proposals were duplicates: the editor ran out of distinct ideas that the action space and feature set allow. More cycles of this loop will not help; a richer action space or more history per decision would be the next change. Editor cost for this run: $3.49.
+
 **Cost and replay.** Each run took a few minutes on a laptop: no GPU rental, nine editor calls costing $0.51 in total. Re-running an arm replays the stored editor replies, so the numbers reproduce with no LLM call:
 
 ```bash

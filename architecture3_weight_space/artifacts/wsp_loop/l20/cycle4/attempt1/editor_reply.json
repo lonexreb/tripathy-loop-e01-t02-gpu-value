@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "A100_SXM_80GB series are mostly unchanged but have rare jumps. Always-wide cuts hyperscaler spot pinball from 0.01466 to 0.01238, a gain of 0.00228. It raises neocloud rate card pinball from 0.00676 to 0.00759, a loss of 0.00083. The net gain is positive. The class is a different set of decisions from the rejected instrument_class edits, and it mixes two instrument classes, so it is less of a single-regime bet.",
+  "feature": "gpu_model",
+  "op": "==",
+  "value": "A100_SXM_80GB",
+  "promote": "wide"
+ }
+}

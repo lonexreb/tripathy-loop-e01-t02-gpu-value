@@ -63,6 +63,18 @@
         "research/lineage/I_wsp1.json",
         "research/lineage/F_arch3_loop-*.json"
       ]
+    },
+    {
+      "id": "arch3-wsp-loop-l20",
+      "cycles": 20,
+      "editor_proposals": 36,
+      "not_programmable": 15,
+      "duplicates": 12,
+      "checkpoint_rejected": 8,
+      "development_screen_rejected": 1,
+      "accepted_edits": 0,
+      "editor_cost_usd": 3.49,
+      "protected_scored": false
     }
   ],
   "result": {

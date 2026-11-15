@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Decisions with unchanged_fraction < 0.32 are the H100 marketplace-ask origins plus most of the H100_80GB neocloud origins (their unchanged fraction runs 0.28 to 0.34). Always-narrow beats medium on both series: 0.0560 vs 0.0616 on marketplace and 0.0126 vs 0.0136 on neocloud. The 0.32 cutoff sits above the programmed 0.3 edit and below the 0.5 edit that was not programmable. It adds the neocloud H100_80GB origins that the 0.3 edit left out, so it selects a different set of decisions. The flat A100 and H100_SXM series stay untouched.",
+  "feature": "unchanged_fraction",
+  "op": "<",
+  "value": 0.32,
+  "promote": "narrow"
+ }
+}

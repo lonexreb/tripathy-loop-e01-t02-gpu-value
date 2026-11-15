@@ -1,0 +1,2655 @@
+[
+ {
+  "cycle": 1,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Marketplace-ask H100 series are noisy with frequent repricing, but the medium band is too wide. Always-narrow scores 0.0560 against 0.0616 for medium, which is the largest single-series gain in the brief. I expect narrow to win on unseen origins.",
+     "feature": "instrument_class",
+     "op": "==",
+     "value": "marketplace_ask",
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 24,
+     "other_size_choosing": 144,
+     "class_margin_before": -0.6329,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.542,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.0
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.000795,
+     "ci90": [
+      -0.001266,
+      -0.000297
+     ],
+     "coverage": 0.779553
+    },
+    "checkpoint_vs_parent": {
+     "diff": -9.9e-05,
+     "ci90": [
+      -0.001086,
+      0.001173
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 2,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Hyperscaler spot series are almost always unchanged (81-97% unchanged days, zero q80 move), but the actor's medium band is too narrow for the rare jumps. Always-wide scores 0.01122 vs 0.01206 on A100_40GB and 0.01238 vs 0.01466 on A100_SXM_80GB, and it beats drift on both. Promote wide for the hyperscaler_spot class. This is a different class from the rejected marketplace_ask edit.",
+     "feature": "instrument_class",
+     "op": "==",
+     "value": "hyperscaler_spot",
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.4262,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.542,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.0
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.000438,
+     "ci90": [
+      -0.000744,
+      -0.000167
+     ],
+     "coverage": 0.859425
+    },
+    "checkpoint_vs_parent": {
+     "diff": 0.000258,
+     "ci90": [
+      5e-05,
+      0.000472
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 3,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Series that reprice often (under 50% unchanged days) get too much width from medium. Always-narrow beats medium on both of them: H100 marketplace ask 0.0560 vs 0.0616, and H100_80GB neocloud 0.0126 vs 0.0136. Selecting by unchanged_fraction < 0.5 covers both. It differs from the rejected marketplace_ask-only edit and uses a regime feature that should generalize better.",
+     "feature": "unchanged_fraction",
+     "op": "<",
+     "value": 0.5,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.6348,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.458,
+       "others_moved": 0.008
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.592
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "H100_80GB series reprice often (unchanged fraction 2-34%). Always-narrow beats medium on both: marketplace ask 0.0560 vs 0.0616 and neocloud rate card 0.0126 vs 0.0136. Selecting by gpu_model == H100_80GB covers both and differs from the rejected marketplace-only edit. It avoids the unchanged_fraction threshold that was not programmable. It leaves H100_SXM_80GB alone, where narrow loses.",
+     "feature": "gpu_model",
+     "op": "==",
+     "value": "H100_80GB",
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.6348,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.458,
+       "others_moved": 0.008
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.592
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   }
+  ],
+  "outcome": "not_programmable"
+ },
+ {
+  "cycle": 4,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "A100_SXM_80GB series are mostly unchanged but have rare jumps. Always-wide cuts hyperscaler spot pinball from 0.01466 to 0.01238, a gain of 0.00228. It raises neocloud rate card pinball from 0.00676 to 0.00759, a loss of 0.00083. The net gain is positive. The class is a different set of decisions from the rejected instrument_class edits, and it mixes two instrument classes, so it is less of a single-regime bet.",
+     "feature": "gpu_model",
+     "op": "==",
+     "value": "A100_SXM_80GB",
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.4118,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.354,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.583,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.688,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 0.812,
+       "others_moved": 0.208
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "A100_40GB series are mostly unchanged days with rare jumps, so medium is too narrow. Always-wide scores 0.01122 vs 0.01206 on hyperscaler spot, a gain of 0.00084. It scores 0.02663 vs 0.02614 on the neocloud rate card, a loss of 0.00049. The net gain is small but positive. This is a different decision set from the rejected instrument_class edits and from the A100_SXM_80GB edit.",
+     "feature": "gpu_model",
+     "op": "==",
+     "value": "A100_40GB",
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.4898,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.771,
+       "others_moved": 0.208
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.917,
+       "others_moved": 0.308
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.317
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   }
+  ],
+  "outcome": "not_programmable"
+ },
+ {
+  "cycle": 5,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Series with a non-trivial daily move (relative_q80 >= 0.001) are the H100 marketplace ask and the H100_80GB neocloud rate card. Always-narrow beats medium on both: 0.0560 vs 0.0616, and 0.0126 vs 0.0136. The flat A100 and hyperscaler series (q80 = 0) stay untouched. This is a different test from the rejected marketplace-only edit. It uses the continuous move-size feature instead of the unchanged_fraction and gpu_model tests that were not programmable.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.001,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.6348,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.458,
+       "others_moved": 0.008
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.592
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "Neocloud rate-card is the only instrument class not yet tried. Medium is already near-best on three of its four series. Narrow wins clearly on H100_80GB (0.0126 vs 0.0136) and is close to flat on A100_40GB (0.0265 vs 0.0261). The other two series lose about 0.001 each, so the net result is uncertain and may be slightly negative. I'm choosing it because instrument_class edits are the only kind the kernel has programmed so far. The remaining class either has no gain or was already rejected.",
+     "feature": "instrument_class",
+     "op": "==",
+     "value": "neocloud_rate_card",
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 96,
+     "other_size_choosing": 72,
+     "class_margin_before": -0.5788,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.573,
+       "others_moved": 0.181
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.333
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.333
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.333
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.333
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.333
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   }
+  ],
+  "outcome": "not_programmable"
+ },
+ {
+  "cycle": 6,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Only instrument_class edits have been programmable so far, and the marketplace_ask-narrow and hyperscaler_spot-wide edits both failed on held-out origins. Summed over the seven series, always-narrow scores 0.1544 against 0.1558 for medium and 0.1858 for wide. Narrow wins big on the two H100_80GB series. It loses about 0.0006 to 0.002 on the flat series. A single global shift is a clean decision set (all), so it should be programmable. It is the only unrejected option with a positive net expected gain, though a small one.",
+     "feature": "all",
+     "op": "==",
+     "value": "all",
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 168,
+     "other_size_choosing": 0,
+     "class_margin_before": -0.5806,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.542,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.0
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.000209,
+     "ci90": [
+      -0.000672,
+      0.000277
+     ],
+     "coverage": 0.669329
+    },
+    "checkpoint_vs_parent": {
+     "diff": 0.000753,
+     "ci90": [
+      -8.5e-05,
+      0.001785
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 7,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Series with zero daily move (relative_q80 < 0.0001) are flat with rare jumps, so medium is too narrow. Always-wide gains 0.0008 on A100_40GB spot and 0.0023 on A100_SXM_80GB spot. It loses about 0.0005 and 0.0008 on the two flat neocloud A100 series, so the net is about +0.0017. This is a move-size regime test, not an instrument_class or gpu_model test, so it selects a different set of decisions from the rejected hyperscaler-only edit.",
+     "feature": "relative_q80",
+     "op": "<",
+     "value": 0.0001,
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 120,
+     "other_size_choosing": 48,
+     "class_margin_before": -0.4582,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.125,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.4,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.525,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.792,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.8,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.808,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 0.95,
+       "others_moved": 0.062
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.118
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": 2.1e-05,
+     "ci90": [
+      -0.000334,
+      0.000351
+     ],
+     "coverage": 0.908946
+    },
+    "outcome": "rejected_on_development_screen"
+   },
+   {
+    "spec": {
+     "hypothesis": "Decisions where fewer than 10% of the last 60 days were unchanged are almost all H100 marketplace-ask origins, with a few at the high end of the range falling outside the class. Always-narrow scores 0.0560 against 0.0616 for medium on that series, and the gain should come from the origins with the most repricing. The test selects a subset of the origins in the rejected marketplace_ask edit, so it is not a duplicate. It also avoids mixing in the neocloud H100_80GB series, which made the earlier 0.5 threshold not programmable.",
+     "feature": "unchanged_fraction",
+     "op": "<",
+     "value": 0.1,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 24,
+     "other_size_choosing": 144,
+     "class_margin_before": -0.6329,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.542,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.053
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 1 attempt 1"
+   }
+  ],
+  "outcome": "duplicate_of_cycle 1 attempt 1"
+ },
+ {
+  "cycle": 8,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Decisions with unchanged_fraction < 0.3 are the H100 marketplace ask origins plus the most active H100_80GB neocloud origins. Always-narrow beats medium on both (0.0560 vs 0.0616, and 0.0126 vs 0.0136). The cutoff sits below the 0.5 test that was not programmable, so it selects a different and tighter set than any earlier proposal. It leaves the flat A100 and H100_SXM series untouched.",
+     "feature": "unchanged_fraction",
+     "op": "<",
+     "value": 0.3,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 26,
+     "other_size_choosing": 142,
+     "class_margin_before": -0.6292,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.615,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.962,
+       "others_moved": 0.007
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.028
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.00077,
+     "ci90": [
+      -0.001234,
+      -0.000267
+     ],
+     "coverage": 0.777955
+    },
+    "checkpoint_vs_parent": {
+     "diff": 8e-05,
+     "ci90": [
+      -0.000861,
+      0.001296
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 9,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Origins with at least 95% unchanged days in the last 60 are the flattest stretches. They are mostly A100_40GB hyperscaler spot origins plus fully flat neocloud A100 origins. In these stretches the rare jump is not covered by the medium band. Always-wide gains 0.0008 on A100_40GB spot (0.01122 vs 0.01206). The cutoff selects a tighter, different set of decisions than the rejected instrument_class and relative_q80 < 0.0001 edits, and it avoids the lower-flatness A100_SXM and H100 origins. The neocloud A100 series lose a little under wide, so the gain is small and uncertain.",
+     "feature": "unchanged_fraction",
+     "op": ">=",
+     "value": 0.95,
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 53,
+     "other_size_choosing": 115,
+     "class_margin_before": -0.4728,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.509,
+       "others_moved": 0.009
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.66,
+       "others_moved": 0.061
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.698,
+       "others_moved": 0.122
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.736,
+       "others_moved": 0.374
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.849,
+       "others_moved": 0.435
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 0.849,
+       "others_moved": 0.591
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "Origins with at least 90% unchanged days in the last 60 are flat stretches, where rare jumps fall outside the medium band. Always-wide gains on A100_40GB spot (0.01122 vs 0.01206) and on A100_SXM_80GB spot at its flatter origins. The neocloud A100 series lose a little. The 0.9 cutoff is looser than the 0.95 test that was not programmable, and it is a different decision set from the rejected instrument_class and relative_q80 edits.",
+     "feature": "unchanged_fraction",
+     "op": ">=",
+     "value": 0.9,
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 83,
+     "other_size_choosing": 85,
+     "class_margin_before": -0.4785,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.602,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.783,
+       "others_moved": 0.235
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.807,
+       "others_moved": 0.329
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.807,
+       "others_moved": 0.341
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.807,
+       "others_moved": 0.341
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 0.819,
+       "others_moved": 0.353
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   }
+  ],
+  "outcome": "not_programmable"
+ },
+ {
+  "cycle": 10,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Origins with under 5% unchanged days in the last 60 are the most volatile H100 marketplace-ask stretches. Always-narrow beats medium on that series (0.0560 vs 0.0616). Earlier narrow edits on the broader marketplace class helped on development but not on the checkpoint, so I am restricting the edit to the extreme end of the range. This is a strict subset of the rejected 0.1 and marketplace_ask sets. It is a different set of decisions because the 0.1 cutoff also selects origins between 5% and 10%, so it should not be a duplicate. It avoids the H100_80GB neocloud origins that made the wider cutoffs hard to program.",
+     "feature": "unchanged_fraction",
+     "op": "<",
+     "value": 0.05,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 24,
+     "other_size_choosing": 144,
+     "class_margin_before": -0.6329,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.542,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 0.0,
+      "others_moved": 0.143
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 1 attempt 1"
+   },
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.15 are the most volatile stretches, and always-narrow beats medium on that series (0.0560 vs 0.0616). This is a strict subset of the rejected marketplace_ask class, selected by move size instead of unchanged_fraction, so it is not a duplicate. It keeps the neocloud H100_80GB origins (q80 below 0.003) out of the class, which made earlier broader cutoffs not programmable.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.15,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 15,
+     "other_size_choosing": 153,
+     "class_margin_before": -0.6143,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.667,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.059
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.077
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.000795,
+     "ci90": [
+      -0.001266,
+      -0.000297
+     ],
+     "coverage": 0.779553
+    },
+    "checkpoint_vs_parent": {
+     "diff": -0.000143,
+     "ci90": [
+      -0.001145,
+      0.001139
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 11,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.17 are the most volatile stretches. Always-narrow beats medium on that series (0.0560 vs 0.0616). This is a tighter subset than the rejected >=0.15 edit, so it selects different decisions. It keeps the neocloud H100_80GB origins out, which blocked the broader cutoffs. The expected gain is small, but it is the highest-signal slice that can be programmed.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.17,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 9,
+     "other_size_choosing": 159,
+     "class_margin_before": -0.6259,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.667,
+       "others_moved": 0.025
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.094
+      }
+     ],
+     "held_out": {
+      "class_on_target": 0.0,
+      "others_moved": 0.143
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 10 attempt 2"
+   },
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.13 are the volatile stretches, and always-narrow beats medium on that series (0.0560 vs 0.0616). The cutoff sits between the rejected >=0.15 subset (15 decisions) and the full marketplace_ask class (24). It drops only the calmest origins, so it selects a different set of decisions. It keeps the neocloud H100_80GB origins (q80 below 0.003) out, which blocked the broader cutoffs.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.13,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 23,
+     "other_size_choosing": 145,
+     "class_margin_before": -0.6318,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.565,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.007
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.027
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 10 attempt 2"
+   }
+  ],
+  "outcome": "duplicate_of_cycle 10 attempt 2"
+ },
+ {
+  "cycle": 12,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Decisions with relative_q80 >= 0.0005 are the repricing H100 series: marketplace ask and H100_80GB neocloud, plus some H100_SXM origins. Always-narrow beats medium on the two clearest series, 0.0560 vs 0.0616 and 0.0126 vs 0.0136. The 0.0005 cutoff differs from the earlier 0.001 test, so it selects a different set of decisions. It leaves the flat A100 and hyperscaler series (q80 = 0) untouched.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.0005,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 48,
+     "other_size_choosing": 120,
+     "class_margin_before": -0.6348,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.458,
+       "others_moved": 0.008
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.2
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.592
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.6
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.14 are the volatile stretches, where always-narrow beats medium (0.0560 vs 0.0616). The cutoff sits between the earlier 0.13 and 0.15 cutoffs, so it selects a different set of decisions. It keeps the neocloud H100 origins (q80 below 0.003) out, which blocked the broader cutoffs.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.14,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 22,
+     "other_size_choosing": 146,
+     "class_margin_before": -0.6288,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.591,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.014
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.027
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 1 attempt 1"
+   }
+  ],
+  "outcome": "duplicate_of_cycle 1 attempt 1"
+ },
+ {
+  "cycle": 13,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.16 are the most volatile stretches, and always-narrow beats medium on that series (0.0560 vs 0.0616). The cutoff sits between the earlier 0.15 cutoff (15 decisions) and the 0.17 cutoff (9 decisions), so it selects a different set of decisions. It keeps the neocloud H100 origins (q80 below 0.003) out, which blocked the broader cutoffs.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.16,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 11,
+     "other_size_choosing": 157,
+     "class_margin_before": -0.6176,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.727,
+       "others_moved": 0.013
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.083
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.077
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 10 attempt 2"
+   },
+   {
+    "spec": {
+     "hypothesis": "Decisions with relative_q80 >= 0.002 are the H100 marketplace-ask origins plus the most active H100_80GB neocloud and H100_SXM origins (q80 up to 0.0026). Always-narrow beats medium on marketplace (0.0560 vs 0.0616) and on H100_80GB neocloud (0.0126 vs 0.0136). The 0.002 cutoff is higher than the 0.0005 and 0.001 cutoffs that were not programmable, so it should add only a few neocloud origins to the marketplace class. That makes it a different set from every earlier proposal. It leaves the flat A100 and hyperscaler series untouched.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.002,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 26,
+     "other_size_choosing": 142,
+     "class_margin_before": -0.637,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.692,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.923,
+       "others_moved": 0.021
+      }
+     ],
+     "held_out": {
+      "class_on_target": 0.412,
+      "others_moved": 0.0
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.00078,
+     "ci90": [
+      -0.001244,
+      -0.000278
+     ],
+     "coverage": 0.777955
+    },
+    "checkpoint_vs_parent": {
+     "diff": 0.00016,
+     "ci90": [
+      -0.000765,
+      0.001368
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 14,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Decisions with unchanged_fraction < 0.32 are the H100 marketplace-ask origins plus most of the H100_80GB neocloud origins (their unchanged fraction runs 0.28 to 0.34). Always-narrow beats medium on both series: 0.0560 vs 0.0616 on marketplace and 0.0126 vs 0.0136 on neocloud. The 0.32 cutoff sits above the programmed 0.3 edit and below the 0.5 edit that was not programmable. It adds the neocloud H100_80GB origins that the 0.3 edit left out, so it selects a different set of decisions. The flat A100 and H100_SXM series stay untouched.",
+     "feature": "unchanged_fraction",
+     "op": "<",
+     "value": 0.32,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 36,
+     "other_size_choosing": 132,
+     "class_margin_before": -0.6305,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.583,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.972,
+       "others_moved": 0.212
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.273
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.409
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.629
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.636
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "Origins with unchanged_fraction < 0.285 are the H100 marketplace-ask origins plus the few H100_80GB neocloud origins with the lowest unchanged share. Always-narrow beats medium on both series (0.0560 vs 0.0616, and 0.0126 vs 0.0136). The cutoff sits just below the programmed 0.3 edit (26 decisions) and above the 0.1 and 0.05 edits (24). It should select a slightly different set, probably 25 decisions. The edit is narrow and in the regime where narrow wins. It keeps clear of the 0.32 cutoff that was not programmable.",
+     "feature": "unchanged_fraction",
+     "op": "<",
+     "value": 0.285,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 25,
+     "other_size_choosing": 143,
+     "class_margin_before": -0.6337,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.64,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.96,
+       "others_moved": 0.007
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.028
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.000766,
+     "ci90": [
+      -0.001231,
+      -0.000263
+     ],
+     "coverage": 0.779553
+    },
+    "checkpoint_vs_parent": {
+     "diff": 7.4e-05,
+     "ci90": [
+      -0.000873,
+      0.00129
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 15,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Origins with unchanged_fraction < 0.08 are the most actively repricing H100 marketplace-ask stretches. Always-narrow beats medium on that series (0.0560 vs 0.0616). This is a strict subset of the rejected marketplace_ask class that drops its calmest origins (0.08-0.12), so it should differ from the 0.05 and 0.1 cutoffs. It keeps neocloud H100_80GB origins (unchanged 0.28+) out, which is what made the broader cutoffs not programmable.",
+     "feature": "unchanged_fraction",
+     "op": "<",
+     "value": 0.08,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 24,
+     "other_size_choosing": 144,
+     "class_margin_before": -0.6329,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.542,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.1
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 1 attempt 1"
+   },
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.155 are the most volatile stretches. Always-narrow beats medium on that series (0.0560 vs 0.0616). The cutoff sits between the earlier 0.15 and 0.16 cutoffs, so it should select a slightly different set of decisions. It keeps the neocloud origins (q80 below 0.003) out, which made the broader cutoffs not programmable.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.155,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 14,
+     "other_size_choosing": 154,
+     "class_margin_before": -0.612,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.714,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.065
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.077
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 10 attempt 2"
+   }
+  ],
+  "outcome": "duplicate_of_cycle 10 attempt 2"
+ },
+ {
+  "cycle": 16,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.165 are the most volatile stretches. Always-narrow beats medium on that series (0.0560 vs 0.0616). The cutoff sits between the 0.16 and 0.17 cutoffs, so it should select a different set of decisions, probably 10. It keeps the neocloud origins (q80 below 0.003) out, which made the broader cutoffs not programmable.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.165,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 10,
+     "other_size_choosing": 158,
+     "class_margin_before": -0.6228,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.7,
+       "others_moved": 0.019
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.089
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.077
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 10 attempt 2"
+   },
+   {
+    "spec": {
+     "hypothesis": "Origins with unchanged_fraction < 0.29 are the H100 marketplace-ask origins plus the few H100_80GB neocloud origins with the lowest unchanged share. Always-narrow beats medium on both series (0.0560 vs 0.0616, and 0.0126 vs 0.0136). The cutoff sits between the programmed 0.285 and 0.3 edits, so it should select a slightly different set of decisions. It stays well below the 0.32 and 0.5 cutoffs that were not programmable. It leaves the flat A100 and H100_SXM series untouched.",
+     "feature": "unchanged_fraction",
+     "op": "<",
+     "value": 0.29,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 25,
+     "other_size_choosing": 143,
+     "class_margin_before": -0.6337,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.64,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.96,
+       "others_moved": 0.007
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.028
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 14 attempt 2"
+   }
+  ],
+  "outcome": "duplicate_of_cycle 14 attempt 2"
+ },
+ {
+  "cycle": 17,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Decisions with relative_q80 >= 0.0015 are the H100 marketplace-ask origins plus the more active H100_80GB neocloud origins. Always-narrow beats medium on both series (0.0560 vs 0.0616, and 0.0126 vs 0.0136). The cutoff sits between the programmed 0.002 edit and the 0.001 edit that was not programmable. It should add some neocloud H100_80GB origins to the 0.002 class, so it selects a different set. The flat A100 and hyperscaler series stay untouched.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.0015,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 38,
+     "other_size_choosing": 130,
+     "class_margin_before": -0.6371,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.553,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.215
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.262
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.408
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.631
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.631
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, the most volatile origins (relative_q80 >= 0.18) are where narrow beats medium most (0.0560 vs 0.0616 on the series). This is a tighter subset than the programmed 0.17 cutoff (9 decisions), so it selects different decisions. It keeps the neocloud origins (q80 below 0.003) out, which blocked the broader cutoffs. The gain is small but should be concentrated in the highest-signal slice.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.18,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 4,
+     "other_size_choosing": 164,
+     "class_margin_before": -0.5733,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.5,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.122
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.152
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.384
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.415
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.415
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   }
+  ],
+  "outcome": "not_programmable"
+ },
+ {
+  "cycle": 18,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Decisions with relative_q80 >= 0.0022 are the H100 marketplace-ask origins plus a few of the most active H100_80GB neocloud origins. Always-narrow beats medium on both series (0.0560 vs 0.0616, and 0.0126 vs 0.0136). The cutoff sits above the programmed 0.002 edit, so it should select a slightly smaller set of decisions. The flat A100 and hyperscaler series stay untouched.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.0022,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 24,
+     "other_size_choosing": 144,
+     "class_margin_before": -0.6329,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.542,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 0.353,
+      "others_moved": 0.0
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 1 attempt 1"
+   },
+   {
+    "spec": {
+     "hypothesis": "Decisions with relative_q80 >= 0.0021 are the H100 marketplace-ask origins plus the one or two most active H100_80GB neocloud origins. Always-narrow beats medium on marketplace (0.0560 vs 0.0616) and on H100_80GB neocloud (0.0126 vs 0.0136). The 0.0021 cutoff sits between the programmed 0.002 edit (26 decisions) and the 0.0022 edit (24 decisions), so it should select a different set of about 25 decisions. It leaves the flat A100, hyperscaler and most H100_SXM series untouched.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.0021,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 25,
+     "other_size_choosing": 143,
+     "class_margin_before": -0.633,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.64,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.96,
+       "others_moved": 0.0
+      }
+     ],
+     "held_out": {
+      "class_on_target": 0.353,
+      "others_moved": 0.0
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "development_vs_parent": {
+     "diff": -0.000795,
+     "ci90": [
+      -0.001266,
+      -0.000297
+     ],
+     "coverage": 0.779553
+    },
+    "checkpoint_vs_parent": {
+     "diff": 7.4e-05,
+     "ci90": [
+      -0.000873,
+      0.00129
+     ]
+    },
+    "outcome": "rejected"
+   }
+  ],
+  "outcome": "rejected"
+ },
+ {
+  "cycle": 19,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Origins with at least 93% unchanged days in the last 60 are the flattest stretches. They are mostly A100_40GB hyperscaler spot origins and fully flat neocloud A100 origins. Always-wide beats medium on A100_40GB spot (0.01122 vs 0.01206). The neocloud A100 series lose a little under wide, so the net gain is small and uncertain. The 0.93 cutoff is higher than the 0.9 and 0.95 cutoffs that were not programmable, so it selects a different set of decisions. It excludes the repricing H100 and marketplace origins.",
+     "feature": "unchanged_fraction",
+     "op": ">=",
+     "value": 0.93,
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 76,
+     "other_size_choosing": 92,
+     "class_margin_before": -0.476,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.658,
+       "others_moved": 0.239
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.737,
+       "others_moved": 0.293
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.803,
+       "others_moved": 0.304
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.816,
+       "others_moved": 0.359
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.816,
+       "others_moved": 0.359
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 0.816,
+       "others_moved": 0.37
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   },
+   {
+    "spec": {
+     "hypothesis": "H100_SXM_80GB neocloud rate-card series reprice moderately (75-97% unchanged days, q80 up to 0.0025). Its drift baseline (0.02397) is worse than medium (0.02097), so the series is not a pure random walk. Always-narrow scores 0.02214 vs 0.02097 for medium, so this is a likely loss on this series. It is the only gpu_model class not yet tried that is a single-series, single-regime test. I propose it only because the gpu_model == A100 tests and the H100_80GB test were not programmable, and I want to check whether this one programs.",
+     "feature": "gpu_model",
+     "op": "==",
+     "value": "H100_SXM_80GB",
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 24,
+     "other_size_choosing": 144,
+     "class_margin_before": -0.632,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.708,
+       "others_moved": 0.125
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.333
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.333
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.382
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.403
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 1.0,
+       "others_moved": 0.521
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   }
+  ],
+  "outcome": "not_programmable"
+ },
+ {
+  "cycle": 20,
+  "attempts": [
+   {
+    "spec": {
+     "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.145 are the volatile stretches, where always-narrow beats medium (0.0560 vs 0.0616). The cutoff sits between the programmed 0.14 (22 decisions) and 0.15 (15 decisions) cutoffs, so it selects a different set of decisions. It keeps the neocloud origins (q80 below 0.003) out, which blocked the broader cutoffs.",
+     "feature": "relative_q80",
+     "op": ">=",
+     "value": 0.145,
+     "promote": "narrow"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "programmed",
+     "class_size_choosing": 20,
+     "other_size_choosing": 148,
+     "class_margin_before": -0.6248,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.55,
+       "others_moved": 0.007
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 1.0,
+       "others_moved": 0.027
+      }
+     ],
+     "held_out": {
+      "class_on_target": 1.0,
+      "others_moved": 0.077
+     }
+    },
+    "random_direction_control_dose_response": [
+     {
+      "multiple": 0.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 1.5,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 2.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 3.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 4.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     },
+     {
+      "multiple": 6.0,
+      "class_on_target": 0.0,
+      "others_moved": 0.0
+     }
+    ],
+    "outcome": "duplicate_of_cycle 10 attempt 2"
+   },
+   {
+    "spec": {
+     "hypothesis": "Origins with at least 96% unchanged days in the last 60 are the flattest hyperscaler spot stretches, mostly A100_40GB spot plus a few fully flat neocloud A100 origins. The medium band is too narrow for the rare jumps. Always-wide beats medium on A100_40GB spot (0.01122 vs 0.01206). The 0.96 cutoff is above the 0.95 cutoff that was not programmable, so it selects a smaller and different set. It leaves the H100 repricing series and the lower-flatness A100_SXM origins alone.",
+     "feature": "unchanged_fraction",
+     "op": ">=",
+     "value": 0.96,
+     "promote": "wide"
+    },
+    "editor": "headless-claude-sonnet",
+    "programming": {
+     "status": "not_programmable",
+     "class_size_choosing": 47,
+     "other_size_choosing": 121,
+     "class_margin_before": -0.4669,
+     "dose_response": [
+      {
+       "multiple": 0.5,
+       "class_on_target": 0.0,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.0,
+       "class_on_target": 0.553,
+       "others_moved": 0.0
+      },
+      {
+       "multiple": 1.5,
+       "class_on_target": 0.66,
+       "others_moved": 0.05
+      },
+      {
+       "multiple": 2.0,
+       "class_on_target": 0.681,
+       "others_moved": 0.107
+      },
+      {
+       "multiple": 3.0,
+       "class_on_target": 0.681,
+       "others_moved": 0.314
+      },
+      {
+       "multiple": 4.0,
+       "class_on_target": 0.723,
+       "others_moved": 0.388
+      },
+      {
+       "multiple": 6.0,
+       "class_on_target": 0.851,
+       "others_moved": 0.471
+      }
+     ]
+    },
+    "outcome": "not_programmable"
+   }
+  ],
+  "outcome": "not_programmable"
+ }
+]

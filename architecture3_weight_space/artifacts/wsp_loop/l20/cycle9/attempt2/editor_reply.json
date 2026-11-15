@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Origins with at least 90% unchanged days in the last 60 are flat stretches, where rare jumps fall outside the medium band. Always-wide gains on A100_40GB spot (0.01122 vs 0.01206) and on A100_SXM_80GB spot at its flatter origins. The neocloud A100 series lose a little. The 0.9 cutoff is looser than the 0.95 test that was not programmable, and it is a different decision set from the rejected instrument_class and relative_q80 edits.",
+  "feature": "unchanged_fraction",
+  "op": ">=",
+  "value": 0.9,
+  "promote": "wide"
+ }
+}

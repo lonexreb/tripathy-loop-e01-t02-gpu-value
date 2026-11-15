@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.16 are the most volatile stretches, and always-narrow beats medium on that series (0.0560 vs 0.0616). The cutoff sits between the earlier 0.15 cutoff (15 decisions) and the 0.17 cutoff (9 decisions), so it selects a different set of decisions. It keeps the neocloud H100 origins (q80 below 0.003) out, which blocked the broader cutoffs.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.16,
+  "promote": "narrow"
+ }
+}

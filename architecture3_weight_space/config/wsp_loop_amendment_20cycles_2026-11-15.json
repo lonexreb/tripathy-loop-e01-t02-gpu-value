@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "amends": "config/wsp_loop_preregistration_2026-11-15.json",
+  "written_before": "the 20-cycle run",
+  "requested_by": "user: 'lets do 20 cycles please'",
+  "arm": "l20: one run of 20 cycles from the unedited actor, empty notebook",
+  "changes": [
+    "cycles: 20 instead of 3",
+    "duplicate rule: a candidate whose decisions over all origins equal those of the unedited actor or of any earlier candidate in the run is discarded without scoring; the editor may revise once",
+    "the editor is told that duplicates are discarded and that accepted edits stack"
+  ],
+  "unchanged": [
+    "actor, bands, edit form and tensor",
+    "programming test",
+    "development screen",
+    "admission rule against the current actor",
+    "locality floor",
+    "editor visibility"
+  ],
+  "multiplicity_warning": "Up to 20 more candidates may be scored on the same 15 checkpoint origins. Under no true effect, a one-sided 5% test repeated 20 times admits at least one candidate about 64% of the time. Any acceptance in this run is exploratory.",
+  "confirmation": "the final actor is scored once on the protected block against drift and against the unedited actor; an accepted edit counts as confirmed only if the protected difference against the unedited actor is negative with the 90% CI excluding zero",
+  "recursion_test": "not part of this run (single arm)",
+  "submission_rule": "unchanged"
+}

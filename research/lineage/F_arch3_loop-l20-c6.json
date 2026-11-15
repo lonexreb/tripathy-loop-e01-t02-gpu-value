@@ -1,0 +1,104 @@
+{
+  "id": "F_arch3_loop-l20-c6",
+  "generation": 6,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "rejected",
+  "improver": "I_wsp_l20",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Only instrument_class edits have been programmable so far, and the marketplace_ask-narrow and hyperscaler_spot-wide edits both failed on held-out origins. Summed over the seven series, always-narrow scores 0.1544 against 0.1558 for medium and 0.1858 for wide. Narrow wins big on the two H100_80GB series. It loses about 0.0006 to 0.002 on the flat series. A single global shift is a clean decision set (all), so it should be programmable. It is the only unrejected option with a positive net expected gain, though a small one.",
+        "feature": "all",
+        "op": "==",
+        "value": "all",
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "programmed",
+        "class_size_choosing": 168,
+        "other_size_choosing": 0,
+        "class_margin_before": -0.5806,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.542,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.0
+          }
+        ],
+        "held_out": {
+          "class_on_target": 1.0,
+          "others_moved": 0.0
+        }
+      },
+      "random_direction_control_dose_response": [
+        {
+          "multiple": 0.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 2.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 3.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 4.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 6.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        }
+      ],
+      "development_vs_parent": {
+        "diff": -0.000209,
+        "ci90": [
+          -0.000672,
+          0.000277
+        ],
+        "coverage": 0.669329
+      },
+      "checkpoint_vs_parent": {
+        "diff": 0.000753,
+        "ci90": [
+          -8.5e-05,
+          0.001785
+        ]
+      },
+      "outcome": "rejected"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T19:01:47.652357+00:00"
+}

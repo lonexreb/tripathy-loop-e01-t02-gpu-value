@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Series that reprice often (under 50% unchanged days) get too much width from medium. Always-narrow beats medium on both of them: H100 marketplace ask 0.0560 vs 0.0616, and H100_80GB neocloud 0.0126 vs 0.0136. Selecting by unchanged_fraction < 0.5 covers both. It differs from the rejected marketplace_ask-only edit and uses a regime feature that should generalize better.",
+  "feature": "unchanged_fraction",
+  "op": "<",
+  "value": 0.5,
+  "promote": "narrow"
+ }
+}

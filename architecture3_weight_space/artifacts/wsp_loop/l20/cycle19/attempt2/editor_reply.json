@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "H100_SXM_80GB neocloud rate-card series reprice moderately (75-97% unchanged days, q80 up to 0.0025). Its drift baseline (0.02397) is worse than medium (0.02097), so the series is not a pure random walk. Always-narrow scores 0.02214 vs 0.02097 for medium, so this is a likely loss on this series. It is the only gpu_model class not yet tried that is a single-series, single-regime test. I propose it only because the gpu_model == A100 tests and the H100_80GB test were not programmable, and I want to check whether this one programs.",
+  "feature": "gpu_model",
+  "op": "==",
+  "value": "H100_SXM_80GB",
+  "promote": "narrow"
+ }
+}

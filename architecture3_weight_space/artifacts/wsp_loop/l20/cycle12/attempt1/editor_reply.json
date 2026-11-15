@@ -1,0 +1,10 @@
+{
+ "editor": "headless-claude-sonnet",
+ "spec": {
+  "hypothesis": "Decisions with relative_q80 >= 0.0005 are the repricing H100 series: marketplace ask and H100_80GB neocloud, plus some H100_SXM origins. Always-narrow beats medium on the two clearest series, 0.0560 vs 0.0616 and 0.0126 vs 0.0136. The 0.0005 cutoff differs from the earlier 0.001 test, so it selects a different set of decisions. It leaves the flat A100 and hyperscaler series (q80 = 0) untouched.",
+  "feature": "relative_q80",
+  "op": ">=",
+  "value": 0.0005,
+  "promote": "narrow"
+ }
+}

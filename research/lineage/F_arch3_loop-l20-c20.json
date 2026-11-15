@@ -1,0 +1,143 @@
+{
+  "id": "F_arch3_loop-l20-c20",
+  "generation": 20,
+  "parent": "loop-base",
+  "kind": "forecaster",
+  "status": "not_programmable",
+  "improver": "I_wsp_l20",
+  "method": "band actor with stacked last-MLP edits (wsp_loop)",
+  "attempts": [
+    {
+      "spec": {
+        "hypothesis": "Within the H100 marketplace-ask series, origins with relative_q80 >= 0.145 are the volatile stretches, where always-narrow beats medium (0.0560 vs 0.0616). The cutoff sits between the programmed 0.14 (22 decisions) and 0.15 (15 decisions) cutoffs, so it selects a different set of decisions. It keeps the neocloud origins (q80 below 0.003) out, which blocked the broader cutoffs.",
+        "feature": "relative_q80",
+        "op": ">=",
+        "value": 0.145,
+        "promote": "narrow"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "programmed",
+        "class_size_choosing": 20,
+        "other_size_choosing": 148,
+        "class_margin_before": -0.6248,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.55,
+            "others_moved": 0.007
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 1.0,
+            "others_moved": 0.027
+          }
+        ],
+        "held_out": {
+          "class_on_target": 1.0,
+          "others_moved": 0.077
+        }
+      },
+      "random_direction_control_dose_response": [
+        {
+          "multiple": 0.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 1.5,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 2.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 3.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 4.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        },
+        {
+          "multiple": 6.0,
+          "class_on_target": 0.0,
+          "others_moved": 0.0
+        }
+      ],
+      "outcome": "duplicate_of_cycle 10 attempt 2"
+    },
+    {
+      "spec": {
+        "hypothesis": "Origins with at least 96% unchanged days in the last 60 are the flattest hyperscaler spot stretches, mostly A100_40GB spot plus a few fully flat neocloud A100 origins. The medium band is too narrow for the rare jumps. Always-wide beats medium on A100_40GB spot (0.01122 vs 0.01206). The 0.96 cutoff is above the 0.95 cutoff that was not programmable, so it selects a smaller and different set. It leaves the H100 repricing series and the lower-flatness A100_SXM origins alone.",
+        "feature": "unchanged_fraction",
+        "op": ">=",
+        "value": 0.96,
+        "promote": "wide"
+      },
+      "editor": "headless-claude-sonnet",
+      "programming": {
+        "status": "not_programmable",
+        "class_size_choosing": 47,
+        "other_size_choosing": 121,
+        "class_margin_before": -0.4669,
+        "dose_response": [
+          {
+            "multiple": 0.5,
+            "class_on_target": 0.0,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.0,
+            "class_on_target": 0.553,
+            "others_moved": 0.0
+          },
+          {
+            "multiple": 1.5,
+            "class_on_target": 0.66,
+            "others_moved": 0.05
+          },
+          {
+            "multiple": 2.0,
+            "class_on_target": 0.681,
+            "others_moved": 0.107
+          },
+          {
+            "multiple": 3.0,
+            "class_on_target": 0.681,
+            "others_moved": 0.314
+          },
+          {
+            "multiple": 4.0,
+            "class_on_target": 0.723,
+            "others_moved": 0.388
+          },
+          {
+            "multiple": 6.0,
+            "class_on_target": 0.851,
+            "others_moved": 0.471
+          }
+        ]
+      },
+      "outcome": "not_programmable"
+    }
+  ],
+  "accepted_edits_so_far": 0,
+  "preregistration_sha256": "0e7a7535b1f5f41119132d7f0764d621d4c982d11f3fe562e289cf5f761c452d",
+  "created_utc": "2026-11-15T19:08:10.308562+00:00"
+}

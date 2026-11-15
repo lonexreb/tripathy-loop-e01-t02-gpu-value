@@ -1,352 +1,352 @@
 series_id,origin_date,horizon_days,q10,q50,q90,target_date,team_id,method_note
-afhubbard.hyperscaler_spot.A100_40GB.spot.median,2026-11-06,1,1.9891,1.9891,1.9891,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.A100_40GB.spot.median,2026-11-06,3,1.8896449999999998,1.9891,1.9891,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.A100_40GB.spot.median,2026-11-06,7,1.8896405756483832,1.9891,1.9993650027216805,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median,2026-11-06,1,1.8818,1.8818,1.8818,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median,2026-11-06,3,1.788922101468483,1.8818,1.974677523844492,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median,2026-11-06,7,1.788901081686509,1.8783082287570552,1.974732293064877,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.T4.spot.median,2026-11-06,1,0.3033464889273234,0.3047000000000001,0.30613921664767296,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.T4.spot.median,2026-11-06,3,0.3017205579050186,0.30490378729424367,0.30837364228377984,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.T4.spot.median,2026-11-06,7,0.2997243604556768,0.3059045470186928,0.3108493440968719,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.V100.spot.median,2026-11-06,1,1.475,1.475,1.475,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.V100.spot.median,2026-11-06,3,1.4266,1.475,1.527561410550138,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-afhubbard.hyperscaler_spot.V100.spot.median,2026-11-06,7,1.4032253915016641,1.475,1.5535795372029726,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-aws_spot.p4d.24xlarge.apne1-az4,2026-11-06,1,1.3440046178367104,1.406990205600456,1.4752520766121897,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apne1-az4,2026-11-06,3,1.2707523031348167,1.4685545002227083,1.7128967806740796,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apne1-az4,2026-11-06,7,1.1145356500721264,1.5511495813116662,2.2248694603035313,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apne2-az4,2026-11-06,1,1.14282690348677,1.1940604479636634,1.2494760670374174,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apne2-az4,2026-11-06,3,1.023726538033007,1.1497999441696494,1.3012546252213602,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apne2-az4,2026-11-06,7,0.8393560291733112,1.0944578814548047,1.4621354507805575,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az1,2026-11-06,1,3.2926639955394763,3.2930499999999996,3.2934493426684717,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az1,2026-11-06,3,3.291954351655395,3.2930499999999996,3.294218550905108,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az1,2026-11-06,7,3.2905473820796347,3.2930499999999996,3.295786550864989,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az2,2026-11-06,1,3.2926639955394763,3.2930499999999996,3.2934493426684717,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az2,2026-11-06,3,3.291954351655395,3.2930499999999996,3.294218550905108,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az2,2026-11-06,7,3.2905473820796347,3.2930499999999996,3.295786550864989,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az3,2026-11-06,1,3.2926639955394763,3.2930499999999996,3.2934493426684717,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az3,2026-11-06,3,3.291954351655395,3.2930499999999996,3.294218550905108,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.aps1-az3,2026-11-06,7,3.2905473820796347,3.2930499999999996,3.295786550864989,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apse2-az1,2026-11-06,1,3.5402864882606497,3.5681125,3.597126747686056,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apse2-az1,2026-11-06,3,3.4359956573583417,3.5681125,3.71594882111667,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apse2-az1,2026-11-06,7,3.2738861164333066,3.5681125,3.9240142897031007,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apse2-az2,2026-11-06,1,1.55188384939025,1.6194873511505863,1.692518856746908,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apse2-az2,2026-11-06,3,1.475165598497822,1.672692806124827,1.9124480686155043,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.apse2-az2,2026-11-06,7,1.3076234436106473,1.7424682259578386,2.384507315428179,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.az_median,2026-11-06,1,2.087494426680608,2.1168893552059593,2.147732002260633,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.az_median,2026-11-06,3,2.0420768273970937,2.1127828283967687,2.1910833570044894,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.az_median,2026-11-06,7,1.9497877299768391,2.107447891977118,2.2945849711208153,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.euw1-az2,2026-11-06,1,2.0363184743264484,2.060528445410221,2.085874906594945,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.euw1-az2,2026-11-06,3,1.9885738327628435,2.0684902573076687,2.1574733549349543,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.euw1-az2,2026-11-06,7,1.8987711338771618,2.077528530975606,2.2928969806207227,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.sae1-az1,2026-11-06,1,3.5998442924766607,3.608865271286424,3.6182206407144464,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.sae1-az1,2026-11-06,3,3.5834153948056686,3.6073507785699914,3.6330464247914653,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.sae1-az1,2026-11-06,7,3.551095698413583,3.60552336337996,3.6659185816025976,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.sae1-az3,2026-11-06,1,3.5997186668445087,3.6087381092951163,3.6180918821932697,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.sae1-az3,2026-11-06,3,3.583183500212326,3.6071646120957617,3.632910644086279,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.sae1-az3,2026-11-06,7,3.5507289789010588,3.605258586979146,3.6657717675709662,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az1,2026-11-06,1,2.6730854359480065,2.678097214499996,2.683291442230071,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az1,2026-11-06,3,2.6561942565949233,2.670718492934469,2.686260210273015,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az1,2026-11-06,7,2.6282283642720055,2.661183677571893,2.697603029300813,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az2,2026-11-06,1,2.0360008096364273,2.0774243975416624,2.121161267930034,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az2,2026-11-06,3,1.9425759770648279,2.055202724029239,2.1824731514829327,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az2,2026-11-06,7,1.7814819500121943,2.0262971656292925,2.3323469786913456,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az6,2026-11-06,1,2.099382329907007,2.1168893552059593,2.135152802863386,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az6,2026-11-06,3,2.0665495877200946,2.1127828283967687,2.163322368067864,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use1-az6,2026-11-06,7,2.0035831472127232,2.107447891977118,2.2272770474264716,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use2-az1,2026-11-06,1,0.32783984823115897,0.3408481872159161,0.3548477847280288,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use2-az1,2026-11-06,3,0.2935515594057203,0.3261526137845955,0.36489861010286667,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use2-az1,2026-11-06,7,0.24216936073288917,0.3080489539926877,0.4006225978945223,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use2-az2,2026-11-06,1,0.9943420529641424,1.006737612320329,1.0197225851527154,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use2-az2,2026-11-06,3,0.9745087074258907,1.005338484620684,1.0393530115586982,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.use2-az2,2026-11-06,7,0.9345256605334731,1.003441937635675,1.0846449318966418,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az1,2026-11-06,1,2.0835502756210618,2.1324146909310473,2.1841677464995017,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az1,2026-11-06,3,2.035947210727035,2.16915721289917,2.3207193529068597,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az1,2026-11-06,7,1.9187299678667336,2.217706068855251,2.597586447119253,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az2,2026-11-06,1,2.2764847527349996,2.3262532717193745,2.378880543924869,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az2,2026-11-06,3,2.1965309752482645,2.360050156604108,2.547709662998437,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az2,2026-11-06,7,2.040273252938712,2.403939079362861,2.876016664782619,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az3,2026-11-06,1,1.6325457813629478,1.6608976162396403,1.6907438389071017,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az3,2026-11-06,3,1.58434273328783,1.6758903686349826,1.7792645128040403,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4d.24xlarge.usw2-az3,2026-11-06,7,1.4922127527401432,1.6965332446210357,1.9519754289767812,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.apne1-az1,2026-11-06,1,2.5027381353823146,2.6358389359791166,2.78097540226777,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.apne1-az1,2026-11-06,3,2.4349781214022577,2.8172853713597417,3.290938081612009,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.apne1-az1,2026-11-06,7,2.201975348095299,3.072717516199874,4.421237353403893,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.apne1-az4,2026-11-06,1,3.8749720472773816,4.136112585648918,4.424776622287073,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.apne1-az4,2026-11-06,3,3.7587725219643335,4.432097361259217,5.283510782924893,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.apne1-az4,2026-11-06,7,3.326079930727478,4.846751449949922,7.311295389301124,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.az_median,2026-11-06,1,2.7023795466985256,2.7525105037356856,2.8053462803539118,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.az_median,2026-11-06,3,2.6431501968031195,2.7549759352428125,2.879916701087704,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.az_median,2026-11-06,7,2.5088664117672774,2.7579495021485636,3.0590335036558662,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.euc1-az1,2026-11-06,1,2.0162909084562295,2.075276555882486,2.1381094965293026,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.euc1-az1,2026-11-06,3,1.9727035652557106,2.1667172800034145,2.3947293545781236,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.euc1-az1,2026-11-06,7,1.8469593361461951,2.288306973769292,2.892771320997329,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.euc1-az2,2026-11-06,1,1.4723104223376597,1.5410327532972603,1.615498353111326,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.euc1-az2,2026-11-06,3,1.417285325053402,1.6045706069088386,1.8319287202752386,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.euc1-az2,2026-11-06,7,1.2710275217190374,1.687665287397611,2.3012013048063795,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.ilc1-az2,2026-11-06,1,4.446166268555123,4.4466875,4.447226742359549,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.ilc1-az2,2026-11-06,3,4.445208018729341,4.4466875,4.448265423415332,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.ilc1-az2,2026-11-06,7,4.443308152640025,4.4466875,4.450382732846286,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.use1-az4,2026-11-06,1,2.790286241698431,2.823428261349004,2.8581256694706134,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.use1-az4,2026-11-06,3,2.739701133219024,2.820204338889943,2.9088179468321806,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.use1-az4,2026-11-06,7,2.6358491475550587,2.816141046512436,3.0274154537489215,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.use1-az6,2026-11-06,1,2.7861323963430222,2.840932532943073,2.8987539229037798,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.use1-az6,2026-11-06,3,2.6597441790182943,2.7894535250122856,2.935057816279068,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.use1-az6,2026-11-06,7,2.4430961810082223,2.7238439406614225,3.0679557176518184,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az1,2026-11-06,1,2.0138125431609453,2.072876700221992,2.1357979348513703,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az1,2026-11-06,3,1.854782134914677,2.0203515250749073,2.2130416129807178,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az1,2026-11-06,7,1.6056291369001743,1.9520264378682592,2.416278454905547,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az2,2026-11-06,1,2.3945861440883394,2.4648538071791948,2.5397112723904214,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az2,2026-11-06,3,2.3352989439665737,2.558694383889622,2.820556823864526,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az2,2026-11-06,7,2.180868455310803,2.6869442106597754,3.3758269647779997,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az3,2026-11-06,1,2.65210541220981,2.681644737009993,2.712547378305636,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az3,2026-11-06,3,2.608857105993005,2.6899085604983246,2.7792346448804457,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p4de.24xlarge.usw2-az3,2026-11-06,7,2.51782661664062,2.7000880076387777,2.914606064128682,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apne1-az1,2026-11-06,1,3.2108513479901073,3.216437219493738,3.2222256446968074,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apne1-az1,2026-11-06,3,3.199660999727697,3.220295905627855,3.2424990012800428,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apne1-az1,2026-11-06,7,3.178500756261089,3.225497805410446,3.27784490458614,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apne1-az4,2026-11-06,1,3.2313731842586177,3.2384275460159837,3.245741003005361,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apne1-az4,2026-11-06,3,3.2233511285461995,3.2477649212141855,3.274038732564405,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apne1-az4,2026-11-06,7,3.204204851006369,3.2598966087451147,3.3220166631977155,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az1,2026-11-06,1,3.784533096222951,3.8927464029258814,4.007942527890033,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az1,2026-11-06,3,3.6287153517490416,3.933264964023503,4.2862927264886945,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az1,2026-11-06,7,3.313256025124858,3.9830333737257964,4.87088450598293,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az2,2026-11-06,1,4.247214591990094,4.2477125,4.248227612993927,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az2,2026-11-06,3,4.171897893056027,4.2477125,4.331012167117553,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az2,2026-11-06,7,4.076926869890998,4.2477125,4.445898635945933,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az3,2026-11-06,1,3.1259235249882877,3.168597872301565,3.2133546573102327,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az3,2026-11-06,3,3.1338140405156842,3.2714378297599507,3.4241987889558674,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.aps1-az3,2026-11-06,7,3.0902305350308663,3.409174423521125,3.7941948198264965,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apse2-az2,2026-11-06,1,8.15635306569743,8.63677844178889,9.163541566259548,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apse2-az2,2026-11-06,3,7.747556179534825,9.073267555259964,10.736508663953773,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apse2-az2,2026-11-06,7,6.741535745581898,9.671591498771624,14.342873443636075,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apse2-az3,2026-11-06,1,3.007531426120381,3.028888544926656,3.051140611836454,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apse2-az3,2026-11-06,3,2.9539433757049256,3.0158661148893544,3.083390603196725,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.apse2-az3,2026-11-06,7,2.8609087320991504,2.9997481667852197,3.1593550839345665,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.az_median,2026-11-06,1,3.8130351303072763,3.850528102299757,3.8896999667451677,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.az_median,2026-11-06,3,3.715849456835698,3.8342390595135853,3.964907079837763,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.az_median,2026-11-06,7,3.5497700680006594,3.8133508761101256,4.1246494158718265,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.cac1-az4,2026-11-06,1,2.7133053216700147,2.7674377690326004,2.8245707199366747,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.cac1-az4,2026-11-06,3,2.6921464551552834,2.862571699147232,3.0556843888792176,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.cac1-az4,2026-11-06,7,2.59762503436409,2.9887552698135145,3.4828572954454944,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.eun1-az3,2026-11-06,1,3.0835109171741855,3.298708203791822,3.537130554192972,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.eun1-az3,2026-11-06,3,2.5302196937315737,3.083655908550543,3.807140087811561,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.eun1-az3,2026-11-06,7,1.8007807334719805,2.8296665369012706,4.6355921123342,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az1,2026-11-06,1,2.568831930965065,2.606178986691915,2.645383376998503,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az1,2026-11-06,3,2.521405680925229,2.628022086471171,2.746561992798928,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az1,2026-11-06,7,2.4194935578161583,2.659622668376917,2.9491050252906654,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az2,2026-11-06,1,3.696779039645633,3.8455232262650925,4.0056892749830135,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az2,2026-11-06,3,3.3285833480392966,3.6935369362325448,4.126732775705974,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az2,2026-11-06,7,2.7634998139554794,3.505084100980229,4.543819171154676,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az3,2026-11-06,1,2.498765581282864,2.52430252972407,2.550993394557909,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az3,2026-11-06,3,2.4707640824356814,2.5548477373002765,2.6475886293791664,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.euw2-az3,2026-11-06,7,2.4052566731594003,2.5963444729030916,2.82260462135564,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.sae1-az3,2026-11-06,1,3.9403476097908947,4.101821380922005,4.275820930816363,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.sae1-az3,2026-11-06,3,3.5647497288706846,3.9544782979144055,4.41714310660096,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.sae1-az3,2026-11-06,7,2.976471520790402,3.77275052359358,4.887606990781673,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az1,2026-11-06,1,4.671664832984463,4.672212499999999,4.672779091399285,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az1,2026-11-06,3,4.594763469362247,4.672212499999999,4.757192158560866,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az1,2026-11-06,7,4.497601356113883,4.672212499999999,4.874202686733121,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az2,2026-11-06,1,3.931049604214694,4.038368827578447,4.152467050958643,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az2,2026-11-06,3,3.7427846963067055,4.056458835049052,4.42068102947498,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az2,2026-11-06,7,3.396073400560485,4.081363498721351,4.991366493136042,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az3,2026-11-06,1,3.9290043168598485,3.9666002055838927,4.00586914779106,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az3,2026-11-06,3,3.8663137559627967,3.9681986937831915,4.080471427120905,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az3,2026-11-06,7,3.741440307917927,3.970356002533341,4.237959249156031,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az4,2026-11-06,1,4.671664832984463,4.672212499999999,4.672779091399285,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az4,2026-11-06,3,4.596791310780286,4.672212499999999,4.754928680554609,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az4,2026-11-06,7,4.50212540184071,4.672212499999999,4.868758570057801,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az5,2026-11-06,1,4.050938140054977,4.092347834234814,4.135628778657919,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az5,2026-11-06,3,3.9556777218344275,4.085394734721089,4.228636232550819,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az5,2026-11-06,7,3.7873267170400218,4.076961858264839,4.41961262636715,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az6,2026-11-06,1,2.4770725429596676,2.5659210116666307,2.6611833333831827,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az6,2026-11-06,3,2.341069327810874,2.5512792034715988,2.7965750379971497,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use1-az6,2026-11-06,7,2.0813903580113498,2.5332295176853195,3.1398490100069587,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az1,2026-11-06,1,3.6284381814487054,3.7085828326908796,3.7933501337059514,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az1,2026-11-06,3,3.6192655546835293,3.874884861988139,4.166224940967886,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az1,2026-11-06,7,3.512224076475585,4.105030348447318,4.865438974885417,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az2,2026-11-06,1,4.284727435512312,4.3217637116770895,4.360412081524872,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az2,2026-11-06,3,4.206211559656329,4.3289215297478725,4.464354687942988,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az2,2026-11-06,7,4.063439888409024,4.339142014008615,4.663606691795528,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az3,2026-11-06,1,2.8639933420091825,2.87363643831621,2.8836457237438182,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az3,2026-11-06,3,2.852105500163432,2.88138400460043,2.9129540863850463,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.use2-az3,2026-11-06,7,2.8251191224359524,2.8918025620057577,2.9665453517021407,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw1-az3,2026-11-06,1,3.761345285814372,3.8375922728695033,3.918091271164285,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw1-az3,2026-11-06,3,3.725211346805593,3.9958058093513475,4.3051184490547545,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw1-az3,2026-11-06,7,3.580964681688893,4.203203824798765,5.006255293175474,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az1,2026-11-06,1,3.7877274701352968,3.8041375000000004,3.8211873595328334,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az1,2026-11-06,3,3.7288490600180477,3.8041375000000004,3.8868328666909604,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az1,2026-11-06,7,3.6345748941960183,3.8041375000000004,4.000620813305047,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az2,2026-11-06,1,3.9366806931988054,3.9882109119985008,4.042225238619477,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az2,2026-11-06,3,3.84937159443411,4.004721882693158,4.177478144406257,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az2,2026-11-06,7,3.679128335092161,4.027092476131515,4.445693795573496,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az3,2026-11-06,1,3.988053746011658,4.037657366329371,4.08961819336926,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az3,2026-11-06,3,3.9518077044895117,4.102745970596672,4.2703881257483784,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az3,2026-11-06,7,3.8474688955662266,4.19134901369733,4.603319583066798,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az4,2026-11-06,1,3.783372362667733,3.8361044176787713,3.8914255889929157,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az4,2026-11-06,3,3.629362334955495,3.8107063265772148,4.014464318312754,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5.48xlarge.usw2-az4,2026-11-06,7,3.379561618953218,3.77758289595203,4.267877522357421,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.apse3-az1,2026-11-06,1,2.41574502490408,2.590483860299821,2.7845497317603023,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.apse3-az1,2026-11-06,3,2.1553697785054124,2.723977074566386,3.4922663732773245,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.apse3-az1,2026-11-06,7,1.701005132113626,2.904647945143003,5.202172568100371,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.az_median,2026-11-06,1,3.706712165883825,3.7344731255113386,3.7634087202120483,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.az_median,2026-11-06,3,3.609929566394096,3.721796741657158,3.845495906255808,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.az_median,2026-11-06,7,3.4569813481840126,3.7063625300520995,4.001424806991678,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.use2-az1,2026-11-06,1,3.226038061738379,3.2421379568067534,3.2588767408601482,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.use2-az1,2026-11-06,3,3.1385275717816343,3.2427903655380583,3.3584690201049385,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.use2-az1,2026-11-06,7,3.0114541705562794,3.244554480172349,3.5225733896717157,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.use2-az3,2026-11-06,1,4.194733301891657,4.226867110646401,4.260366368148277,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.use2-az3,2026-11-06,3,4.048923892862771,4.201015325331037,4.37026651044967,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.use2-az3,2026-11-06,7,3.832230748116654,4.168689428846904,4.573110962147511,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.usw2-az3,2026-11-06,1,4.4895081145708815,4.528407387211187,4.569000692261776,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.usw2-az3,2026-11-06,3,4.369616666215298,4.507713525775996,4.660678778273126,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5e.48xlarge.usw2-az3,2026-11-06,7,4.173897644055686,4.481089740014152,4.8452090870645135,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apne1-az4,2026-11-06,1,4.348330528026292,4.403683237626901,4.461683344205037,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apne1-az4,2026-11-06,3,4.1900616492958225,4.340638095250109,4.507223997666284,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apne1-az4,2026-11-06,7,3.931093032745235,4.261306265699182,4.654020470994444,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apne2-az1,2026-11-06,1,3.462632028887813,3.532568026191541,3.6063986572406104,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apne2-az1,2026-11-06,3,3.3879073558134785,3.610733514400604,3.864900840400952,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apne2-az1,2026-11-06,7,3.210785679574064,3.7135727910868384,4.354890014075575,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.aps1-az1,2026-11-06,1,5.616229100149024,5.616887500000001,5.617568650557312,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.aps1-az1,2026-11-06,3,5.556574026919927,5.616887500000001,5.682651233971238,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.aps1-az1,2026-11-06,7,5.480393335505928,5.616887500000001,5.772521057739812,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.aps1-az3,2026-11-06,1,3.645552724767454,3.7430000928877685,3.8465444141965612,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.aps1-az3,2026-11-06,3,3.4446284323942025,3.6572155526002854,3.8982251699106616,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.aps1-az3,2026-11-06,7,3.094277366847818,3.5481408205405502,4.119177539322852,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apse3-az2,2026-11-06,1,5.345305510104409,5.528315423494861,5.724222280224723,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apse3-az2,2026-11-06,3,5.214824864360774,5.7294232730824515,6.334446774867977,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apse3-az2,2026-11-06,7,4.844391446448954,6.006355963349371,7.597420075979829,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apse3-az3,2026-11-06,1,5.348143909386041,5.55562165190071,5.778716273001445,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apse3-az3,2026-11-06,3,5.221899094348551,5.770557583845239,6.419638651806126,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.apse3-az3,2026-11-06,7,4.829245200370202,6.067503571853811,7.7862898883873175,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.az_median,2026-11-06,1,4.981461442292925,5.106972151573064,5.240132810365825,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.az_median,2026-11-06,3,4.776230744492967,5.124575061230969,5.524577776340615,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.az_median,2026-11-06,7,4.383257468633434,5.147930976345411,6.138059860489853,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.eus2-az1,2026-11-06,1,2.4185012879993613,2.4506289521019426,2.4843119610621254,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.eus2-az1,2026-11-06,3,2.3221579373706187,2.4168511922559053,2.5218308599947483,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.eus2-az1,2026-11-06,7,2.168362513489329,2.3757242563165573,2.624610010138155,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.eus2-az2,2026-11-06,1,1.9469268474737096,1.9798672288902668,2.0145283383412735,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.eus2-az2,2026-11-06,3,1.8628315866004306,1.9464455119957689,2.039658838710048,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.eus2-az2,2026-11-06,7,1.7240109421570382,1.9059588137357844,2.126486909892522,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use1-az2,2026-11-06,1,4.833569795888893,4.835839705798776,4.838188893075474,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use1-az2,2026-11-06,3,4.805212874625198,4.838233322205965,4.873999567145731,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use1-az2,2026-11-06,7,4.766249048311504,4.841249945290558,4.925671119051795,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use1-az6,2026-11-06,1,5.682341881874569,5.712922546750546,5.744729324286151,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use1-az6,2026-11-06,3,5.603393979065458,5.723458429615983,5.855142750963277,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use1-az6,2026-11-06,7,5.465458472977412,5.736388395980878,6.050239283311941,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az1,2026-11-06,1,4.986524059681765,5.050194600598637,5.116912967147627,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az1,2026-11-06,3,4.661354144209415,4.906212984586297,5.1816780624723835,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az1,2026-11-06,7,4.2057864829804466,4.7273769110967105,5.37334860054652,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az2,2026-11-06,1,5.696305324622378,5.719154302048781,5.742886440826484,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az2,2026-11-06,3,5.535157855681022,5.704511819657528,5.891693249414867,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az2,2026-11-06,7,5.3086009718694465,5.686450539658931,6.134052322211509,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az3,2026-11-06,1,4.871940673467977,4.99904936806502,5.134025103845779,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az3,2026-11-06,3,4.855586900617208,5.230557898199201,5.66074816956924,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.use2-az3,2026-11-06,7,4.6790880574878,5.546226678638273,6.674659119216397,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az2,2026-11-06,1,5.004495429622422,5.072862837542721,5.144567141580408,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az2,2026-11-06,3,4.744156483902754,5.032675824948514,5.359619164752438,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az2,2026-11-06,7,4.357583566442979,4.986520948677741,5.779867481625948,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az3,2026-11-06,1,5.9379155281147025,5.944577397993644,5.95147650859763,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az3,2026-11-06,3,5.813972770802971,5.936163615788637,6.070511357497147,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az3,2026-11-06,7,5.650957132200416,5.9253442769607725,6.244959995233187,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az4,2026-11-06,1,4.493360159955407,4.584398060266323,4.680511784297002,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az4,2026-11-06,3,4.079993533834844,4.437825797335492,4.853449048072221,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-aws_spot.p5en.48xlarge.usw2-az4,2026-11-06,7,3.5170243121940863,4.261535101492688,5.257481459679586,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0; last_value_stale_days=6
-fastgpu_daily.hyperscaler_spot.A100_80GB.spot.median,2026-11-06,1,1.6846101285271624,1.757,1.8438216439733095,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.hyperscaler_spot.A100_80GB.spot.median,2026-11-06,3,1.5826098974633338,1.757,1.9615623148310266,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.hyperscaler_spot.A100_80GB.spot.median,2026-11-06,7,1.45214321340272,1.7835104058272635,2.1167558301464853,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.hyperscaler_spot.T4.spot.median,2026-11-06,1,0.08597905957221495,0.08900000000000001,0.09113473886289519,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.hyperscaler_spot.T4.spot.median,2026-11-06,3,0.0819589010463799,0.08900000000000001,0.09524791997044552,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.hyperscaler_spot.T4.spot.median,2026-11-06,7,0.07602584953786337,0.08900000000000001,0.1046464581166009,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,1,1.8155,1.8155,1.826375593723191,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,3,1.805718084710737,1.8235711308696858,1.8520411062639313,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,7,1.671138052424259,1.8328651650725083,1.995969224142686,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.A100_80GB.on_demand.median,2026-11-06,1,2.293,2.293,2.31283629936433,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.A100_80GB.on_demand.median,2026-11-06,3,2.2404790889118824,2.293,2.4065705056799085,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.A100_80GB.on_demand.median,2026-11-06,7,2.2469156747814303,2.293,2.520723241392018,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.B200.on_demand.median,2026-11-06,1,6.254173302147051,6.299999999999999,6.3779145517725455,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.B200.on_demand.median,2026-11-06,3,5.979632526577947,6.299999999999999,6.6903624267964785,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.B200.on_demand.median,2026-11-06,7,5.374000949641511,6.299999999999999,7.087507097025447,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.B300.on_demand.median,2026-11-06,1,8.49,8.49,8.585950937268642,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.B300.on_demand.median,2026-11-06,3,8.263804926081368,8.49,8.777598948541105,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.B300.on_demand.median,2026-11-06,7,7.455014374941683,8.49,9.620118976264996,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H100_PCIe_80GB.on_demand.median,2026-11-06,1,2.79,2.79,2.79,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H100_PCIe_80GB.on_demand.median,2026-11-06,3,2.659953323327472,2.79,2.79,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H100_PCIe_80GB.on_demand.median,2026-11-06,7,2.4761601750796727,2.79,2.8887660596685123,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,1,3.9489999999999994,3.9489999999999994,3.953101704500934,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,3,3.9285552276488183,3.9489999999999994,3.9807583774442596,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,7,3.9285552276488183,3.9489999999999994,3.999405318999481,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H200.on_demand.median,2026-11-06,1,4.539999999999999,4.539999999999999,4.576065926334309,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H200.on_demand.median,2026-11-06,3,4.5002844633826244,4.539999999999999,4.611323780196939,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.H200.on_demand.median,2026-11-06,7,4.5002844633826244,4.539999999999999,4.70902977418085,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.L40S.on_demand.median,2026-11-06,1,1.7355,1.7355,1.7452831824597794,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.L40S.on_demand.median,2026-11-06,3,1.7330818966053998,1.7355,1.7830535350579237,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.L40S.on_demand.median,2026-11-06,7,1.6888073274312436,1.7355,1.8221076767857565,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,1,1.528030999400399,1.5342974896965156,1.5435695627668973,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,3,1.5298035375397794,1.5467340996168584,1.5748444214291109,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,7,1.3662595459345523,1.5625409961685826,1.6379070102039934,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,1,0.5,0.5,0.5039165294510422,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,3,0.48831979506046475,0.5,0.5117268647112171,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,7,0.4245415599658499,0.5,0.5199866013854725,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,1,2.1518214557056465,2.1615,2.18245707486439,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,3,2.0768121818969933,2.1615,2.2700939133617952,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,7,2.0515248676884092,2.1615,2.518881166204089,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.A100_80GB.spot.median,2026-11-06,1,1.147,1.147,1.1492362807208545,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.A100_80GB.spot.median,2026-11-06,3,1.147,1.147,1.1588601728879657,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.A100_80GB.spot.median,2026-11-06,7,1.147,1.147,1.1910077525675553,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.B200.spot.median,2026-11-06,1,4.177,4.177,4.197432999880088,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.B200.spot.median,2026-11-06,3,4.177,4.177,4.236841501392002,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.B200.spot.median,2026-11-06,7,4.123069113924049,4.177,4.308776209297352,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.B300.spot.median,2026-11-06,1,4.735,4.735,4.759718941975489,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.B300.spot.median,2026-11-06,3,4.735,4.735,4.833648186281238,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.B300.spot.median,2026-11-06,7,4.735,4.735,4.921122816839373,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.H100_SXM_80GB.spot.median,2026-11-06,1,2.285,2.285,2.285,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.H100_SXM_80GB.spot.median,2026-11-06,3,2.285,2.285,2.3278812650816683,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.H100_SXM_80GB.spot.median,2026-11-06,7,2.285,2.285,2.348767441860465,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.H200.spot.median,2026-11-06,1,2.8,2.8,2.8147433075144215,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.H200.spot.median,2026-11-06,3,2.8,2.8,2.8442370959468852,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.H200.spot.median,2026-11-06,7,2.8,2.8178034682080924,2.9018095605960683,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.L40S.spot.median,2026-11-06,1,0.97,0.97,0.9801147467174768,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.L40S.spot.median,2026-11-06,3,0.97,0.9801570680628272,0.9991113673822175,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.L40S.spot.median,2026-11-06,7,0.97,0.9998291571753987,1.029799402843422,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.RTX_PRO_6000.spot.median,2026-11-06,1,1.4145,1.4145,1.4211095470044708,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.RTX_PRO_6000.spot.median,2026-11-06,3,1.4145,1.416086355140187,1.480767617173116,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-fastgpu_daily.neocloud_spot.RTX_PRO_6000.spot.median,2026-11-06,7,1.4145,1.435602097902098,1.5831746861924685,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.marketplace_ask.H100_80GB.spot.median,2026-11-06,1,1.5979275315587336,1.875,2.227607922453957,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.marketplace_ask.H100_80GB.spot.median,2026-11-06,3,1.5576408933061139,1.875,2.161762916804823,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.marketplace_ask.H100_80GB.spot.median,2026-11-06,7,1.5455380042392257,1.875,2.477381396447417,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,1,1.99,1.99,1.99,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,3,1.99,1.99,2.0012606631374896,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,7,1.99,1.99,2.019442564062364,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median,2026-11-06,1,1.95,1.95,1.9695969612892024,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median,2026-11-06,3,1.9402414092579476,1.95,2.0000627401205033,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median,2026-11-06,7,1.8901303401568346,1.95,2.0620774607420844,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.B200.on_demand.median,2026-11-06,1,7.890000000000001,7.890000000000001,7.929880288816694,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.B200.on_demand.median,2026-11-06,3,7.890000000000001,7.890000000000001,7.991740778855042,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.B200.on_demand.median,2026-11-06,7,7.832019076959112,7.890000000000001,8.085596696695228,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.B300.on_demand.median,2026-11-06,1,9.731736207902177,9.744999999999997,9.7887796179058,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.B300.on_demand.median,2026-11-06,3,9.722969690543746,9.74818904079703,9.947625714268389,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.B300.on_demand.median,2026-11-06,7,9.709127737232219,9.769618947368414,10.518596100714579,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median,2026-11-06,1,3.87178646027368,3.8849999999999993,3.8967459854971196,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median,2026-11-06,3,3.864856414667665,3.8849999999999993,3.9114650870818743,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median,2026-11-06,7,3.8474002650207186,3.883603899020752,4.152729937904601,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,1,3.5539000000000005,3.5539000000000005,3.5855693860652353,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,3,3.5099232365829507,3.5539000000000005,3.643299357800254,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,7,3.5057556707195934,3.5609441211448516,3.8627735536975725,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H200.on_demand.median,2026-11-06,1,4.59,4.59,4.59,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H200.on_demand.median,2026-11-06,3,4.59,4.59,4.6685968799884385,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.H200.on_demand.median,2026-11-06,7,4.463436202128889,4.59,4.739499415174309,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.L4.on_demand.median,2026-11-06,1,0.8807551157676828,0.8839,0.8866611721292368,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.L4.on_demand.median,2026-11-06,3,0.878479763100812,0.8833098152681951,0.8885952341209609,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.L4.on_demand.median,2026-11-06,7,0.8736495111487214,0.8817791798451302,0.8898438070689259,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.L40S.on_demand.median,2026-11-06,1,1.6099,1.6099,1.612038113503813,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.L40S.on_demand.median,2026-11-06,3,1.6099,1.6099,1.621869022029352,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.L40S.on_demand.median,2026-11-06,7,1.6012713112756078,1.6099,1.623557716799417,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,1,1.2515,1.2515,1.2704942299703736,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,3,1.2515,1.2515,1.308576887212867,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,7,1.236232409735957,1.2838663793103449,1.3514566562251122,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,1,0.711,0.711,0.7224447013878849,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,3,0.711,0.711,0.745963021760338,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,7,0.711,0.711,0.7943529126045586,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,1,2.3,2.3,2.328341905262311,2026-11-07,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,3,2.3,2.3,2.3585096252575486,2026-11-09,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
-gpurentalprices.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,7,2.3,2.3,2.5045570522561817,2026-11-13,ai-scientist,PACK_ONLY champion iter 8 sha f30eed6c5ce0
+afhubbard.hyperscaler_spot.A100_40GB.spot.median,2026-11-06,1,1.9891,1.9891,1.9891,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.A100_40GB.spot.median,2026-11-06,3,1.8896449999999998,1.9891,1.9891,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.A100_40GB.spot.median,2026-11-06,7,1.8896405756483832,1.9891,1.9993650027216805,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median,2026-11-06,1,1.8818,1.8818,1.8818,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median,2026-11-06,3,1.788922101468483,1.8818,1.974677523844492,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median,2026-11-06,7,1.788901081686509,1.8783082287570552,1.974732293064877,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.T4.spot.median,2026-11-06,1,0.3033464889273234,0.3047000000000001,0.30613921664767296,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.T4.spot.median,2026-11-06,3,0.3017205579050186,0.30490378729424367,0.30837364228377984,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.T4.spot.median,2026-11-06,7,0.2997243604556768,0.3059045470186928,0.3108493440968719,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.V100.spot.median,2026-11-06,1,1.475,1.475,1.475,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.V100.spot.median,2026-11-06,3,1.4266,1.475,1.527561410550138,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+afhubbard.hyperscaler_spot.V100.spot.median,2026-11-06,7,1.4032253915016641,1.475,1.5535795372029726,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+aws_spot.p4d.24xlarge.apne1-az4,2026-11-06,1,1.3433951599248124,1.4069902056004562,1.4786891714612858,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apne1-az4,2026-11-06,3,1.280215061092945,1.4688269656016413,1.7000813587890464,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apne1-az4,2026-11-06,7,1.133348978547935,1.5514771622214742,2.185564858947003,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apne2-az4,2026-11-06,1,1.1505828737598502,1.1940604479636634,1.242609681350991,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apne2-az4,2026-11-06,3,1.0292395989052434,1.1492986389374822,1.292664717629794,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apne2-az4,2026-11-06,7,0.849685220001909,1.0933224368959886,1.4396183940560099,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az1,2026-11-06,1,3.2927000837154288,3.2930499999999996,3.2934257048994935,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az1,2026-11-06,3,3.292009125413815,3.2930499999999996,3.294160113512792,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az1,2026-11-06,7,3.290672467793186,3.2930499999999996,3.295649669327671,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az2,2026-11-06,1,3.2927000837154288,3.2930499999999996,3.2934257048994935,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az2,2026-11-06,3,3.292009125413815,3.2930499999999996,3.294160113512792,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az2,2026-11-06,7,3.290672467793186,3.2930499999999996,3.295649669327671,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az3,2026-11-06,1,3.2927000837154288,3.2930499999999996,3.2934257048994935,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az3,2026-11-06,3,3.292009125413815,3.2930499999999996,3.294160113512792,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.aps1-az3,2026-11-06,7,3.290672467793186,3.2930499999999996,3.295649669327671,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apse2-az1,2026-11-06,1,3.5255063600300014,3.5681125,3.6140248882844386,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apse2-az1,2026-11-06,3,3.442483781893294,3.5681125,3.7084135962906823,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apse2-az1,2026-11-06,7,3.28800384511929,3.5681125,3.905404102810571,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apse2-az2,2026-11-06,1,1.555774057377749,1.6194873511505863,1.690792862915213,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apse2-az2,2026-11-06,3,1.487715155548698,1.6763566816485367,1.903843381631017,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.apse2-az2,2026-11-06,7,1.33561075063676,1.754397367198855,2.363469863692707,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.az_median,2026-11-06,1,2.0940403378516033,2.1168893552059593,2.141672602678507,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.az_median,2026-11-06,3,2.0448929713195967,2.112098773869656,2.1863921728055686,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.az_median,2026-11-06,7,1.9553284757284997,2.1052358721879343,2.282446970722245,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.euw1-az2,2026-11-06,1,2.0347846930474063,2.060528445410221,2.0884551667504483,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.euw1-az2,2026-11-06,3,1.9927885881650431,2.0687947189927147,2.1532515177147316,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.euw1-az2,2026-11-06,7,1.9099823148203248,2.0804151282054444,2.2847867502982075,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.sae1-az1,2026-11-06,1,3.6012026825566563,3.608865271286424,3.617112781182444,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.sae1-az1,2026-11-06,3,3.5843212234351713,3.6070617967908634,3.6314663692665534,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.sae1-az1,2026-11-06,7,3.5532160321823287,3.604933468477516,3.6622756551947737,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.sae1-az3,2026-11-06,1,3.601060800408057,3.6087381092951163,3.617001188678733,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.sae1-az3,2026-11-06,3,3.5837218265516166,3.6065035020461425,3.630953397040124,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.sae1-az3,2026-11-06,7,3.552169287818394,3.6039736379272362,3.6614166966651336,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az1,2026-11-06,1,2.673433403761663,2.678097214499996,2.683119472786584,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az1,2026-11-06,3,2.657005828124687,2.6708061852979994,2.6855691578578806,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az1,2026-11-06,7,2.630133715177411,2.6614541810098014,2.696044299794593,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az2,2026-11-06,1,2.040370502840472,2.0774243975416624,2.117959562579815,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az2,2026-11-06,3,1.9476752074643777,2.054799051318778,2.1754989964253952,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az2,2026-11-06,7,1.7925981111310199,2.0258559414282624,2.3154962468379034,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az6,2026-11-06,1,2.102001208374641,2.1168893552059593,2.132972670045301,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az6,2026-11-06,3,2.0681672094223953,2.112098773869656,2.160067325740066,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use1-az6,2026-11-06,7,2.0072804599408647,2.106008202539114,2.219609550954681,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use2-az1,2026-11-06,1,0.32957638691831026,0.3408481872159161,0.3533843186848816,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use2-az1,2026-11-06,3,0.29426068581652787,0.32522347863003626,0.36182258270278306,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use2-az1,2026-11-06,7,0.24403920862382875,0.30671507635068623,0.393681532958889,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use2-az2,2026-11-06,1,0.9967860655101118,1.006737612320329,1.01752449278966,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use2-az2,2026-11-06,3,0.9761375194468592,1.0054518106158965,1.0377422363274638,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.use2-az2,2026-11-06,7,0.937760361517528,1.0033393324768753,1.080322481543836,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az1,2026-11-06,1,2.089686634072425,2.132414690931047,2.1792854376269846,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az1,2026-11-06,3,2.043280126246113,2.1700822826346524,2.3138820451532904,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az1,2026-11-06,7,1.9324340982958554,2.2174320075907508,2.576813787708681,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az2,2026-11-06,1,2.273489542693397,2.326253271719375,2.3842397558151225,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az2,2026-11-06,3,2.207659278812161,2.3635062373967153,2.5416984210078457,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az2,2026-11-06,7,2.0630042074145662,2.4108682581371137,2.858564675162196,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az3,2026-11-06,1,1.6313520877812908,1.6608976162396403,1.6932037676611065,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az3,2026-11-06,3,1.5937123462087395,1.6810730367331537,1.779433443541945,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4d.24xlarge.usw2-az3,2026-11-06,7,1.5092089987273472,1.7048824170512666,1.9478737518962201,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.apne1-az1,2026-11-06,1,2.515875716855465,2.6358389359791166,2.771063793243061,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.apne1-az1,2026-11-06,3,2.4578728792437916,2.823113933528378,3.272222548072892,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.apne1-az1,2026-11-06,7,2.2429441581921385,3.0781737878075,4.349238965799924,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.apne1-az4,2026-11-06,1,3.9241781080399876,4.136112585648918,4.376531740468491,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.apne1-az4,2026-11-06,3,3.782702091380019,4.423715879282726,5.2273895649030315,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.apne1-az4,2026-11-06,7,3.372006795504616,4.82203773850391,7.1260195173695875,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.az_median,2026-11-06,1,2.7164124591427457,2.7525105037356856,2.791747087031851,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.az_median,2026-11-06,3,2.648537122097135,2.7548771263440877,2.873434117525391,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.az_median,2026-11-06,7,2.5202253684253266,2.757355185949039,3.0425711315668864,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.euc1-az1,2026-11-06,1,2.0140230860963375,2.0752765558824864,2.143044878197115,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.euc1-az1,2026-11-06,3,1.9750565920425862,2.1591506270523997,2.374457617200097,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.euc1-az1,2026-11-06,7,1.85728112401065,2.2765738746894044,2.844405932874375,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.euc1-az2,2026-11-06,1,1.4811932430626649,1.5410327532972603,1.6079179706271614,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.euc1-az2,2026-11-06,3,1.4274948523458721,1.6061311894888743,1.82160104953588,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.euc1-az2,2026-11-06,7,1.2953071084493295,1.6956942361561385,2.276577415299027,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.ilc1-az2,2026-11-06,1,4.4462149993186735,4.4466875,4.447194823690886,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.ilc1-az2,2026-11-06,3,4.445281981100666,4.4466875,4.448186513947834,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.ilc1-az2,2026-11-06,7,4.443477058997013,4.4466875,4.4501978982944355,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.use1-az4,2026-11-06,1,2.79746944652187,2.823428261349004,2.851551171776377,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.use1-az4,2026-11-06,3,2.7432702074421518,2.8197921987461183,2.9038974214614464,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.use1-az4,2026-11-06,7,2.643038955457707,2.814496564045395,3.0147233353335166,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.use1-az6,2026-11-06,1,2.79812067112592,2.840932532943073,2.887591521295852,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.use1-az6,2026-11-06,3,2.667956650227098,2.791412818885126,2.929656634718396,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.use1-az6,2026-11-06,7,2.4608949738728176,2.7288059489149346,3.055316286781749,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az1,2026-11-06,1,2.0170211952424433,2.072876700221992,2.134582494077405,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az1,2026-11-06,3,1.8626217888989658,2.020235567547978,2.2028580945028144,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az1,2026-11-06,7,1.6266131562454997,1.9583157313710402,2.398341014410386,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az2,2026-11-06,1,2.3939777721442,2.4648538071791948,2.5432188168662315,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az2,2026-11-06,3,2.3521536444875313,2.5654161421826873,2.8142225515588803,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az2,2026-11-06,7,2.2116830270002295,2.6966252986994608,3.3495468510631907,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az3,2026-11-06,1,2.655591277948826,2.681644737009993,2.7098746587569438,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az3,2026-11-06,3,2.6130603152717646,2.6901239924661007,2.7749209182740517,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p4de.24xlarge.usw2-az3,2026-11-06,7,2.527077040996803,2.700554690096654,2.9039880426647304,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apne1-az1,2026-11-06,1,3.2098447183144305,3.216437219493738,3.2235084997372914,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apne1-az1,2026-11-06,3,3.200831396732936,3.220438573328044,3.2415288214959,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apne1-az1,2026-11-06,7,3.180521388384134,3.2251805387152968,3.2748853302572343,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apne1-az4,2026-11-06,1,3.2306356202893847,3.2384275460159837,3.246796539531291,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apne1-az4,2026-11-06,3,3.2247192065859736,3.2479177715055885,3.2728740329216452,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apne1-az4,2026-11-06,7,3.207145215178938,3.2600780640958695,3.319067470811153,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az1,2026-11-06,1,3.7938552874114357,3.8927464029258814,4.001755705953179,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az1,2026-11-06,3,3.6452245031430115,3.9352702954730896,4.270087357071241,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az1,2026-11-06,7,3.35421074916733,3.9953179631970035,4.836993906634682,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az2,2026-11-06,1,4.223414944432699,4.2477125,4.2736044046686725,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az2,2026-11-06,3,4.175656283123515,4.2477125,4.326808650682904,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az2,2026-11-06,7,4.08530072402923,4.2477125,4.435773220536092,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az3,2026-11-06,1,3.1253214995065903,3.168597872301565,3.215830987958919,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az3,2026-11-06,3,3.1454538660331774,3.2765401702092034,3.421722454477355,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.aps1-az3,2026-11-06,7,3.1136612977424085,3.418194676381007,3.7839350943675933,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apse2-az2,2026-11-06,1,8.211875663839194,8.63677844178889,9.117706619264956,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apse2-az2,2026-11-06,3,7.810659026617237,9.075210630128536,10.648810697274921,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apse2-az2,2026-11-06,7,6.85862374773922,9.66360404508694,14.051427190917456,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apse2-az3,2026-11-06,1,3.0088965583777765,3.028888544926656,3.050479473232942,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apse2-az3,2026-11-06,3,2.9565716908287616,3.0154200022956026,3.079523154129629,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.apse2-az3,2026-11-06,7,2.86611044855414,2.998090070256535,3.149434907851345,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.az_median,2026-11-06,1,3.812180699295382,3.850528102299757,3.8920380389378715,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.az_median,2026-11-06,3,3.722796503217937,3.835388129582454,3.959455398555232,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.az_median,2026-11-06,7,3.564595846205097,3.815588349367603,4.110908148779423,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.cac1-az4,2026-11-06,1,2.7136532897683407,2.7674377690326004,2.82643953199568,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.cac1-az4,2026-11-06,3,2.7027962487005337,2.8650889786668023,3.048404752730617,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.cac1-az4,2026-11-06,7,2.6213105122618123,2.9949299454617737,3.463456420196285,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.eun1-az3,2026-11-06,1,3.0967125517115015,3.298708203791822,3.530321752965054,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.eun1-az3,2026-11-06,3,2.553332536704097,3.081198479218556,3.7642284595078914,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.eun1-az3,2026-11-06,7,1.8380608716657267,2.8237132533127327,4.513069802463102,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az1,2026-11-06,1,2.571925549482897,2.606178986691915,2.6434803382052734,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az1,2026-11-06,3,2.52536564570481,2.626704618997509,2.7391361094818842,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az1,2026-11-06,7,2.42395406555928,2.6519489740132713,2.925444519691286,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az2,2026-11-06,1,3.719876971909918,3.8455232262650925,3.9852196341794075,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az2,2026-11-06,3,3.342593277953621,3.689838815867261,4.099804058279762,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az2,2026-11-06,7,2.7928307050453056,3.5004321469127895,4.479279168782026,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az3,2026-11-06,1,2.4974536104155853,2.52430252972407,2.5534395328706934,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az3,2026-11-06,3,2.47775467069433,2.557792792879364,2.645919152646792,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.euw2-az3,2026-11-06,7,2.4167400127191927,2.5987875201803687,2.813481874094952,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.sae1-az3,2026-11-06,1,3.9681895956738664,4.101821380922005,4.250357635970541,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.sae1-az3,2026-11-06,3,3.581712242868838,3.952736241272401,4.390838820505297,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.sae1-az3,2026-11-06,7,3.0097454289173498,3.769973541400963,4.821193718236624,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az1,2026-11-06,1,4.647401943444347,4.672212499999999,4.69864036887956,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az1,2026-11-06,3,4.598605251379693,4.672212499999999,4.752906698295859,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az1,2026-11-06,7,4.506174863031609,4.672212499999999,4.8638988512537615,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az2,2026-11-06,1,3.935982684440718,4.038368827578447,4.15106036826735,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az2,2026-11-06,3,3.762919312540728,4.061902762007896,4.407623846297793,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az2,2026-11-06,7,3.429808583949187,4.084196985158177,4.944816211809842,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az3,2026-11-06,1,3.933878691794123,3.9666002055838927,4.001890342233734,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az3,2026-11-06,3,3.8709735044130245,3.9678175877101944,4.074391741467344,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az3,2026-11-06,7,3.7516264119264386,3.969361765551246,4.223102695385636,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az4,2026-11-06,1,4.648055141790161,4.672212499999999,4.697941058338695,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az4,2026-11-06,3,4.6005332902033285,4.672212499999999,4.750758305706772,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az4,2026-11-06,7,4.510480790946761,4.672212499999999,4.858737729421805,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az5,2026-11-06,1,4.050418321746555,4.092347834234813,4.13776480120935,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az5,2026-11-06,3,3.9623895835807157,4.085729784478491,4.22170251594318,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az5,2026-11-06,7,3.8006068075389483,4.076210703091781,4.401004415791317,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az6,2026-11-06,1,2.496490791680489,2.5659210116666307,2.6426073323049444,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az6,2026-11-06,3,2.3501851115593504,2.5502255878907754,2.7826184634821236,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use1-az6,2026-11-06,7,2.1003800493468128,2.5313537206496823,3.1040259895411433,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az1,2026-11-06,1,3.6284936631624785,3.7085828326908796,3.796714372923093,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az1,2026-11-06,3,3.6314589849961183,3.874695502871334,4.150948021256307,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az1,2026-11-06,7,3.5323034486191673,4.096429207723414,4.814163420989,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az2,2026-11-06,1,4.282326740353009,4.3217637116770895,4.364328810205168,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az2,2026-11-06,3,4.211610566980108,4.328250396356939,4.456792418151257,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az2,2026-11-06,7,4.07376912615908,4.335916758281728,4.643367805549025,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az3,2026-11-06,1,2.8642809720608127,2.87363643831621,2.8837056304962827,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az3,2026-11-06,3,2.8546611104486024,2.8824934935571953,2.912488432691825,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.use2-az3,2026-11-06,7,2.8296273814717825,2.8930406042924917,2.964031162632731,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw1-az3,2026-11-06,1,3.752477963863917,3.8375922728695033,3.9311998681008062,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw1-az3,2026-11-06,3,3.7477832715520836,4.0059474909338535,4.299985061322909,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw1-az3,2026-11-06,7,3.6367933526345633,4.234674335817533,4.999837986151528,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az1,2026-11-06,1,3.7800030912147915,3.8041375000000004,3.8300000164681487,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az1,2026-11-06,3,3.732579752880939,3.8041394437291927,3.8826577091811845,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az1,2026-11-06,7,3.642874161941337,3.8041411599959836,3.9905637091111106,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az2,2026-11-06,1,3.938158147099529,3.9882109119985008,4.0425888555224425,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az2,2026-11-06,3,3.8536886907592898,4.001289974682528,4.165093549543831,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az2,2026-11-06,7,3.6879634320043246,4.018564454032034,4.4143979881505375,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az3,2026-11-06,1,3.989652125422658,4.03765736632937,4.089742989033197,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az3,2026-11-06,3,3.955854594831257,4.099257526150995,4.2582218869316355,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az3,2026-11-06,7,3.8519922889492624,4.178353523963767,4.567584785991171,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az4,2026-11-06,1,3.7768625464357255,3.8361044176787713,3.9005799483443706,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az4,2026-11-06,3,3.6370796723781913,3.8095108086007943,4.002766212167936,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5.48xlarge.usw2-az4,2026-11-06,7,3.3971682263699567,3.7761827661918645,4.240343635439522,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.apse3-az1,2026-11-06,1,2.4034369724593097,2.590483860299821,2.8080666114831048,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.apse3-az1,2026-11-06,3,2.2072654163418144,2.7570975661583894,3.491088457946944,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.apse3-az1,2026-11-06,7,1.7852845602889107,2.968082258510293,5.163124806989364,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.az_median,2026-11-06,1,3.6983041664640686,3.7344731255113386,3.773498889645619,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.az_median,2026-11-06,3,3.612223195667822,3.718483030031156,3.8357961663969604,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.az_median,2026-11-06,7,3.4615362817650053,3.698343155655528,3.9775040513489524,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.use2-az1,2026-11-06,1,3.2085186611360252,3.2421379568067534,3.2783583043813644,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.use2-az1,2026-11-06,3,3.1407617271769164,3.2398005107282852,3.349497194891017,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.use2-az1,2026-11-06,7,3.0155926106505717,3.236924296244647,3.4998728968782284,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.use2-az3,2026-11-06,1,4.177434440374846,4.226867110646401,4.280293422240613,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.use2-az3,2026-11-06,3,4.052881961759163,4.197376001142285,4.357865765376743,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.use2-az3,2026-11-06,7,3.840615051668996,4.160267680696272,4.542792115171286,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.usw2-az3,2026-11-06,1,4.483727230218589,4.528407387211187,4.576613663129543,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.usw2-az3,2026-11-06,3,4.375609540791971,4.506878818876251,4.652047081693602,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5e.48xlarge.usw2-az3,2026-11-06,7,4.187498545036658,4.479756656390698,4.824883828803937,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apne1-az4,2026-11-06,1,4.354325595300504,4.4036832376268995,4.4572828564995515,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apne1-az4,2026-11-06,3,4.194125349260165,4.337184654773896,4.495165631531713,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apne1-az4,2026-11-06,7,3.9409898464739994,4.254840371719706,4.626520969361034,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apne2-az1,2026-11-06,1,3.461468877026605,3.532568026191541,3.6103889452242144,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apne2-az1,2026-11-06,3,3.3949109594309,3.606692393600615,3.8474667637516404,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apne2-az1,2026-11-06,7,3.22598312381779,3.7041083657160874,4.30932919034004,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.aps1-az1,2026-11-06,1,5.59760453992312,5.616887500000001,5.637390686151042,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.aps1-az1,2026-11-06,3,5.559574261021645,5.616887500000001,5.679344834833195,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.aps1-az1,2026-11-06,7,5.487138588861863,5.616887500000001,5.7646379416635884,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.aps1-az3,2026-11-06,1,3.6721300068522758,3.7430000928877685,3.82073983902745,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.aps1-az3,2026-11-06,3,3.4560930077233074,3.6584168490820885,3.887082280249016,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.aps1-az3,2026-11-06,7,3.1204434651330377,3.553741595424985,4.095010552013457,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apse3-az2,2026-11-06,1,5.364690319302035,5.528315423494861,5.709490293114702,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apse3-az2,2026-11-06,3,5.237671322478054,5.727510091805686,6.300626818084371,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apse3-az2,2026-11-06,7,4.876213318924731,5.9811671950432235,7.477187343956122,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apse3-az3,2026-11-06,1,5.381260348527478,5.555621651900711,5.749098035299839,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apse3-az3,2026-11-06,3,5.245303045513637,5.767537447476176,6.38217321318634,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.apse3-az3,2026-11-06,7,4.861687513367624,6.038947938638369,7.653600463685844,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.az_median,2026-11-06,1,4.993518413400884,5.106972151573064,5.231524913904449,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.az_median,2026-11-06,3,4.791517027292773,5.122912838057242,5.50207034246557,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.az_median,2026-11-06,7,4.410202266693818,5.13809884950874,6.0726875883883125,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.eus2-az1,2026-11-06,1,2.419515419615246,2.4506289521019426,2.484517506138467,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.eus2-az1,2026-11-06,3,2.3256254985042153,2.415627859865537,2.515201429578855,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.eus2-az1,2026-11-06,7,2.1746760698805834,2.3717860465051923,2.6072388645167037,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.eus2-az2,2026-11-06,1,1.9522980677998625,1.979867228890267,2.0099279897247757,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.eus2-az2,2026-11-06,3,1.8658552702912738,1.9453295243752184,2.033727190330786,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.eus2-az2,2026-11-06,7,1.7288236727682678,1.9017153839432528,2.1101691118292933,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use1-az2,2026-11-06,1,4.825294682024082,4.835839705798776,4.847067803653875,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use1-az2,2026-11-06,3,4.806805900883077,4.838180347715912,4.8721516451567055,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use1-az2,2026-11-06,7,4.770140335700134,4.841421459440576,4.921589663070922,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use1-az6,2026-11-06,1,5.674454838020033,5.712922546750546,5.754263665171029,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use1-az6,2026-11-06,3,5.6106609589624785,5.724809386317522,5.849867618877072,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use1-az6,2026-11-06,7,5.4819937818446665,5.739841379867669,6.0377787310357,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az1,2026-11-06,1,4.968269625787683,5.050194600598637,5.139458108703951,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az1,2026-11-06,3,4.67330248897092,4.90621386706577,5.167545430716019,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az1,2026-11-06,7,4.231029981553514,4.728032587403558,5.339787923688058,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az2,2026-11-06,1,5.664407477118509,5.719154302048781,5.7781181279450475,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az2,2026-11-06,3,5.541457041277408,5.702404497602767,5.88001699529604,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az2,2026-11-06,7,5.322838355047327,5.6821330959807295,6.10621795341828,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az3,2026-11-06,1,4.881521622952276,4.99904936806502,5.128674359382097,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az3,2026-11-06,3,4.878254872857811,5.235467350133155,5.643713845898249,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.use2-az3,2026-11-06,7,4.722847570640681,5.550709595131759,6.6184822391767595,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az2,2026-11-06,1,4.978037887492004,5.072862837542721,5.17648294245642,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az2,2026-11-06,3,4.773072942050192,5.048426349155578,5.35949969809572,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az2,2026-11-06,7,4.40317474548455,5.004840582412835,5.758435017036659,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az3,2026-11-06,1,5.905299919576778,5.944577397993645,5.986567228841977,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az3,2026-11-06,3,5.819866125713334,5.936004485878779,6.063559773012303,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az3,2026-11-06,7,5.664116719425277,5.925079632472898,6.22829908965019,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az4,2026-11-06,1,4.462804927259397,4.584398060266323,4.718501938003576,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az4,2026-11-06,3,4.105817844621808,4.447182117878262,4.841959224806062,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+aws_spot.p5en.48xlarge.usw2-az4,2026-11-06,7,3.55893126737512,4.271110084993602,5.214250135120542,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c; last_value_stale_days=6
+fastgpu_daily.hyperscaler_spot.A100_80GB.spot.median,2026-11-06,1,1.6846101285271624,1.757,1.8438216439733095,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.hyperscaler_spot.A100_80GB.spot.median,2026-11-06,3,1.5826098974633338,1.757,1.9615623148310266,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.hyperscaler_spot.A100_80GB.spot.median,2026-11-06,7,1.45214321340272,1.7835104058272635,2.1167558301464853,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.hyperscaler_spot.T4.spot.median,2026-11-06,1,0.08597905957221495,0.08900000000000001,0.09113473886289519,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.hyperscaler_spot.T4.spot.median,2026-11-06,3,0.0819589010463799,0.08900000000000001,0.09524791997044552,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.hyperscaler_spot.T4.spot.median,2026-11-06,7,0.07602584953786337,0.08900000000000001,0.1046464581166009,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,1,1.8155,1.8155,1.826375593723191,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,3,1.805718084710737,1.8235711308696858,1.8520411062639313,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,7,1.671138052424259,1.8328651650725083,1.995969224142686,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.A100_80GB.on_demand.median,2026-11-06,1,2.293,2.293,2.31283629936433,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.A100_80GB.on_demand.median,2026-11-06,3,2.2404790889118824,2.293,2.4065705056799085,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.A100_80GB.on_demand.median,2026-11-06,7,2.2469156747814303,2.293,2.520723241392018,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.B200.on_demand.median,2026-11-06,1,6.254173302147051,6.299999999999999,6.3779145517725455,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.B200.on_demand.median,2026-11-06,3,5.979632526577947,6.299999999999999,6.6903624267964785,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.B200.on_demand.median,2026-11-06,7,5.374000949641511,6.299999999999999,7.087507097025447,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.B300.on_demand.median,2026-11-06,1,8.49,8.49,8.585950937268642,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.B300.on_demand.median,2026-11-06,3,8.263804926081368,8.49,8.777598948541105,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.B300.on_demand.median,2026-11-06,7,7.455014374941683,8.49,9.620118976264996,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H100_PCIe_80GB.on_demand.median,2026-11-06,1,2.79,2.79,2.79,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H100_PCIe_80GB.on_demand.median,2026-11-06,3,2.659953323327472,2.79,2.79,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H100_PCIe_80GB.on_demand.median,2026-11-06,7,2.4761601750796727,2.79,2.8887660596685123,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,1,3.9489999999999994,3.9489999999999994,3.953101704500934,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,3,3.9285552276488183,3.9489999999999994,3.9807583774442596,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,7,3.9285552276488183,3.9489999999999994,3.999405318999481,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H200.on_demand.median,2026-11-06,1,4.539999999999999,4.539999999999999,4.576065926334309,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H200.on_demand.median,2026-11-06,3,4.5002844633826244,4.539999999999999,4.611323780196939,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.H200.on_demand.median,2026-11-06,7,4.5002844633826244,4.539999999999999,4.70902977418085,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.L40S.on_demand.median,2026-11-06,1,1.7355,1.7355,1.7452831824597794,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.L40S.on_demand.median,2026-11-06,3,1.7330818966053998,1.7355,1.7830535350579237,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.L40S.on_demand.median,2026-11-06,7,1.6888073274312436,1.7355,1.8221076767857565,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,1,1.528030999400399,1.5342974896965156,1.5435695627668973,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,3,1.5298035375397794,1.5467340996168584,1.5748444214291109,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,7,1.3662595459345523,1.5625409961685826,1.6379070102039934,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,1,0.5,0.5,0.5039165294510422,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,3,0.48831979506046475,0.5,0.5117268647112171,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,7,0.4245415599658499,0.5,0.5199866013854725,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,1,2.1518214557056465,2.1615,2.18245707486439,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,3,2.0768121818969933,2.1615,2.2700939133617952,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,7,2.0515248676884092,2.1615,2.518881166204089,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.A100_80GB.spot.median,2026-11-06,1,1.147,1.147,1.1492362807208545,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.A100_80GB.spot.median,2026-11-06,3,1.147,1.147,1.1588601728879657,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.A100_80GB.spot.median,2026-11-06,7,1.147,1.147,1.1910077525675553,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.B200.spot.median,2026-11-06,1,4.177,4.177,4.197432999880088,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.B200.spot.median,2026-11-06,3,4.177,4.177,4.236841501392002,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.B200.spot.median,2026-11-06,7,4.123069113924049,4.177,4.308776209297352,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.B300.spot.median,2026-11-06,1,4.735,4.735,4.759718941975489,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.B300.spot.median,2026-11-06,3,4.735,4.735,4.833648186281238,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.B300.spot.median,2026-11-06,7,4.735,4.735,4.921122816839373,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.H100_SXM_80GB.spot.median,2026-11-06,1,2.285,2.285,2.285,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.H100_SXM_80GB.spot.median,2026-11-06,3,2.285,2.285,2.3278812650816683,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.H100_SXM_80GB.spot.median,2026-11-06,7,2.285,2.285,2.348767441860465,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.H200.spot.median,2026-11-06,1,2.8,2.8,2.8147433075144215,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.H200.spot.median,2026-11-06,3,2.8,2.8,2.8442370959468852,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.H200.spot.median,2026-11-06,7,2.8,2.8178034682080924,2.9018095605960683,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.L40S.spot.median,2026-11-06,1,0.97,0.97,0.9801147467174768,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.L40S.spot.median,2026-11-06,3,0.97,0.9801570680628272,0.9991113673822175,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.L40S.spot.median,2026-11-06,7,0.97,0.9998291571753987,1.029799402843422,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.RTX_PRO_6000.spot.median,2026-11-06,1,1.4145,1.4145,1.4211095470044708,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.RTX_PRO_6000.spot.median,2026-11-06,3,1.4145,1.416086355140187,1.480767617173116,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+fastgpu_daily.neocloud_spot.RTX_PRO_6000.spot.median,2026-11-06,7,1.4145,1.435602097902098,1.5831746861924685,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.marketplace_ask.H100_80GB.spot.median,2026-11-06,1,1.5979275315587336,1.875,2.227607922453957,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.marketplace_ask.H100_80GB.spot.median,2026-11-06,3,1.5576408933061139,1.875,2.161762916804823,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.marketplace_ask.H100_80GB.spot.median,2026-11-06,7,1.5455380042392257,1.875,2.477381396447417,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,1,1.99,1.99,1.99,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,3,1.99,1.99,2.0012606631374896,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median,2026-11-06,7,1.99,1.99,2.019442564062364,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median,2026-11-06,1,1.95,1.95,1.9695969612892024,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median,2026-11-06,3,1.9402414092579476,1.95,2.0000627401205033,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median,2026-11-06,7,1.8901303401568346,1.95,2.0620774607420844,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.B200.on_demand.median,2026-11-06,1,7.890000000000001,7.890000000000001,7.929880288816694,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.B200.on_demand.median,2026-11-06,3,7.890000000000001,7.890000000000001,7.991740778855042,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.B200.on_demand.median,2026-11-06,7,7.832019076959112,7.890000000000001,8.085596696695228,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.B300.on_demand.median,2026-11-06,1,9.731736207902177,9.744999999999997,9.7887796179058,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.B300.on_demand.median,2026-11-06,3,9.722969690543746,9.74818904079703,9.947625714268389,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.B300.on_demand.median,2026-11-06,7,9.709127737232219,9.769618947368414,10.518596100714579,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median,2026-11-06,1,3.87178646027368,3.8849999999999993,3.8967459854971196,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median,2026-11-06,3,3.864856414667665,3.8849999999999993,3.9114650870818743,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median,2026-11-06,7,3.8474002650207186,3.883603899020752,4.152729937904601,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,1,3.5539000000000005,3.5539000000000005,3.5855693860652353,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,3,3.5099232365829507,3.5539000000000005,3.643299357800254,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median,2026-11-06,7,3.5057556707195934,3.5609441211448516,3.8627735536975725,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H200.on_demand.median,2026-11-06,1,4.59,4.59,4.59,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H200.on_demand.median,2026-11-06,3,4.59,4.59,4.6685968799884385,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.H200.on_demand.median,2026-11-06,7,4.463436202128889,4.59,4.739499415174309,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.L4.on_demand.median,2026-11-06,1,0.8807551157676828,0.8839,0.8866611721292368,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.L4.on_demand.median,2026-11-06,3,0.878479763100812,0.8833098152681951,0.8885952341209609,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.L4.on_demand.median,2026-11-06,7,0.8736495111487214,0.8817791798451302,0.8898438070689259,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.L40S.on_demand.median,2026-11-06,1,1.6099,1.6099,1.612038113503813,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.L40S.on_demand.median,2026-11-06,3,1.6099,1.6099,1.621869022029352,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.L40S.on_demand.median,2026-11-06,7,1.6012713112756078,1.6099,1.623557716799417,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,1,1.2515,1.2515,1.2704942299703736,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,3,1.2515,1.2515,1.308576887212867,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_6000_Ada.on_demand.median,2026-11-06,7,1.236232409735957,1.2838663793103449,1.3514566562251122,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,1,0.711,0.711,0.7224447013878849,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,3,0.711,0.711,0.745963021760338,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_A6000.on_demand.median,2026-11-06,7,0.711,0.711,0.7943529126045586,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,1,2.3,2.3,2.328341905262311,2026-11-07,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,3,2.3,2.3,2.3585096252575486,2026-11-09,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c
+gpurentalprices.neocloud_rate_card.RTX_PRO_6000.on_demand.median,2026-11-06,7,2.3,2.3,2.5045570522561817,2026-11-13,ai-scientist,PACK_PLUS_EXA champion iter 4 sha 11f63d31d49c

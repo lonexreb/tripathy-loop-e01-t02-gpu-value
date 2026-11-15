@@ -1,6 +1,6 @@
 {
   "starter_version": "0.1",
-  "run_utc": "2026-11-15T16:12:13Z",
+  "run_utc": "2026-11-15T17:48:12Z",
   "status": "scored_no_cells",
   "mode": "frozen_cutoff",
   "cutoff": "2026-11-06",
@@ -27,8 +27,8 @@
   "inputs": {
     "forecast": {
       "path": "submission_2026-11-06.csv",
-      "sha256": "29d19cfa958f2699a0c0cf3ca5f1339efc45ae45fa4d24fc8b33042fd1af7e04",
-      "bytes": 65626
+      "sha256": "619d3e48688150a7831c2c2cd52602ae2f0bbf5507dee01dfbe7912079450acd",
+      "bytes": 67000
     },
     "truth": {
       "path": "history_2026-11-06.csv",

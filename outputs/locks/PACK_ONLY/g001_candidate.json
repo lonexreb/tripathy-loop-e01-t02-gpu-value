@@ -1,0 +1,64 @@
+{
+  "stage": "PACK_ONLY",
+  "procedure_version": "v001",
+  "code_sha256": "6f484dccba562555bcd5101d8e423bec60e41eddae7098cfd9f1664f04ae3115",
+  "champion_code_sha256": "f30eed6c5ce08626837e86c9469ef28d52b21711781f7a0d2a0c97c4adfbda4b",
+  "pack_manifest_sha256": "ef6fae466042f0bbe6598f16da534de0181d363575f54b53e88191eaa4329f31",
+  "origins": [
+    "2026-07-15",
+    "2026-07-22",
+    "2026-07-29",
+    "2026-08-05",
+    "2026-08-12",
+    "2026-08-19",
+    "2026-08-26",
+    "2026-09-02",
+    "2026-09-09",
+    "2026-09-16",
+    "2026-09-23"
+  ],
+  "hypothesis_card": {
+    "mechanism": "The champion's pooled LINEAR momentum OLS cannot represent nonlinear state-conditional dynamics (vol clustering, momentum saturation, sticky zones); the GBM member captures them (alone +0.039 Discovery pooled, 10/11 origins) but its tree q50 drifts on calm sticky zones (-0.039 median, Gate-2 risk). The 35/65 blend lets the tree carry the nonlinear/pooled gain while the linear member anchors the calm-zone center and the calibrated band; quantile averaging is the one width lever with a confirmed-positive record (iters 8/9).",
+    "expected_observation": "Discovery pooled between the members (~0.47, > champion 0.4462), in-sample median below champion (known artifact), coverage in [0.74, 0.86]; OOS pseudo-origin pooled delta strongly positive (z >> 2) with OOS median at or above champion parity and all three horizon deltas positive.",
+    "competing_explanation": "The GBM's Discovery gain is in-sample leakage of the pooled tree fit (fit and scored on overlapping windows) and would not transfer out of sample; the tree q50 drifts on sticky zones, so the blend's holdout median falls below the Gate-2 floor (0.2695) with no pooled transfer.",
+    "test": "Pre-flight fixture (passed: 10 series, 30 rows, ordered/positive/finite quantiles, clip respected, 3.5 s) -> dry_run_discovery (w0.50: pooled 0.4814, +0.0352, screen PASS; w0.35: 0.4731, +0.0269, screen PASS) -> backtest_candidate on 71 dense pseudo-origins (w0.50: +0.0422, z=11.1, 94% origins, OOS median -0.0014; w0.35: +0.0325, z=11.5, 97% origins, OOS median 0.0000). Commit the w0.35 variant as the gate-risk-minimising choice.",
+    "rejection_condition": "Discovery pooled <= champion 0.4462 (screen), or sanity failures, or OOS backtest pooled delta <= 0; at Holdout: pooled <= 0.3118 (Gate 1), or median < 0.2695 (Gate 2), or coverage outside [0.74, 0.86] (Gate 3), or any horizon skill < -0.020 (Gate 4). The class-exploration mechanism is additionally falsified if the blend's holdout pooled gain vs champion is below +0.005 (the tree's OOS gain did not transfer)."
+  },
+  "hypothesis": "BOLD, model_combination (builds on the crashed iter-10 candidate, family ensemble/model-class exploration): the AWS regime is a 35/65 log-space quantile average of (1) a pooled gradient-boosting member (HistGradientBoostingRegressor loss='quantile' per quantile, features = trailing 1/3/7-day log changes + 7/14/28-day local vol, 540-day pooled train) and (2) the champion's pooled-linear-momentum member (pooled OLS momentum + vol-window ensemble {7,14,28} at h3/h7 + 0.95 h1 tail narrowing + vol-scaled conformal z). The iter-10 crash (tuple-unpack: 4-tuple unpacked as 5, plus an undefined name) was fixed and the code executed for the first time via the mandatory pre-flight fixture before any dry run. Weight w_gbm=0.35 chosen over 0.50 after paired OOS comparison: both transfer strongly on pooled, but w=0.35 holds OOS median at exact champion parity (0.26634 vs 0.26634) and improves the lower-tail series-skill quantiles (q10 -0.072 vs -0.089, q25 +0.028 vs +0.020), minimising Gate-2 failure probability. Regimes B/C byte-identical to the champion.",
+  "model_class": "model_combination",
+  "hypothesis_family": "",
+  "novelty": "bold",
+  "builds_on_iteration": 10,
+  "status": "DRY_RUN_OK",
+  "error": null,
+  "screen_pass": true,
+  "discovery": {
+    "pooled_skill": 0.47305507419034354,
+    "median_skill": 0.25869452729708076,
+    "coverage_80": 0.8057717250324254,
+    "skill_by_horizon": {
+      "1": 0.4698531673515569,
+      "3": 0.4982528339579877,
+      "7": 0.46189494074991855
+    },
+    "q10_breach_rate": 0.08073929961089495,
+    "q90_breach_rate": 0.11348897535667964,
+    "skill_by_origin": {
+      "2026-07-15": 0.4763706385378145,
+      "2026-07-22": 0.52536380629271,
+      "2026-07-29": 0.5436058750706179,
+      "2026-08-05": 0.5488896204521987,
+      "2026-08-12": 0.3426163771050652,
+      "2026-08-19": 0.5043160636481833,
+      "2026-08-26": 0.4602283432550198,
+      "2026-09-02": 0.5042290695434877,
+      "2026-09-09": 0.4333219353576002,
+      "2026-09-16": 0.37950012256515653,
+      "2026-09-23": 0.4492286146437464
+    }
+  },
+  "discovery_pooled_delta": 0.026868116248005558,
+  "code_file": "g001_candidate.py",
+  "episode_id": "g001_candidate",
+  "locked_utc": "2026-11-15T18:54:31Z"
+}

@@ -32,8 +32,16 @@ MANIFEST.sha256: all 672 listed files verify. `starter/run_demo.sh` step 5 (un-t
 | PACK_ONLY | 7 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4466 | +0.2969 | +0.2561 | +0.7429 | +0.3157 | Pooled vol-state tail scaling at h3/h7, stacked on the iteration-6 confirmed stack (regime |
 | PACK_ONLY | 8 | PROMOTED | strands_modal:zai-org/GLM-5.3 | +0.4462 | +0.3088 | +0.2745 | +0.7514 | +0.3252 | Vol-window parameter-perturbation ensemble at h3/h7, stacked on the iteration-6 confirmed  |
 | PACK_ONLY | 9 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4471 | +0.3102 | +0.2754 | +0.7500 | +0.3258 | Extend the confirmed vol-window ensemble to h1 with a 0.90 tail-narrowing re-center (ensem |
+| PACK_PLUS_EXA | 0 | SEED | lab | +0.4462 | +0.3088 | +0.2745 | +0.7514 | +0.3252 | seed champion (current workspace forecaster) |
+| PACK_PLUS_EXA | 0 | FORK | lab |  | +0.3088 | +0.2745 | +0.7514 | +0.3252 |  |
+| PACK_PLUS_EXA | 1 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4462 | +0.3108 | +0.2717 | +0.7500 | +0.3264 | horizon_structure (bold): replace the direct h-day pooled-OLS q50 at h3/h7 with an iterate |
+| PACK_PLUS_EXA | 2 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4478 | +0.3108 | +0.2752 | +0.7451 | +0.3266 | interval_calibration (incremental, builds on archived iteration 1): estimate the regime-A  |
+| PACK_PLUS_EXA | 3 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4487 | +0.3121 | +0.2727 | +0.7373 | +0.3280 | interval_calibration (bold, builds on archived iteration 2): h3 both-tail narrowing f=0.93 |
+| PACK_PLUS_EXA | 4 | PROMOTED | strands_modal:zai-org/GLM-5.3 | +0.4504 | +0.3139 | +0.2713 | +0.7500 | +0.3339 | exogenous_signals (bold, builds on archived iteration 3 — the Gate-1-passing / Gate-3-fail |
+| PACK_PLUS_EXA | 5 | REVERTED | strands_modal:zai-org/GLM-5.3 | +0.4514 | +0.3145 | +0.2709 | +0.7507 | +0.3352 | exogenous_signals (bold, builds on the champion = iter 4): TWO stacked levers on the champ |
 
 **PACK_ONLY champion** (iteration 8, code `f30eed6c5ce0`): Discovery pooled +0.446, Holdout pooled +0.309 / median +0.275 / coverage 0.751 / by horizon h1 +0.403, h3 +0.337, h7 +0.280; 2026-10-24: pooled +0.325, coverage 0.753.
+**PACK_PLUS_EXA champion** (iteration 4, code `11f63d31d49c`): Discovery pooled +0.450, Holdout pooled +0.314 / median +0.271 / coverage 0.750 / by horizon h1 +0.420, h3 +0.341, h7 +0.284; 2026-10-24: pooled +0.334, coverage 0.759.
 
 Seed `drift` clone for comparison: Discovery +0.149, Holdout +0.231 (coverage 0.698, which fails Gate 3), 2026-10-24 +0.2004.
 
@@ -51,10 +59,6 @@ Negative results (falsified on Discovery, kept in the notebook):
 - **Recent-window recalibration** of the residual quantiles (90/180 days) was unstable around the AWS archive hole (2026-03 to 2026-06) and lowered skill.
 
 Agent notebook verdicts (latest last):
-- [PACK_ONLY] iteration 1: PROMOTED (2026-11-15T10:25:12Z): holdout pooled 0.2966 (need > 0.2336), median 0.2552 (need >= 0.2408), coverage 0.7408 (band 0.74-0.86), horizons {'1': 0.3983, '3': 0.3244, '7': 0.2668}.
-- [PACK_ONLY] iteration 2: REVERTED (2026-11-15T10:48:49Z): 
-- [PACK_ONLY] iteration 2: candidate proposed (local split-conformal calibration): holdout pooled -9.7752465503551e+17 (need > 0.2996), median 0.1699 (need >= 0.2502), coverage 0.7182 (band 0.74-0.86), horizons {'1': 0.408, '3': 0.2951, '7': -1.6053584808952591e+18}.
-- [PACK_ONLY] iteration 3: REVERTED (2026-11-15T10:49:34Z): 
 - [PACK_ONLY] iteration 3: candidate proposed (split-conformal tail-widening calibration, regime A only): holdout pooled 0.297 (need > 0.2996), median 0.2576 (need >= 0.2502), coverage 0.738 (band 0.74-0.86), horizons {'1': 0.4016, '3': 0.3221, '7': 0.2681}.
 - [PACK_ONLY] iteration 4: REVERTED (2026-11-15T10:50:13Z): holdout pooled 0.2966 (need > 0.2996), median 0.2552 (need >= 0.2502), coverage 0.7408 (band 0.74-0.86), horizons {'1': 0.3983, '3': 0.3244, '7': 0.2668}.
 - [PACK_ONLY] iteration 5: REVERTED (2026-11-15T15:33:06Z): holdout pooled 0.2971 (need > 0.2996), median 0.2562 (need >= 0.2502), coverage 0.738 (band [0.74, 0.86], or within 0.0642 of 0.80), horizons {'1': 0.403, '3': 0.3244, '7': 0.2668}. Gate margins {'gate1': -0.0025, 'gate2': 0.006, 'gate3': 0.0022, 'gate4': 0.28
@@ -62,11 +66,16 @@ Agent notebook verdicts (latest last):
 - [PACK_ONLY] iteration 7: REVERTED [regime_change] (2026-11-15T15:55:55Z): holdout pooled 0.2969 (need > 0.2996), median 0.2561 (need >= 0.2502), coverage 0.7429 (band [0.74, 0.86], or within 0.0642 of 0.80), horizons {'1': 0.403, '3': 0.3239, '7': 0.2667}. Gate margins {'gate1': -0.0027, 'gate2': 0.0059, 'gate3': 0.0071, 'gate4': 0.
 - [PACK_ONLY] iteration 8: PROMOTED (2026-11-15T16:00:20Z): holdout pooled 0.3088 (need > 0.2996), median 0.2745 (need >= 0.2502), coverage 0.7514 (band [0.74, 0.86], or within 0.0642 of 0.80), horizons {'1': 0.403, '3': 0.3369, '7': 0.2801}. Gate margins {'gate1': 0.0092, 'gate2': 0.0243, 'gate3': 0.0156, 'gate4': 0.3
 - [PACK_ONLY] iteration 9: REVERTED [ensemble] (2026-11-15T16:02:52Z): holdout pooled 0.3102 (need > 0.3118), median 0.2754 (need >= 0.2695), coverage 0.75 (band [0.74, 0.86], or within 0.0536 of 0.80), horizons {'1': 0.4164, '3': 0.3369, '7': 0.2801}. Gate margins {'gate1': -0.0016, 'gate2': 0.0059, 'gate3': 0.01, 'gate4': 0.300
+- [PACK_PLUS_EXA] iteration 1: REVERTED (2026-11-15T16:20:21Z): holdout pooled 0.3108 (need > 0.3118), median 0.2717 (need >= 0.2695), coverage 0.75 (band [0.74, 0.86], or within 0.0536 of 0.80), horizons {'1': 0.4164, '3': 0.3379, '7': 0.2807}. Gate margins {'gate1': -0.001, 'gate2': 0.0022, 'gate3': 0.01, 'gate4': 0.3007
+- [PACK_PLUS_EXA] iteration 2: REVERTED [interval_calibration] (2026-11-15T16:31:29Z): holdout pooled 0.3108 (need > 0.3118), median 0.2752 (need >= 0.2695), coverage 0.7451 (band [0.74, 0.86], or within 0.0536 of 0.80), horizons {'1': 0.4222, '3': 0.3357, '7': 0.2807}. Gate margins {'gate1': -0.001, 'gate2': 0.0057, 'gate3': 0.0051, 'gate4': 0.
+- [PACK_PLUS_EXA] iteration 3: REVERTED [interval_calibration] (2026-11-15T16:40:56Z): holdout pooled 0.3121 (need > 0.3118), median 0.2727 (need >= 0.2695), coverage 0.7373 (band [0.74, 0.86], or within 0.0536 of 0.80), horizons {'1': 0.4222, '3': 0.3404, '7': 0.2807}. Gate margins {'gate1': 0.0003, 'gate2': 0.0032, 'gate3': -0.0027, 'gate4': 0
+- [PACK_PLUS_EXA] iteration 4: PROMOTED [exogenous_signals] (2026-11-15T17:04:29Z): holdout pooled 0.3139 (need > 0.3118), median 0.2713 (need >= 0.2695), coverage 0.75 (band [0.74, 0.86], or within 0.0536 of 0.80), horizons {'1': 0.4205, '3': 0.3411, '7': 0.2836}. Gate margins {'gate1': 0.0021, 'gate2': 0.0018, 'gate3': 0.01, 'gate4': 0.3036
+- [PACK_PLUS_EXA] iteration 5: REVERTED [exogenous_signals] (2026-11-15T17:20:27Z): holdout pooled 0.3145 (need > 0.3169), median 0.2709 (need >= 0.2663), coverage 0.7507 (band [0.74, 0.86], or within 0.055 of 0.80), horizons {'1': 0.4215, '3': 0.3421, '7': 0.2839}. Gate margins {'gate1': -0.0024, 'gate2': 0.0046, 'gate3': 0.0107, 'gate4': 0.
 
 Current research playbook (`workspace/scientist_prompt.md`, evolved by the agent):
 
 ```markdown
-# Scientist Playbook — GPU cloud rental price forecaster (stage PACK_ONLY)
+# Scientist Playbook — GPU cloud rental price forecaster (stage PACK_PLUS_EXA)
 
 <!-- LAB-PROTECTED:BEGIN (owned by the lab; rewrites cannot remove or edit this block) -->
 ## Lab rules (protected)
@@ -86,52 +95,50 @@ Current research playbook (`workspace/scientist_prompt.md`, evolved by the agent
 
 ## Mission
 Beat the champion on the four Holdout gates (pooled skill, breadth, calibrated 80% band, no bad horizon)
-with forecasts that would also be honest at the frozen 2026-11-06 origin.
+with forecasts that would also be honest at the frozen 2026-11-06 origin. Stage PACK_PLUS_EXA adds
+point-in-time web search (external_signals.search) — usable and CONFIRMED (iter 4).
 
 ## Where the loss lives (check before every hypothesis)
-- The pooled score is scale-dependent and *fragile*: one exploding cell can annihilate it (iteration 2: a
-  single series with width_rel 1e86 drove pooled skill to -1e84). Read `slices[].share_of_total_loss`
-  and `worst_series` first; ~95% of champion loss is AWS hyperscaler_spot (h7 60%, h3 25%, h1 9%).
-- Fix the regime that carries the loss. A gain on a 1% slice cannot move the pooled skill.
-- **Gate 1 needs pooled > champion + 0.003.** A lever confined to h1 (~10% of loss share) cannot clear it
-  alone even when it transfers perfectly (iteration 9: h1 holdout +0.0134, pooled only +0.0013, shortfall
-  0.0016). Single-horizon levers must be stacked with a second confirmed lever before submission, or
-  target h7 (60% of loss) directly.
+- The pooled score is scale-dependent and *fragile*: one exploding cell can annihilate it. Read
+  `slices[].share_of_total_loss` and `worst_series` first; ~95% of champion loss is AWS hyperscaler_spot
+  (h7 63%, h3 27%, h1 10%).
+- **Gate 1 needs holdout pooled > champion + 0.003 (champion 0.3139 -> threshold 0.31692).** Holdout pooled
+  deltas decompose roughly as horizon-skill-delta x loss share: +0.006 h1 skill ~ +0.0006 pooled; +0.002 h3
+  ~ +0.0005; +0.001 h7 ~ +0.0006. Stack levers until the SUM clears +0.003 with margin.
 - **Read `mean_q50_error`/`bias_rel` vs `mean_width_rel` before choosing a lever.** h7 under-coverage was a
-  CENTERING problem (bias_rel -0.012 at h7), not a width problem; the calm-zone worst series lose on WIDTH
-  (coverage 0.97), not q50 bias.
+  CENTERING problem (bias_rel -0.012 at h7), not a width problem; the calm-zone worst series lose on q50
+  centering (p5/p5e/p5en sticky zones, skill -0.09..-0.64 on ~3.4% of loss).
+- Breach-rate asymmetry (q90 11.5% vs q10 9.5%) is NOT a width signal: asymmetric tail factors are
+  loss-positive at EVERY horizon in EVERY form (iter-5 analysis: h7 0.90/1.00 +0.59%, 0.93/1.00 +0.73%,
+  1.00/0.93 +0.03%). The symmetric factor is optimal; the asymmetry is a centering artifact.
 
 ## Method
 1. Diagnose from Discovery only: per-slice skill, breach asymmetry, worst series (bias vs width).
 2. State ONE falsifiable hypothesis with a mechanism and a predicted sign.
-3. Change one thing at a time so the ledger attributes the effect; keep everything else identical.
-   (Exception: when stacking CONFIRMED levers, submit the stack and attribute via the per-lever deltas
-   already measured on Holdout — iterations 6 and 8 did this cleanly.)
+3. Change one thing at a time so the ledger attributes the effect; when stacking CONFIRMED levers, submit
+   the stack and attribute via the per-lever deltas already measured on Holdout.
 4. Record the result, including negative results and their magnitude. Use analyze_discovery to measure
    out-of-sample BEFORE spending a dry run or a submission (budget: ~6 analyses, 4 dry runs per iteration).
-   NOTE: the analysis budget exhausts fast; plan analyses to answer several questions per call.
 5. **Pseudo-origin OOS analysis (fit at origin-28d, score the next 28 days inside Discovery) is the strongest
-   pre-screen available.** Iteration 8 is the decisive positive case: its 5/5-origin OOS gains transferred to
-   Holdout at ~5x their Discovery magnitude. Iteration 7 is the negative case: calm-origin WIDTH-conditioning
-   gains did not transfer. Iteration 9 confirms the pre-screen again (OOS 5/5 origins -> holdout +0.0134 h1).
-   Prefer unconditional smoothing over conditional rescaling.
-6. **In-sample Discovery diagnostics LIE about the median when a lever widens bands**: iteration 8's
-   Discovery in-sample median dropped -0.0146 while the holdout median ROSE +0.0193. The champion's
-   in-sample pooled z is optimal in-sample by construction, so any widening looks bad in-sample. Trust the
-   pseudo-origin OOS per-series median, not the in-sample median, when the lever changes width.
+   pre-screen — but it is NOT a guarantee:** confirmed transfer cases are PACK_ONLY 8, 9 (~1.5-5x),
+   PACK_PLUS_EXA 1 chain (~0.7x), 2 w270-at-h1 (~0.7x), 3 h3-f0.93-on-skill (~1.9x), 4 h7-f0.95-on-skill
+   (~0.9x). FALSIFIED non-transfer: PACK_PLUS_EXA 2 w270-at-h3, 3 h3-f0.93-on-COVERAGE (2x over-transfer),
+   **5 h7-f0.93-on-skill (~0.25x: OOS -0.41% h7 loss predicted +0.002-0.003 h7 skill, holdout +0.0003 —
+   the h7 tail-factor frontier is EXHAUSTED at 0.95; marginal steps along an already-harvested frontier
+   transfer far worse than the first step).** OOS skill transfer does NOT imply OOS coverage transfer
+   (coverage cost of a narrowing lever over-transfers ~2x). Short-horizon (h1) z/width signals transfer at
+   ~80% prior; h3/h7 recency signals at ~50%; plain both-tail factors at ~90-100% for the FIRST step only.
+6. **In-sample Discovery diagnostics LIE about the median when a lever widens bands** (PACK_ONLY 8:
+  in-sample -0.0146, holdout +0.0193) **and about centering** (PACK_PLUS_EXA 1, and iter 5: the pooled
+  cross-sectional calm-zone center damping is OOS-positive h3 -0.12%/h7 -0.20% loss with +0.006 coverage,
+  but in-sample -0.004 pooled — the champion's center is in-sample-optimal, so ANY centering shift is
+  in-sample-negative by construction, ~4x its OOS gain). A centering lever can only pass the pre-Holdout
 
-## HARD guardrails (all measured; cite the falsifying iteration to remove any of them)
-- **Bound every output.** Clip per-series z to a small multiple of pooled z AND clip final log-quantiles to
-  a sane band around the last value (log q within +/- 1 of log last). Iteration 2's explosion (h7 pooled
-  -1e18) came from unbounded per-series z on a sticky series.
-- **Never touch the LOWER quantile with a "max".** Iteration 3 falsified "elementwise max of pooled z is
-  widening-only": max widens the upper side but RAISES q10, narrowing the lower band. Result: q10 breach
-  10.1% -> 10.9%, holdout coverage 0.7
 ```
 
 ## 6. Exa ablation (PACK_ONLY vs PACK_PLUS_EXA)
 
-Stage 2 has not been run yet: the Exa code path (point-in-time guard, cache, `external_signals`, agent tool) is implemented and unit-tested offline, and `python -m lab.rsi_controller fork-stage2` followed by `run --stage pack_plus_exa` produces the comparison. Prior expectation, recorded before running: at 1-7 day horizons, AWS spot momentum dominates, and dated news has little room to add skill to administered prices that move in smoothed trends.
+Holdout pooled skill PACK_ONLY +0.309 vs PACK_PLUS_EXA +0.314: marginal gain from point-in-time news +0.0051. See `outputs/ablation_summary.csv`.
 
 ## 7. Frozen submission
 

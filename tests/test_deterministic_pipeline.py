@@ -198,11 +198,13 @@ def test_firewall_rejects_file_io(ctrl):
 def test_degraded_forecaster_screened_before_holdout(ctrl):
     before = ctrl.cfg.forecaster_path.read_text()
     r = ctrl.propose_and_test_forecaster("5x wider bands", "notes", (FIX / "degraded_5x.py").read_text())
-    assert r["status"] == "REJECTED_DISCOVERY"                  # worse on Discovery: never spends a Holdout evaluation
-    assert r["screen"]["failed"] == ["discovery_gain"] and "gates" not in r and "holdout" not in r
-    assert r["discovery_diagnostics"]["coverage_80"] > 0.86 and r["discovery_diagnostics"]["sanity"]["ok"]
+    # q10 floored at 1% of q50 (100x below the last value) trips the sanity screen; it is also worse on Discovery.
+    # Either way it never spends a Holdout evaluation.
+    assert r["status"] == "REJECTED_SANITY"
+    assert set(r["screen"]["failed"]) == {"sanity", "discovery_gain"} and "gates" not in r and "holdout" not in r
+    assert r["discovery_diagnostics"]["coverage_80"] > 0.86 and r["discovery_diagnostics"]["sanity"]["n_extreme_rows"] > 0
     assert ctrl.cfg.forecaster_path.read_text() == before
-    assert _ledger_last(ctrl)["status"] == "REJECTED_DISCOVERY"
+    assert _ledger_last(ctrl)["status"] == "REJECTED_SANITY"
 
 
 def test_improved_candidate_promoted_and_committed(ctrl):

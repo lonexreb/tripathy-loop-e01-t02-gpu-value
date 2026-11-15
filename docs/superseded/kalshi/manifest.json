@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "experiment_id": "01",
+  "status": "planning",
+  "question": "PROVISIONAL: Can a time-causal, evidence-grounded forecaster improve proper-scoring loss over a matched Kalshi market-implied forecast on settled H100 weekly and monthly markets?",
+  "hypothesis": "PROVISIONAL: An auditable forecast-score-diagnose-revise loop using cutoff-bounded Exa evidence and explicit economic features will reduce out-of-sample proper-scoring loss versus the contemporaneous Kalshi baseline.",
+  "primary_metric": "PROVISIONAL: paired delta in Brier score versus the time-matched Kalshi probability, with calibration and log loss as secondary metrics",
+  "baseline": "PROVISIONAL: Kalshi market-implied probability captured at the same forecast timestamp and before the market cutoff",
+  "budget_usd": 0,
+  "stop_condition": "",
+  "dataset": {
+    "name": "Settled Kalshi H100 weekly and monthly markets",
+    "version": "pending feasibility audit",
+    "cutoff": "per-market cutoff or close; exact timestamp policy pending review",
+    "license": "pending source and terms verification"
+  },
+  "reproducibility": {
+    "command": "python -m tripathy_experiment.cli run --dry-run",
+    "random_seeds": [],
+    "artifact_directory": "artifacts/runs"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "frozen_utc": "2026-11-14",
+  "horizons": [1, 3, 7],
+  "origin_step_days": 1,
+  "note": "Daily origins inside each block; cells from neighbouring origins overlap, so every interval is a block bootstrap over origins, never over cells. Blocks were fixed before any comparative result was inspected.",
+  "blocks": {
+    "development": {"start": "2026-09-01", "end": "2026-09-30", "truth": "in_pack",
+                    "use": "hypothesis exploration; the improver may read errors here"},
+    "checkpoint":  {"start": "2026-10-01", "end": "2026-10-15", "truth": "in_pack",
+                    "use": "acceptance test for a candidate F_{g+1} and for I_1; the improver never reads per-cell errors here before proposing"},
+    "protected":   {"start": "2026-10-16", "end": "2026-10-30", "truth": "in_pack",
+                    "use": "scored once per final lineage member and for the common-start improver comparison; last origin whose 7-day target is inside the pack"},
+    "official":    {"start": "2026-11-06", "end": "2026-11-06", "truth": "withheld_until_2026-11-13",
+                    "use": "submission; scored by the organisers on 2026-11-15"}
+  },
+  "common_start": {"forecaster": "F*", "history_through": "2026-10-15", "compare_on": "protected"}
+}

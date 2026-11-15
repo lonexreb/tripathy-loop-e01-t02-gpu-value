@@ -1,16 +1,16 @@
-# Claude Code Lane E01 - Track 02 Kalshi
+# Claude Code Lane E01 — Track 02 GPU Value
 
 You own one isolated idea in the Tripathy Loop.
 
 ## Session protocol
 
-- Read `project.yaml` and `experiment/manifest.json` first.
-- Read `docs/PROJECT_BRIEF.md` and the two independent model reviews before proposing an implementation plan.
-- Refuse to run an undefined experiment; complete the start gate instead.
-- Treat every field prefixed `PROVISIONAL:` as unresolved; do not silently promote it to an accepted design decision.
-- Enforce time causality: no source, market price, feature or policy update may use information published after the simulated forecast timestamp.
+- Read `project.yaml`, `experiment/manifest.json`, `PLAN.md`, and `research/PROTOCOL.md` first.
+- Treat `research/PROTOCOL.md`, `research/origins.json`, `research/adapted_series.txt`, and `research/paired.py` as frozen evaluator inputs.
+- Enforce time causality: no source, price, feature, or policy update may use information published after the simulated forecast origin.
 - Plan around a falsifiable hypothesis and a fixed baseline.
-- Use subagents for independent research, implementation, evaluation and adversarial review only when their contracts are explicit.
+- Never splice rate cards, marketplace asks, AWS spot, indices, resale pointers, or launch prices into one price curve.
+- Preserve rejected candidates and negative results in `research/lineage/`.
+- Use subagents only when their contracts are explicit and the user or repository instructions authorize delegation.
 - Verify every subagent result before integration.
 - Keep provider adapters behind interfaces; keep evaluation deterministic where possible.
 - Update `artifacts/session-summary.json` after each meaningful iteration.

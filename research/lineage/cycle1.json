@@ -1,0 +1,22 @@
+{
+  "cycle": 1,
+  "improver": "I_0",
+  "proposed": [
+    "F_1_c1",
+    "F_1_c2"
+  ],
+  "statuses": {
+    "F_1_c1": "rejected",
+    "F_1_c2": "accepted"
+  },
+  "head": "F_1_c2",
+  "submission": "research/out/submission_head_2026-11-06.csv",
+  "submission_validation": {
+    "exit": 0,
+    "status": "scored_no_cells",
+    "rows_in": 111,
+    "rows_valid": 111,
+    "n_problems": 0,
+    "problems": []
+  }
+}

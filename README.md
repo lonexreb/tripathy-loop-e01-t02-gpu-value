@@ -1,31 +1,38 @@
-# Tripathy Loop E01 - Track 02: Kalshi GPU Forecaster
+# Tripathy Loop E01 — Track 02: GPU Value
 
-Tripathy Loop lane `E01`, assigned provisionally to Pacific Track 02: Recursive Self-Improvement. The candidate system is an evidence-grounded H100 forecaster evaluated by leakage-safe replay of settled Kalshi markets.
+This repository implements Pacific Track 2 Direction A: a leakage-safe research system that proposes bounded changes to a GPU rental-price forecaster, evaluates them on unseen historical origins, preserves negative results, and advances only candidates that pass the frozen acceptance rule.
 
-The scope is not implementation-ready. Independent Claude and ChatGPT reviews must resolve data availability, cutoff integrity, baseline timing, the primary metric, budget and stop condition before the start gate passes. See `docs/PROJECT_BRIEF.md` and `docs/CROSS_REVIEW_PROMPT.md`.
+The scored object is a set of `q10`, `q50`, and `q90` forecasts in USD per GPU-hour at horizons 1, 3, and 7 days. The primary metric is mean pinball loss; headline skill is measured against `last_value`, and `drift` is the practical baseline to beat.
 
-## Start gate
+## Current checkpoint
 
-Do not build idea-specific functionality until `experiment/manifest.json` contains a falsifiable hypothesis, baseline, metric, budget and stop condition.
+- Data pack `v0.1.1-handover`: published ZIP checksum verified; 672/672 manifest entries verified.
+- Frozen protocol: seven adapted H100/A100 posted-rental series, with disclosed drift fallback for the remaining final-origin headline series.
+- `F_0`: official drift baseline.
+- Cycle 1 `I_0`: two candidates proposed within budget.
+- `repricing_mixture`: rejected because its checkpoint interval crossed zero.
+- `conformal_trailing(window=45)`: accepted as `F_1`; checkpoint pooled skill improved from `+0.0891` to `+0.1186`, and interval coverage improved from `0.6655` to `0.7138`.
 
-## Commands
+## Reproduce
+
+The immutable pack, virtual environment, and generated outputs remain local and are ignored by Git.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev,modal]'
-pytest
-python -m tripathy_experiment.cli validate
-python -m tripathy_experiment.cli run --dry-run
+bash research/reproduce.sh
 ```
 
-## Repository contract
+The command verifies the pack, runs unit checks, rebuilds the baseline and Cycle 1, validates the submission, performs the expected leakage refusal, and prints deterministic hashes.
 
-- GitHub records code, review, test results and artifacts.
-- Linear records work, ownership and decisions.
-- Slack broadcasts linked updates to the existing channel ID currently displayed as `#tripathy-exp-01`; the standard target name is `#tl-e01-t02-kalshi`.
-- Claude Code owns this lane and delegates bounded subagent tasks.
-- Modal runs isolated compute when the selected idea requires it.
-- Vercel hosts only an idea-specific UI, if needed.
+## Repository map
 
-Read `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/EXPERIMENT_PROTOCOL.md` and `docs/SECURITY.md` before implementation.
+- `PLAN.md`: governing contract and execution plan.
+- `research/PROTOCOL.md`: frozen experimental protocol.
+- `research/origins.json`: development, checkpoint, protected, and official blocks.
+- `research/scientist/`: candidate forecasters, improver, and evaluator.
+- `research/lineage/`: accepted and rejected machine-readable lineage.
+- `docs/adr/0002-supersede-kalshi-scope.md`: scope migration decision.
+- `docs/superseded/kalshi/`: preserved former scope documents.
+
+## Lane
+
+E01 continues to use the existing GitHub history, Linear project, and Slack channel. Git history is preserved; the earlier Kalshi framing is superseded, not rewritten.

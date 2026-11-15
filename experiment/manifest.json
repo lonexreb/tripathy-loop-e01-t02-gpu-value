@@ -1,22 +1,23 @@
 {
   "schema_version": 1,
   "experiment_id": "01",
-  "status": "planning",
-  "question": "PROVISIONAL: Can a time-causal, evidence-grounded forecaster improve proper-scoring loss over a matched Kalshi market-implied forecast on settled H100 weekly and monthly markets?",
-  "hypothesis": "PROVISIONAL: An auditable forecast-score-diagnose-revise loop using cutoff-bounded Exa evidence and explicit economic features will reduce out-of-sample proper-scoring loss versus the contemporaneous Kalshi baseline.",
-  "primary_metric": "PROVISIONAL: paired delta in Brier score versus the time-matched Kalshi probability, with calibration and log loss as secondary metrics",
-  "baseline": "PROVISIONAL: Kalshi market-implied probability captured at the same forecast timestamp and before the market cutoff",
-  "budget_usd": 0,
-  "stop_condition": "",
+  "status": "running",
+  "question": "Can a bounded self-improving forecaster reduce unseen-origin pinball loss for posted GPU rental-price quantiles relative to the official drift baseline?",
+  "hypothesis": "A trailing conformal interval calibrated only from history available at each origin will reduce checkpoint mean pinball loss relative to drift without increasing development loss.",
+  "primary_metric": "Paired mean cell pinball-loss difference versus the parent forecaster, with a 90% origin-block bootstrap confidence interval",
+  "baseline": "Official starter drift forecast; last_value remains the skill denominator",
+  "budget_usd": 1,
+  "stop_condition": "Stop after two improver cycles, or earlier when no candidate passes the frozen checkpoint acceptance rule.",
   "dataset": {
-    "name": "Settled Kalshi H100 weekly and monthly markets",
-    "version": "pending feasibility audit",
-    "cutoff": "per-market cutoff or close; exact timestamp policy pending review",
-    "license": "pending source and terms verification"
+    "name": "gpu-price-pack",
+    "version": "v0.1.1-handover",
+    "cutoff": "2026-11-06 23:59:59 UTC",
+    "license": "CC BY 4.0 compilation with per-source licenses"
   },
   "reproducibility": {
-    "command": "python -m tripathy_experiment.cli run --dry-run",
-    "random_seeds": [],
-    "artifact_directory": "artifacts/runs"
+    "command": "bash research/reproduce.sh",
+    "random_seeds": [0, 1],
+    "artifact_directory": "research/out",
+    "lineage_directory": "research/lineage"
   }
 }

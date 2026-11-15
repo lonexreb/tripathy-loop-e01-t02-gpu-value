@@ -1,0 +1,22 @@
+{
+  "channel": "C0CHNFW0DB7",
+  "_workspace": "T0CHM33JRDH",
+  "_channel_names": {"displayed": "#tripathy-exp-01", "standard": "#tl-e01-t02-gpu-value"},
+  "_note": "approved migration update payload",
+  "text": "E01 lane update: Kalshi scope superseded; Track 2 Direction A protocol frozen, baseline slice and cycle 1 done",
+  "unfurl_links": false,
+  "blocks": [
+    {"type": "header", "text": {"type": "plain_text", "text": "Tripathy Loop E01 — Track 2 Direction A started"}},
+    {"type": "section", "text": {"type": "mrkdwn", "text": "*Scope change:* the provisional Kalshi replay scope is *superseded* (history kept, ADR 0002). Lane E01 now targets the Pacific Track 2 brief: q10/q50/q90 posted-rental forecasts, origin 2026-11-06, h=1/3/7, pinball loss, scored Sunday 2026-11-15."}},
+    {"type": "section", "fields": [
+      {"type": "mrkdwn", "text": "*Repo*\n<https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value|lonexreb/tripathy-loop-e01-t02-gpu-value> · branch `e01/track2-direction-a`"},
+      {"type": "mrkdwn", "text": "*Linear*\n<https://linear.app/tripathy/project/tripathy-loop-e01-track-02-kalshi-gpu-forecaster-4a9aac262fa8/overview|E01 project> (reused)"},
+      {"type": "mrkdwn", "text": "*Pack*\n`v0.1.1-handover`, zip SHA-256 + 672/672 manifest OK"},
+      {"type": "mrkdwn", "text": "*Adapted series*\n7 headline H100/A100 posted-rental series; drift fallback for the other 30"}
+    ]},
+    {"type": "section", "text": {"type": "mrkdwn", "text": "*Frozen protocol:* dev 09-01..09-30 · checkpoint 10-01..10-15 · protected 10-16..10-30 · daily origins, block bootstrap · as-of filtering on every input · no DATA.md §9 sources · negative results kept · bounded F_g/I_g with fixed-improver and no-Exa controls."}},
+    {"type": "section", "text": {"type": "mrkdwn", "text": "*Results so far:* drift beats last_value on every block (CI excludes 0) but 80% intervals cover only 0.59–0.67. Cycle 1 offline `I_0`: `repricing_mixture` *rejected* (+0.000124, CI crosses 0); `conformal_trailing` w=45 *accepted* as `F_1` (−0.000957, CI [−0.001539, −0.000315]; checkpoint skill +0.119 vs +0.089). `research/reproduce.sh` is one command, demo_out-independent, deterministic hashes."}},
+    {"type": "section", "text": {"type": "mrkdwn", "text": "*Remaining:* Cycle 2 common-start test, evidence bundle, calibration improvement toward 0.8 coverage, and final findings."}},
+    {"type": "context", "elements": [{"type": "mrkdwn", "text": "Next: cycle 2 (`I_1`, common-start vs `I_0` on protected) · artifacts: `research/PROTOCOL.md` · `research/lineage/` · `research/ops/`"}]}
+  ]
+}

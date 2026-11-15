@@ -13,3 +13,14 @@ build/
 .vercel/
 .DS_Store
 *.log
+*.py[cod]
+*.pem
+*.key
+secrets/
+
+# Track 2 inputs and generated artifacts stay local. The contract, published
+# checksums, and download instructions in source-downloads/ remain trackable.
+source-downloads/*.zip
+gpu-price-pack-v0.1.1-handover/
+demo_out/
+research/out/

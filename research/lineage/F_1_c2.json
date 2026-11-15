@@ -1,0 +1,313 @@
+{
+  "id": "F_1_c2",
+  "generation": 1,
+  "parent": "F_0",
+  "kind": "forecaster",
+  "status": "accepted",
+  "decision_reason": "checkpoint diff -0.000957 CI [-0.001539, -0.000315], development diff -0.000473",
+  "improver": "I_0",
+  "method": "conformal_trailing",
+  "params": {
+    "window": 45
+  },
+  "hypothesis": "recent realised |h-day log change| is a better width estimate than full-history quantiles (non-stationary volatility)",
+  "chain": {
+    "error": "80% interval covers 0.588 of development truths (target 0.80); below q10 0.160, above q90 0.252",
+    "unresolved_question": "is the miss a width problem (volatility understated) or a location problem (median off)?",
+    "evidence": "median_signal=+0.000234 (drift median vs flat median); coverage by horizon {'1': 0.731, '3': 0.591, '7': 0.443}",
+    "hypothesis": "recent realised |h-day log change| is a better width estimate than full-history quantiles (non-stationary volatility)",
+    "executable_change": "forecaster.py --method conformal_trailing --params '{\"window\": 45}'"
+  },
+  "forecaster": {
+    "script": "research/scientist/forecaster.py",
+    "method": "conformal_trailing",
+    "params": {
+      "window": 45
+    }
+  },
+  "budget_used": {
+    "evaluations": 2,
+    "blocks_read": [
+      "development",
+      "checkpoint"
+    ],
+    "wall_clock_s": 1.4
+  },
+  "scores": {
+    "development": {
+      "n_cells": 626,
+      "pinball": 0.02312,
+      "skill_pooled": 0.1794,
+      "skill_median_of_series": 0.164359,
+      "coverage": {
+        "below_q10": 0.135783,
+        "within_q10_q90": 0.65016,
+        "above_q90": 0.214058
+      }
+    },
+    "checkpoint": {
+      "n_cells": 290,
+      "pinball": 0.028602,
+      "skill_pooled": 0.118592,
+      "skill_median_of_series": 0.137744,
+      "coverage": {
+        "below_q10": 0.051724,
+        "within_q10_q90": 0.713793,
+        "above_q90": 0.234483
+      }
+    }
+  },
+  "paired_vs_parent": {
+    "development": {
+      "overall": {
+        "n_cells": 626,
+        "pinball_a": 0.02312,
+        "pinball_b": 0.023593,
+        "mean_diff": -0.000473,
+        "skill_a_vs_b": 0.020068,
+        "share_a_better": 0.268371,
+        "share_tied": 0.357827,
+        "coverage_a_q10_q90": 0.65016
+      },
+      "n_origins": 30,
+      "bootstrap_90ci_mean_diff": [
+        -0.000942,
+        -2.4e-05
+      ],
+      "ci_excludes_zero": true,
+      "by_horizon": {
+        "1": {
+          "n_cells": 208,
+          "pinball_a": 0.009737,
+          "pinball_b": 0.00999,
+          "mean_diff": -0.000253,
+          "skill_a_vs_b": 0.025314,
+          "share_a_better": 0.139423,
+          "share_tied": 0.629808,
+          "coverage_a_q10_q90": 0.75
+        },
+        "3": {
+          "n_cells": 208,
+          "pinball_a": 0.019078,
+          "pinball_b": 0.019306,
+          "mean_diff": -0.000228,
+          "skill_a_vs_b": 0.011825,
+          "share_a_better": 0.293269,
+          "share_tied": 0.240385,
+          "coverage_a_q10_q90": 0.649038
+        },
+        "7": {
+          "n_cells": 210,
+          "pinball_a": 0.040378,
+          "pinball_b": 0.041313,
+          "mean_diff": -0.000935,
+          "skill_a_vs_b": 0.022627,
+          "share_a_better": 0.371429,
+          "share_tied": 0.204762,
+          "coverage_a_q10_q90": 0.552381
+        }
+      },
+      "by_series": {
+        "afhubbard.hyperscaler_spot.A100_40GB.spot.median": {
+          "n_cells": 88,
+          "pinball_a": 0.011325,
+          "pinball_b": 0.012513,
+          "mean_diff": -0.001187,
+          "skill_a_vs_b": 0.0949,
+          "share_a_better": 0.227273,
+          "share_tied": 0.329545,
+          "coverage_a_q10_q90": 0.909091
+        },
+        "afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median": {
+          "n_cells": 88,
+          "pinball_a": 0.011929,
+          "pinball_b": 0.013741,
+          "mean_diff": -0.001812,
+          "skill_a_vs_b": 0.131879,
+          "share_a_better": 0.204545,
+          "share_tied": 0.318182,
+          "coverage_a_q10_q90": 0.681818
+        },
+        "gpurentalprices.marketplace_ask.H100_80GB.spot.median": {
+          "n_cells": 90,
+          "pinball_a": 0.065281,
+          "pinball_b": 0.063994,
+          "mean_diff": 0.001287,
+          "skill_a_vs_b": -0.020114,
+          "share_a_better": 0.388889,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.955556
+        },
+        "gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median": {
+          "n_cells": 90,
+          "pinball_a": 0.027259,
+          "pinball_b": 0.027641,
+          "mean_diff": -0.000382,
+          "skill_a_vs_b": 0.013831,
+          "share_a_better": 0.166667,
+          "share_tied": 0.755556,
+          "coverage_a_q10_q90": 0.566667
+        },
+        "gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median": {
+          "n_cells": 90,
+          "pinball_a": 0.009125,
+          "pinball_b": 0.009677,
+          "mean_diff": -0.000552,
+          "skill_a_vs_b": 0.057018,
+          "share_a_better": 0.266667,
+          "share_tied": 0.655556,
+          "coverage_a_q10_q90": 0.555556
+        },
+        "gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median": {
+          "n_cells": 90,
+          "pinball_a": 0.012926,
+          "pinball_b": 0.013148,
+          "mean_diff": -0.000222,
+          "skill_a_vs_b": 0.016861,
+          "share_a_better": 0.377778,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.511111
+        },
+        "gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median": {
+          "n_cells": 90,
+          "pinball_a": 0.023481,
+          "pinball_b": 0.023973,
+          "mean_diff": -0.000492,
+          "skill_a_vs_b": 0.02051,
+          "share_a_better": 0.244444,
+          "share_tied": 0.444444,
+          "coverage_a_q10_q90": 0.377778
+        }
+      }
+    },
+    "checkpoint": {
+      "overall": {
+        "n_cells": 290,
+        "pinball_a": 0.028602,
+        "pinball_b": 0.029559,
+        "mean_diff": -0.000957,
+        "skill_a_vs_b": 0.032371,
+        "share_a_better": 0.434483,
+        "share_tied": 0.082759,
+        "coverage_a_q10_q90": 0.713793
+      },
+      "n_origins": 15,
+      "bootstrap_90ci_mean_diff": [
+        -0.001539,
+        -0.000315
+      ],
+      "ci_excludes_zero": true,
+      "by_horizon": {
+        "1": {
+          "n_cells": 100,
+          "pinball_a": 0.014809,
+          "pinball_b": 0.014813,
+          "mean_diff": -5e-06,
+          "skill_a_vs_b": 0.000317,
+          "share_a_better": 0.25,
+          "share_tied": 0.24,
+          "coverage_a_q10_q90": 0.77
+        },
+        "3": {
+          "n_cells": 95,
+          "pinball_a": 0.02965,
+          "pinball_b": 0.029938,
+          "mean_diff": -0.000288,
+          "skill_a_vs_b": 0.00963,
+          "share_a_better": 0.473684,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.726316
+        },
+        "7": {
+          "n_cells": 95,
+          "pinball_a": 0.042074,
+          "pinball_b": 0.044702,
+          "mean_diff": -0.002628,
+          "skill_a_vs_b": 0.058782,
+          "share_a_better": 0.589474,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.642105
+        }
+      },
+      "by_series": {
+        "afhubbard.hyperscaler_spot.A100_40GB.spot.median": {
+          "n_cells": 45,
+          "pinball_a": 0.005911,
+          "pinball_b": 0.006346,
+          "mean_diff": -0.000435,
+          "skill_a_vs_b": 0.068517,
+          "share_a_better": 0.4,
+          "share_tied": 0.333333,
+          "coverage_a_q10_q90": 0.911111
+        },
+        "afhubbard.hyperscaler_spot.A100_SXM_80GB.spot.median": {
+          "n_cells": 45,
+          "pinball_a": 0.010404,
+          "pinball_b": 0.011519,
+          "mean_diff": -0.001115,
+          "skill_a_vs_b": 0.096791,
+          "share_a_better": 0.2,
+          "share_tied": 0.2,
+          "coverage_a_q10_q90": 0.755556
+        },
+        "gpurentalprices.marketplace_ask.H100_80GB.spot.median": {
+          "n_cells": 40,
+          "pinball_a": 0.053837,
+          "pinball_b": 0.053018,
+          "mean_diff": 0.000819,
+          "skill_a_vs_b": -0.01544,
+          "share_a_better": 0.625,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.8
+        },
+        "gpurentalprices.neocloud_rate_card.A100_40GB.on_demand.median": {
+          "n_cells": 40,
+          "pinball_a": 0.044415,
+          "pinball_b": 0.048076,
+          "mean_diff": -0.00366,
+          "skill_a_vs_b": 0.076139,
+          "share_a_better": 0.575,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.875
+        },
+        "gpurentalprices.neocloud_rate_card.A100_SXM_80GB.on_demand.median": {
+          "n_cells": 40,
+          "pinball_a": 0.020209,
+          "pinball_b": 0.02091,
+          "mean_diff": -0.000701,
+          "skill_a_vs_b": 0.033511,
+          "share_a_better": 0.45,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.25
+        },
+        "gpurentalprices.neocloud_rate_card.H100_80GB.on_demand.median": {
+          "n_cells": 40,
+          "pinball_a": 0.03223,
+          "pinball_b": 0.034423,
+          "mean_diff": -0.002193,
+          "skill_a_vs_b": 0.063705,
+          "share_a_better": 0.6,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.7
+        },
+        "gpurentalprices.neocloud_rate_card.H100_SXM_80GB.on_demand.median": {
+          "n_cells": 40,
+          "pinball_a": 0.038321,
+          "pinball_b": 0.037779,
+          "mean_diff": 0.000542,
+          "skill_a_vs_b": -0.014338,
+          "share_a_better": 0.225,
+          "share_tied": 0.0,
+          "coverage_a_q10_q90": 0.675
+        }
+      }
+    }
+  },
+  "cells": {
+    "development": "research/out/cells_development_F_1_c2.csv",
+    "checkpoint": "research/out/cells_checkpoint_F_1_c2.csv"
+  },
+  "evidence_ids": [],
+  "created_utc": "2026-11-15T05:20:41+00:00",
+  "selected_as": "F_1"
+}

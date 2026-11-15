@@ -2,7 +2,7 @@
 
 import modal
 
-APP_NAME = "tripathy-loop-e01-t02-kalshi"
+APP_NAME = "tripathy-loop-e01-t02-gpu-value"
 app = modal.App(APP_NAME)
 image = modal.Image.debian_slim(python_version="3.11").pip_install(".")
 

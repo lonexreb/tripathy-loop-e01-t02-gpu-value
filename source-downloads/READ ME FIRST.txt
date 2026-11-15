@@ -1,0 +1,30 @@
+READ ME FIRST
+GPU price data pack for Track 2 of the AI Research Hackathon (Recursive Self-Improvement by Pacific: An AI Scientist for GPU Value), San Francisco, 14 to 15 November 2026
+
+
+WHAT IS IN THIS FOLDER
+
+1. gpu-price-pack-v0.1.1-handover_pack-only.zip (about 285 MB)
+   The data pack: public, openly licensed data on GPU rental prices and hardware. Its last day is 6 November 2026.
+
+2. ZIP.sha256
+   The checksum line of the zip, if you want to check your download.
+
+
+HOW TO START
+
+1. Download the zip and unpack it. You get one folder, gpu-price-pack-v0.1.1-handover.
+2. The starter kit is the folder "starter" inside the pack. The track's full brief, linked on the event's resources page, has the quickstart, the forecast file layout, how forecasts are scored and what to submit. Follow the brief.
+3. Read DATA.md in the pack. It says what each table is and what it is not.
+
+To check that the pack is intact, run this inside the pack folder; no output means every file matches:
+
+   sha256sum -c MANIFEST.sha256 | grep -v ': OK$'
+
+On a Mac use "shasum -a 256 -c" in place of "sha256sum -c".
+
+
+TWO THINGS TO KNOW
+
+1. Every rental price in the pack is a posted price. None is a price paid.
+2. If you use the pack, keep its ATTRIBUTION.md with your work. Each table keeps the licence and the credit of its source.

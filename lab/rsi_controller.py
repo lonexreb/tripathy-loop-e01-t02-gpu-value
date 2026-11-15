@@ -473,7 +473,8 @@ class StrandsAgentDriver:
             self.name = f"strands_modal:{model_id}"
             self.model = OpenAIModel(client_args={"api_key": api_key, "base_url": base + "/v1", "default_headers": headers,
                                                   "timeout": 1800, "max_retries": 2},
-                                     model_id=model_id, params={"temperature": 0.2, "max_tokens": 12000})
+                                     model_id=model_id, params={"temperature": 0.2, "max_tokens": int(os.environ.get("LLM_MAX_TOKENS", "64000")),
+                                                                "reasoning_effort": os.environ.get("LLM_REASONING_EFFORT", "high")})
         elif provider == "litellm":
             from strands.models.litellm import LiteLLMModel
             self.model = LiteLLMModel(model_id=model_id, params={"temperature": 0.2})
@@ -519,13 +520,13 @@ class StrandsAgentDriver:
         agent = Agent(model=self.model, tools=tools, system_prompt=AGENT_CONTRACT + "\n\n" + playbook, callback_handler=None)
         agent(f"Iteration {ctrl.next_iteration()} of stage {ctrl.cfg.stage}. Call inspect_current_state, diagnose the "
               "Discovery errors, then call propose_and_test_forecaster exactly once with one falsifiable hypothesis and a "
-              "complete forecaster. Finally call update_scientist_prompt with your revised playbook.")
+              "complete forecaster (keep it under ~250 lines). Finally call update_scientist_prompt with your revised playbook.")
         if not results:
             raise RuntimeError("the Strands agent finished without proposing a candidate")
         return results[-1]
 
 
-DEFAULT_MODAL_LLM_URL = "https://ananthbashyam1--ep-glm-5-3-flash-server.us-west.modal.direct"
+DEFAULT_MODAL_LLM_URL = "https://ananthbashyam1--ep-glm-5-3-server.us-west.modal.direct"
 
 
 def modal_proxy_headers() -> dict:

@@ -10,3 +10,6 @@
   `https://ananthbashyam1--ep-glm-5-3-server.us-west.modal.direct` (zai-org/GLM-5.3) with Modal proxy auth
   (`MODAL_PROXY_TOKEN_ID` / `MODAL_PROXY_TOKEN_SECRET` in the gitignored `.env`). No Anthropic SDK.
 - `lab/` is immutable to the agent (hash-checked); the agent owns `workspace/`.
+- Research memory (lab/memory.py): every candidate is archived in `outputs/candidates/<STAGE>/iter_NNN/` (code, diff vs
+  champion, result.json); playbook versions in `outputs/playbooks/<STAGE>/`; the playbook's LAB-PROTECTED block is
+  re-inserted verbatim by the lab. Offline memory-loop tests: `tests/test_memory_loop.py` (no pack needed).

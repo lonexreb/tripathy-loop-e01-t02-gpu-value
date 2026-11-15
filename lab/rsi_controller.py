@@ -1,8 +1,10 @@
 """Dual-layer RSI orchestrator: Devin API / Strands drivers, 4-gate promotion and a git commit/revert state machine.
 
 The agent owns workspace/ (forecaster.py, scientist_prompt.md, theory_of_market.md) and talks to the lab only
-through four tools: inspect_current_state, propose_and_test_forecaster, update_scientist_prompt and, in
-PACK_PLUS_EXA only, search_exa_signals. Candidates are audited (no I/O, no network), evaluated in a separate
+through its tools: inspect_current_state, inspect_candidate, propose_and_test_forecaster, update_scientist_prompt and,
+in PACK_PLUS_EXA only, search_exa_signals. Cross-iteration memory (candidate archive under outputs/candidates/,
+experiment registry, exploration directive, protected playbook block, playbook versions under outputs/playbooks/)
+lives in lab/memory.py. Candidates are audited (no I/O, no network), evaluated in a separate
 process with a timeout, scored with full diagnostics on Discovery and only the four gate aggregates on Holdout,
 then PROMOTED (champion overwritten, workspace committed) or REVERTED / RUNTIME_ERROR (forecaster.py restored
 from the champion backup; the playbook and the notebook keep the agent's notes so negative results persist).
@@ -22,8 +24,12 @@ import tempfile
 import time
 from pathlib import Path
 
-from lab.config import (BENCHMARK_ORIGIN, DISCOVERY_ORIGINS, HOLDOUT_ORIGINS, STAGE_PACK_ONLY, STAGE_PACK_PLUS_EXA,
+from lab.config import (DISCOVERY_ORIGINS, HOLDOUT_ORIGINS, STAGE_PACK_ONLY, STAGE_PACK_PLUS_EXA,
                         LabConfig, load_config)
+from lab.memory import (HYPOTHESIS_FAMILIES, NOVELTY_LEVELS, PROTECTED_BLOCK, archive_candidate, collapse_warnings,
+                        demote_headings, diff_stats, dropped_guardrails, enforce_protected, exploration_directive,
+                        family_stats, fit_json, gate_margins, is_no_op, metric_delta, near_misses, normalize_family,
+                        normalize_novelty, notebook_index, registry_row, unified_diff)
 from lab.sandbox import audit_forecaster_source
 from lab.workbench import CandidateWorkbench, audit_analysis_source, clip_json
 
@@ -36,6 +42,10 @@ ANALYSIS_TIMEOUT_S = 300
 GIT_IDENTITY = ["-c", "user.name=AI Scientist Lab", "-c", "user.email=ai-scientist-lab@localhost"]
 MAX_PLAYBOOK_CHARS = 24_000
 MAX_THEORY_UPDATE_CHARS = 6_000
+MAX_STATE_CHARS = 60_000
+STATE_SHRINK_ORDER = [("theory_of_market_tail_md", "tail"), ("scientist_prompt_md", "head"), ("ledger_tail", "drop_old"),
+                      ("champion_discovery_diagnostics", "head"), ("near_misses", "drop_last"),
+                      ("experiment_registry", "drop_old"), ("champion_forecaster_py", "head")]
 
 
 def utc_now() -> str:
@@ -170,6 +180,10 @@ class RSIController:
         self.champ_dir = self.cfg.outputs_dir / "champions" / self.cfg.stage
         self.state_path = self.champ_dir / "champion_state.json"
         self.backup_path = self.champ_dir / "forecaster.py"
+        self.candidates_dir = self.cfg.outputs_dir / "candidates" / self.cfg.stage
+        self.playbooks_dir = self.cfg.outputs_dir / "playbooks" / self.cfg.stage
+        self.iteration_budget: dict | None = None  # {"planned": N, "first_iteration": i} set by the run loop
+        self._pending_archive = self._pending_discovery = None
         self._lab_hash = self._hash_lab()
 
     # --------------------------------------------------------------------------- utilities ----
@@ -275,35 +289,104 @@ class RSIController:
         return state
 
     # ------------------------------------------------------------------------------- tools ----
-    def inspect_current_state(self, ledger_tail: int = 12) -> dict:
+    def budget(self) -> dict | None:
+        b = self.iteration_budget
+        if not b:
+            return None
+        this = self.next_iteration()
+        done = this - b["first_iteration"]
+        return {"planned": b["planned"], "this_iteration": done + 1, "remaining": max(0, b["planned"] - done - 1)}
+
+    def experiment_registry(self) -> list[dict]:
+        """Every experiment of this stage as one compact row (never truncated, unlike the full-record ledger tail)."""
+        rows = []
+        for r in self.ledger_entries(self.cfg.stage):
+            if r.get("status") in EXPERIMENT_STATUSES + ("SEED", "FORK"):
+                row = registry_row(r)
+                if r.get("status") in EXPERIMENT_STATUSES:
+                    row["archived"] = (self.candidates_dir / f"iter_{int(r['iteration']):03d}" / "forecaster.py").exists()
+                rows.append(row)
+        return rows
+
+    def _ensure_protected_playbook(self) -> None:
+        p = self.cfg.prompt_path
+        text, changed = enforce_protected(p.read_text() if p.exists() else "# AI Scientist research playbook\n")
+        if changed:
+            p.write_text(text)
+
+    def inspect_current_state(self, ledger_tail: int = 4, include_playbook: bool = True) -> dict:
         champ = self.bootstrap()
-        ledger = [{k: r.get(k) for k in ("iteration", "status", "hypothesis", "discovery", "holdout", "gates", "screen",
-                                          "benchmark_2026_10_24", "error")}
+        playbook = enforce_protected(self.cfg.prompt_path.read_text() if self.cfg.prompt_path.exists() else "")[0]
+        ledger = [{k: r.get(k) for k in ("iteration", "status", "hypothesis_family", "novelty", "hypothesis", "discovery",
+                                          "discovery_delta_vs_champion", "holdout", "screen", "gates", "gate_margins", "no_op",
+                                          "candidate_dir", "benchmark_2026_10_24", "error") if r.get(k) is not None}
                   for r in self.ledger_entries(self.cfg.stage) if r.get("status") in EXPERIMENT_STATUSES + ("SEED", "FORK")]
+        registry = self.experiment_registry()
         theory = self.cfg.theory_path.read_text() if self.cfg.theory_path.exists() else ""
-        return {
+        state = {
             "stage": self.cfg.stage, "enable_exa": self.cfg.enable_exa, "next_iteration": self.next_iteration(),
-            "scientist_prompt_md": self.cfg.prompt_path.read_text() if self.cfg.prompt_path.exists() else "",
-            "theory_of_market_tail_md": theory[-8000:],
-            "champion_forecaster_py": self.backup_path.read_text(),
-            "champion_discovery_diagnostics": champ["discovery"],
-            "champion_holdout_aggregates": champ["holdout"],
+            "budget": self.budget(),
+            "exploration_directive": exploration_directive(registry, self.budget()),
+            "hypothesis_families": HYPOTHESIS_FAMILIES,
+            "family_stats": family_stats(registry),
+            "playbook_lint": {"collapse_warnings": collapse_warnings(playbook)},
+            "experiment_registry": registry,
+            "near_misses": near_misses(registry),
             "promotion_gates": gate_descriptions(self.cfg),
+            "champion_holdout_aggregates": champ["holdout"],
+            "champion_discovery_diagnostics": champ["discovery"],
+            "champion_forecaster_py": self.backup_path.read_text(),
             "ledger_tail": ledger[-ledger_tail:],
+            "notebook_index": notebook_index(theory),
+            "theory_of_market_tail_md": theory[-8000:],
         }
+        if include_playbook:
+            state["scientist_prompt_md"] = playbook
+        return state
 
     def _tested_shas(self) -> set[str]:
         return {r.get("code_sha256") for r in self.ledger_entries(self.cfg.stage) if r.get("status") in SCREEN_STATUSES}
 
-    def propose_and_test_forecaster(self, hypothesis: str, theory_update_md: str, new_forecaster_code: str) -> dict:
+    def render_state(self, max_chars: int = MAX_STATE_CHARS, include_playbook: bool = False) -> str:
+        """inspect_current_state as valid JSON within a character budget (low-value fields shrink first)."""
+        return fit_json(self.inspect_current_state(include_playbook=include_playbook), max_chars, STATE_SHRINK_ORDER)
+
+    def inspect_candidate(self, iteration: int, max_chars: int = 40_000) -> dict:
+        """An archived candidate: code, diff against the CURRENT champion, gates/margins and Discovery diagnostics."""
+        d = self.candidates_dir / f"iter_{int(iteration):03d}"
+        if not (d / "forecaster.py").exists():
+            have = sorted(x.name for x in self.candidates_dir.glob("iter_*")) if self.candidates_dir.exists() else []
+            return {"error": f"no archived candidate for iteration {iteration}", "archived": have}
+        code = (d / "forecaster.py").read_text()
+        res = json.loads((d / "result.json").read_text()) if (d / "result.json").exists() else {}
+        out = {"iteration": iteration, "status": res.get("status"), "hypothesis": res.get("hypothesis"),
+               "hypothesis_family": res.get("hypothesis_family"), "gates": res.get("gates"),
+               "gate_margins": res.get("gate_margins"), "holdout": res.get("holdout"),
+               "holdout_delta_vs_champion": res.get("holdout_delta_vs_champion"),
+               "discovery_delta_vs_champion": res.get("discovery_delta_vs_champion"), "error": res.get("error"),
+               "diff_vs_current_champion": unified_diff(self.backup_path.read_text(), code),
+               "discovery_diagnostics": res.get("discovery_diagnostics"), "forecaster_py": code}
+        return json.loads(fit_json(out, max_chars, [("discovery_diagnostics", "head"), ("forecaster_py", "head"),
+                                                    ("diff_vs_current_champion", "head")]))
+
+    def propose_and_test_forecaster(self, hypothesis: str, theory_update_md: str, new_forecaster_code: str,
+                                    hypothesis_family: str = "", novelty: str = "",
+                                    builds_on_iteration: int | None = None) -> dict:
         """Two-stage test: audit -> duplicate check -> Discovery (sanity + improvement screen) -> Holdout gates."""
         t0 = time.time()
         champ = self.bootstrap()
         self._check_lab_intact()
         it = self.next_iteration()
         code_sha = sha256_text(new_forecaster_code)
-        base = {"iteration": it, "hypothesis": hypothesis[:2000], "code_sha256": code_sha,
-                "parent_code_sha256": champ["code_sha256"]}
+        champion_code = self.backup_path.read_text()
+        cand_dir = self.candidates_dir / f"iter_{it:03d}"
+        base = {"iteration": it, "hypothesis": hypothesis[:2000], "hypothesis_family": normalize_family(hypothesis_family),
+                "novelty": normalize_novelty(novelty), "code_sha256": code_sha, "parent_code_sha256": champ["code_sha256"],
+                "candidate_dir": str(cand_dir.relative_to(self.root)),
+                "diff_vs_champion_lines": diff_stats(unified_diff(champion_code, new_forecaster_code))}
+        if builds_on_iteration is not None:
+            base["builds_on_iteration"] = int(builds_on_iteration)
+        self._pending_archive = (cand_dir, new_forecaster_code, champion_code)
         problems = audit_forecaster_source(new_forecaster_code)
         if problems:
             status = "RUNTIME_ERROR" if any(p.startswith("SyntaxError") for p in problems) else "REJECTED_FIREWALL"
@@ -319,9 +402,11 @@ class RSIController:
             return self._finish(base, "RUNTIME_ERROR", theory_update_md, t0, error=res.get("error"),
                                 traceback_tail=res.get("traceback_tail"))
         disc = res["discovery"]
+        self._pending_discovery = disc
         screen = screen_candidate(disc, champ.get("discovery"), self.cfg)
         vs = compare_discovery(disc, champ.get("discovery"))
         rec = {**base, "discovery": self._discovery_summary(disc), "screen": screen,
+               "discovery_delta_vs_champion": metric_delta(disc, champ.get("discovery")),
                "vs_champion_discovery": {k: vs[k] for k in vs if k != "slice_deltas_best_first"}}
         if not screen["pass"]:
             self._restore_champion()
@@ -329,6 +414,7 @@ class RSIController:
                                 f"pre-Holdout screen failed ({', '.join(screen['failed'])}): "
                                 + json.dumps({k: screen["checks"][k] for k in screen["failed"]}, default=str))
             out = self._ledger({**rec, "status": screen["status"], "seconds": round(time.time() - t0, 1)})
+            self._archive(out)
             return {**out, "vs_champion_discovery": vs, "discovery_diagnostics": disc}
         hres = self.run_evaluation(self.cfg.forecaster_path, phase="holdout")
         if not hres.get("ok"):
@@ -341,9 +427,13 @@ class RSIController:
             gates["holdout_sanity"] = {"pass": False}
             gates["all_pass"] = False
         rec.update(holdout=res["holdout"], benchmark_2026_10_24=res["benchmark_2026_10_24"], gates=gates,
+                   gate_margins=gate_margins(gates),
+                   holdout_delta_vs_champion=metric_delta(res["holdout"], champ["holdout"]),
                    champion_holdout_before=champ["holdout"])
+        if is_no_op(res["holdout"], champ["holdout"]):
+            rec["no_op"] = True
         if gates["all_pass"]:
-            self._append_theory(it, hypothesis, theory_update_md, "PROMOTED", gates)
+            self._append_theory(it, hypothesis, theory_update_md, "PROMOTED", gates, family=base["hypothesis_family"])
             shutil.copyfile(self.cfg.forecaster_path, self.backup_path)
             commit = self.git_commit(f"[{self.cfg.stage}] iter {it} PROMOTED: {hypothesis[:60]}")
             state = {"stage": self.cfg.stage, "iteration": it, "code_sha256": code_sha, "git_commit": commit,
@@ -355,43 +445,78 @@ class RSIController:
             out = self._ledger({**rec, "status": "PROMOTED", "git_commit": commit, "seconds": round(time.time() - t0, 1)})
         else:
             self._restore_champion()
-            self._append_theory(it, hypothesis, theory_update_md, "REVERTED", gates)
+            self._append_theory(it, hypothesis, theory_update_md, "REVERTED", gates, family=base["hypothesis_family"],
+                                no_op=bool(rec.get("no_op")))
             out = self._ledger({**rec, "status": "REVERTED", "seconds": round(time.time() - t0, 1)})
+        self._archive(out)
         return {**out, "vs_champion_discovery": vs, "discovery_diagnostics": res["discovery"]}
 
+    def _archive(self, rec: dict) -> None:
+        pending, disc = getattr(self, "_pending_archive", None), getattr(self, "_pending_discovery", None)
+        self._pending_archive = self._pending_discovery = None
+        if pending:
+            cand_dir, code, champion_code = pending
+            archive_candidate(cand_dir, code, champion_code, rec, disc)
+
     def _finish(self, base: dict, status: str, theory_update_md: str, t0: float, **extra) -> dict:
-        self._append_theory(base["iteration"], base["hypothesis"], theory_update_md, status, None, extra.get("error"))
-        return self._ledger({**base, "status": status, **extra, "seconds": round(time.time() - t0, 1)})
+        self._append_theory(base["iteration"], base["hypothesis"], theory_update_md, status, None, extra.get("error"),
+                            family=base.get("hypothesis_family"))
+        out = self._ledger({**base, "status": status, **extra, "seconds": round(time.time() - t0, 1)})
+        self._archive(out)
+        return out
 
     def _restore_champion(self) -> None:
         shutil.copyfile(self.backup_path, self.cfg.forecaster_path)
 
     def _append_theory(self, it: int, hypothesis: str, update_md: str, status: str, gates: dict | None,
-                       error: str | None = None) -> None:
-        lines = [f"\n## [{self.cfg.stage}] iteration {it}: {status} ({utc_now()})", f"**Hypothesis.** {hypothesis.strip()}", ""]
+                       error: str | None = None, family: str | None = None, no_op: bool = False) -> None:
+        tag = f" [{family}]" if family and family != "unspecified" else ""
+        lines = [f"\n## [{self.cfg.stage}] iteration {it}: {status}{' (NO_OP)' if no_op else ''}{tag} ({utc_now()})",
+                 f"**Hypothesis.** {hypothesis.strip()}", ""]
         if update_md and update_md.strip():
-            lines += [update_md.strip()[:MAX_THEORY_UPDATE_CHARS], ""]
+            lines += [demote_headings(update_md.strip()[:MAX_THEORY_UPDATE_CHARS]), ""]
         if gates:
             g = gates
             lines.append(f"*Lab verdict:* holdout pooled {g['gate1_pooled_gain']['value']} (need > {g['gate1_pooled_gain']['threshold']}), "
                          f"median {g['gate2_breadth']['value']} (need >= {g['gate2_breadth']['threshold']}), "
                          f"coverage {g['gate3_calibration']['value']} (band {g['gate3_calibration']['band']}, or within "
-                         f"{g['gate3_calibration'].get('max_distance_to_target')} of 0.80), horizons {g['gate4_horizon_floor']['value']}.")
+                         f"{g['gate3_calibration'].get('max_distance_to_target')} of 0.80), horizons {g['gate4_horizon_floor']['value']}."
+                         f" Gate margins {gate_margins(g)}.")
+            if no_op:
+                lines.append("*Lab verdict:* NO_OP: Holdout aggregates are identical to the champion's; the change never fired.")
         if error:
             lines.append(f"*Lab verdict:* {status}: {error[:600]}")
         with open(self.cfg.theory_path, "a", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
 
     def update_scientist_prompt(self, new_playbook_md: str, rationale: str, iteration: int | None = None) -> dict:
-        """Replace the playbook. `iteration` labels the ledger row; by default the last finished experiment."""
+        """Replace the playbook (`iteration` labels the ledger row). The lab-protected block is restored verbatim if the rewrite altered it; every
+        previous version is archived; dropped guardrail bullets and "freeze the champion" language are reported."""
         self._check_lab_intact()
-        text = (new_playbook_md or "").strip()
-        if len(text) < 200 or len(text) > MAX_PLAYBOOK_CHARS:
-            return {"status": "PROMPT_REJECTED", "error": f"playbook must be 200..{MAX_PLAYBOOK_CHARS} characters"}
-        self.cfg.prompt_path.write_text(text + "\n")
+        text, restored = enforce_protected((new_playbook_md or "").strip())
+        budget = MAX_PLAYBOOK_CHARS + len(PROTECTED_BLOCK)
+        if len(text) < 200 + len(PROTECTED_BLOCK) or len(text) > budget:
+            return {"status": "PROMPT_REJECTED",
+                    "error": f"playbook (excluding the protected block) must be 200..{MAX_PLAYBOOK_CHARS} characters"}
+        old = self.cfg.prompt_path.read_text() if self.cfg.prompt_path.exists() else ""
         it = self.next_iteration() - 1 if iteration is None else iteration
-        return self._ledger({"status": "PROMPT_UPDATED", "iteration": it,
-                             "rationale": (rationale or "")[:1500], "prompt_sha256": sha256_text(text)})
+        if old:
+            self.playbooks_dir.mkdir(parents=True, exist_ok=True)
+            n = len(list(self.playbooks_dir.glob("*.md")))
+            (self.playbooks_dir / f"v{n:03d}_before_iter{it:03d}_update.md").write_text(old)
+        dropped = dropped_guardrails(old, text)
+        warnings = collapse_warnings(text)
+        self.cfg.prompt_path.write_text(text)
+        rec = {"status": "PROMPT_UPDATED", "iteration": it, "rationale": (rationale or "")[:1500], "prompt_sha256": sha256_text(text),
+               "protected_block_restored": restored, "dropped_guardrails": dropped, "collapse_warnings": warnings}
+        out = self._ledger(rec)
+        if dropped or warnings or restored:
+            out["lab_feedback"] = ("Saved. " + ("The lab-protected block was restored. " if restored else "") +
+                                   (f"You dropped {len(dropped)} guardrail bullet(s); re-add them unless an iteration "
+                                    "falsified them (cite it). " if dropped else "") +
+                                   ("Your playbook argues for stopping/freezing; the lab decides stopping, so replace it "
+                                    "with ranked untried directions. " if warnings else ""))
+        return out
 
     def _agent_file(self, kind: str, code: str) -> Path:
         d = self.cfg.outputs_dir / "runs"
@@ -510,6 +635,12 @@ Discovery pooled skill beats the champion's; otherwise it is REJECTED_SANITY / R
 candidate is reverted, but your notebook entry and playbook persist: write down what you learned, including negative
 results, and make every hypothesis falsifiable. Never hard-code dates, series-specific constants tuned to a single
 origin, or anything that could only be known after an origin.
+
+MEMORY: every candidate (including reverted and crashed ones) is archived with its code, its diff against the champion
+it was tested against, its gate margins (>0 passes) and its full Discovery diagnostics; read one with
+inspect_candidate(iteration). The experiment registry lists every experiment of this stage with its hypothesis family.
+Tag each proposal with hypothesis_family (one of: {", ".join(HYPOTHESIS_FAMILIES)}) and novelty
+({" | ".join(NOVELTY_LEVELS)}); set builds_on_iteration when you start from an archived candidate instead of the champion.
 """.strip()
 
 PROPOSAL_SCHEMA = {
@@ -520,29 +651,47 @@ PROPOSAL_SCHEMA = {
         "new_forecaster_code": {"type": "string", "description": "the complete new workspace/forecaster.py"},
         "new_playbook_md": {"type": "string", "description": "the complete revised workspace/scientist_prompt.md"},
         "playbook_rationale": {"type": "string"},
+        "hypothesis_family": {"type": "string", "enum": list(HYPOTHESIS_FAMILIES)},
+        "novelty": {"type": "string", "enum": list(NOVELTY_LEVELS)},
+        "builds_on_iteration": {"type": ["integer", "null"],
+                                "description": "archived candidate this one starts from (null = the champion)"},
     },
-    "required": ["hypothesis", "theory_update_md", "new_forecaster_code", "new_playbook_md", "playbook_rationale"],
+    "required": ["hypothesis", "theory_update_md", "new_forecaster_code", "new_playbook_md", "playbook_rationale",
+                 "hypothesis_family", "novelty"],
 }
 
 
-def build_iteration_prompt(state: dict) -> str:
+def build_iteration_prompt(state: dict, max_near_miss_diff_chars: int = 6000) -> str:
+    """Single-shot prompt (Devin API driver). Order: contract, directive, full registry, near-miss diffs, champion,
+    playbook, notebook tail. Each section has its own budget, so no section can push another out of the prompt."""
     def j(x, n):
-        return json.dumps(x, default=str)[:n]
+        s = json.dumps(x, default=str)
+        return s if len(s) <= n else s[:n] + " ...[truncated by the lab]"
 
+    near = []
+    for nm in state.get("near_misses") or []:
+        diff = (nm.get("diff_vs_current_champion") or "")[:max_near_miss_diff_chars]
+        near.append(f"### Iteration {nm['it']} ({nm.get('family')}), gate margins {nm.get('margins')}\n"
+                    f"{nm.get('hypothesis', '')}\n```diff\n{diff}\n```")
     return "\n\n".join([
         AGENT_CONTRACT,
-        "## Your current research playbook (workspace/scientist_prompt.md)\n" + state["scientist_prompt_md"],
-        "## Notebook tail (workspace/theory_of_market.md)\n" + state["theory_of_market_tail_md"],
-        "## Champion forecaster (workspace/forecaster.py)\n```python\n" + state["champion_forecaster_py"] + "\n```",
-        "## Champion Discovery diagnostics\n" + j(state["champion_discovery_diagnostics"], 14000),
+        "## Exploration directive (from the lab)\n" + state.get("exploration_directive", ""),
+        "## Experiment registry (every experiment of this stage, oldest first)\n" + j(state.get("experiment_registry"), 16000),
+        "## Hypothesis families tried\n" + j(state.get("family_stats"), 2000),
+        "## Closest near-misses (diff vs the current champion)\n" + ("\n\n".join(near) or "none yet"),
+        "## Promotion gates\n" + j(state["promotion_gates"], 1000),
         "## Champion Holdout aggregates\n" + j(state["champion_holdout_aggregates"], 2000),
-        "## Promotion gates\n" + j(state["promotion_gates"], 2000),
-        "## Experiment ledger (most recent last)\n" + j(state["ledger_tail"], 9000),
+        "## Champion Discovery diagnostics\n" + j(state["champion_discovery_diagnostics"], 14000),
+        "## Champion forecaster (workspace/forecaster.py)\n```python\n" + state["champion_forecaster_py"] + "\n```",
+        "## Most recent experiments (full records)\n" + j(state["ledger_tail"], 9000),
+        "## Your current research playbook (workspace/scientist_prompt.md)\n" + state.get("scientist_prompt_md", ""),
+        "## Notebook tail (workspace/theory_of_market.md)\n" + state["theory_of_market_tail_md"],
         f"## Task (iteration {state['next_iteration']}, stage {state['stage']})\n"
         "Diagnose the Discovery errors, state ONE falsifiable hypothesis, and write the complete new forecaster.py that "
-        "tests it. Also return a revised playbook (heuristics, guardrails and coding rules learned so far). Work only from "
-        "the material above: do not clone repositories, open pull requests or browse for GPU price data. Reply ONLY via "
-        "the structured output.",
+        "tests it (from the champion or from a near-miss above; set builds_on_iteration accordingly). Follow the "
+        "exploration directive. Also return a revised playbook (heuristics, guardrails and ranked untried ideas; keep the "
+        "lab-protected block). Work only from the material above: do not clone repositories, open pull requests or "
+        "browse for GPU price data. Reply ONLY via the structured output.",
     ])
 
 
@@ -562,7 +711,9 @@ class ScriptedDriver:
             p = {"hypothesis": doc.splitlines()[0], "theory_update_md": doc, "new_forecaster_code": code}
         if p.get("new_playbook_md"):
             ctrl.update_scientist_prompt(p["new_playbook_md"], p.get("playbook_rationale", ""), iteration=ctrl.next_iteration())
-        return ctrl.propose_and_test_forecaster(p["hypothesis"], p["theory_update_md"], p["new_forecaster_code"])
+        return ctrl.propose_and_test_forecaster(p["hypothesis"], p["theory_update_md"], p["new_forecaster_code"],
+                                                p.get("hypothesis_family", ""), p.get("novelty", ""),
+                                                p.get("builds_on_iteration"))
 
 
 class DevinAPIDriver:
@@ -642,10 +793,14 @@ class DevinAPIDriver:
 
     def run_iteration(self, ctrl: RSIController, i: int) -> dict:
         state = ctrl.inspect_current_state()
+        for nm in state["near_misses"]:
+            nm["diff_vs_current_champion"] = ctrl.inspect_candidate(nm["it"]).get("diff_vs_current_champion", "")
         so = self.propose(build_iteration_prompt(state), f"AI Scientist {state['stage']} iteration {state['next_iteration']}")
+        res = ctrl.propose_and_test_forecaster(so["hypothesis"], so.get("theory_update_md", ""), so["new_forecaster_code"],
+                                               so.get("hypothesis_family", ""), so.get("novelty", ""),
+                                               so.get("builds_on_iteration"))
         if so.get("new_playbook_md"):
-            ctrl.update_scientist_prompt(so["new_playbook_md"], so.get("playbook_rationale", ""), iteration=ctrl.next_iteration())
-        res = ctrl.propose_and_test_forecaster(so["hypothesis"], so.get("theory_update_md", ""), so["new_forecaster_code"])
+            ctrl.update_scientist_prompt(so["new_playbook_md"], so.get("playbook_rationale", ""))
         res["devin_session"] = self.sessions[-1]
         return res
 
@@ -727,13 +882,18 @@ class StrandsAgentDriver:
         tools = [tool(getattr(tb, n)) for n in AgentToolbox.TOOL_NAMES]
         if ctrl.cfg.enable_exa:
             tools.append(tool(tb.search_exa_signals))
-        playbook = ctrl.cfg.prompt_path.read_text() if ctrl.cfg.prompt_path.exists() else ""
+        ctrl._ensure_protected_playbook()
+        playbook = ctrl.cfg.prompt_path.read_text()
+        directive = exploration_directive(ctrl.experiment_registry(), ctrl.budget())
         agent = Agent(model=self.model, tools=tools, system_prompt=AGENT_CONTRACT + "\n\n" + WORKBENCH_PROTOCOL + "\n\n"
                       + playbook, callback_handler=None)
-        prompt = (f"Iteration {tb.iteration} of stage {ctrl.cfg.stage}. Call inspect_current_state and diagnose the "
-                  f"Discovery errors. Then edit the candidate with small edit_candidate changes, dry-run it on Discovery "
-                  f"(at most {tb.max_dry_runs} dry runs), submit_candidate_for_holdout exactly once with one falsifiable "
-                  f"hypothesis, and finally call update_scientist_prompt with your revised playbook.")
+        prompt = (f"Iteration {tb.iteration} of stage {ctrl.cfg.stage}. Lab directive: {directive}\n"
+                  "Call inspect_current_state and diagnose the Discovery errors (use inspect_candidate on near-misses "
+                  "or on the experiments your idea relates to). Then edit the candidate with small edit_candidate "
+                  f"changes (or start from a near-miss with load_candidate), dry-run it on Discovery (at most "
+                  f"{tb.max_dry_runs} dry runs), submit_candidate_for_holdout exactly once with one falsifiable "
+                  "hypothesis, its family and novelty, and finally call update_scientist_prompt with your revised "
+                  "playbook (keep the lab-protected block; record what you learned and rank untried directions).")
         retries = int(os.environ.get("LLM_MAX_TOKEN_RETRIES", "2"))
         for attempt in range(retries + 2):
             try:
@@ -788,9 +948,9 @@ NUDGE_SUBMIT = ("You have not called submit_candidate_for_holdout yet. Finish th
 class AgentToolbox:
     """The in-iteration tools of the Strands driver as plain methods (wrapped with strands.tool by the driver)."""
 
-    TOOL_NAMES = ("inspect_current_state", "view_candidate", "edit_candidate", "write_candidate", "show_candidate_diff",
-                  "dry_run_discovery", "analyze_discovery", "submit_candidate_for_holdout",
-                  "propose_and_test_forecaster", "update_scientist_prompt")
+    TOOL_NAMES = ("inspect_current_state", "inspect_candidate", "view_candidate", "edit_candidate", "write_candidate",
+                  "load_candidate", "show_candidate_diff", "dry_run_discovery", "analyze_discovery",
+                  "submit_candidate_for_holdout", "propose_and_test_forecaster", "update_scientist_prompt")
 
     def __init__(self, ctrl: RSIController, max_dry_runs: int | None = None, max_analyses: int | None = None,
                  max_submissions: int = 1):
@@ -803,11 +963,28 @@ class AgentToolbox:
         self.max_analyses = max_analyses if max_analyses is not None else int(os.environ.get("RSI_MAX_ANALYSES", "6"))
         self.max_submissions = max_submissions
         self.n_dry_runs = self.n_analyses = 0
+        self.builds_on: int | None = None
         self.results: list[dict] = []
 
     def inspect_current_state(self) -> str:
-        """Return the playbook, notebook tail, champion code, Discovery diagnostics, Holdout aggregates and ledger."""
-        return clip_json(self.ctrl.inspect_current_state(), 60000)
+        """Return the exploration directive, the full experiment registry (every experiment with family and gate
+        margins), near-misses, champion code, Discovery diagnostics, Holdout aggregates, recent full ledger records
+        and the notebook tail. Your playbook is already in the system prompt."""
+        return self.ctrl.render_state(include_playbook=False)
+
+    def inspect_candidate(self, iteration: int) -> str:
+        """Return an archived candidate (any status): its code, its diff against the current champion, gates, gate
+        margins and full Discovery diagnostics. Use it to build on near-misses instead of restarting."""
+        return clip_json(self.ctrl.inspect_candidate(iteration), 45000)
+
+    def load_candidate(self, iteration: int) -> str:
+        """Replace the working candidate with the archived candidate of `iteration` (e.g. a near-miss) so you can
+        refine it with edit_candidate. Pass builds_on_iteration=<iteration> when you submit."""
+        d = self.ctrl.candidates_dir / f"iter_{int(iteration):03d}" / "forecaster.py"
+        if not d.exists():
+            return json.dumps({"ok": False, "error": f"no archived candidate for iteration {iteration}"})
+        self.builds_on = int(iteration)
+        return json.dumps(self.wb.write(d.read_text()))
 
     def view_candidate(self, start_line: int = 1, end_line: int = 0) -> str:
         """Show the current candidate forecaster with line numbers (end_line 0 = to the end)."""
@@ -845,26 +1022,35 @@ class AgentToolbox:
         self.n_analyses += 1
         return clip_json(self.ctrl.run_discovery_analysis(analysis_code, origins, iteration=self.iteration), 20000)
 
-    def submit_candidate_for_holdout(self, hypothesis: str, theory_update_md: str) -> str:
-        """Evaluate the current candidate (Discovery diagnostics + 4 Holdout gates) and promote or revert it.
-        Allowed once per iteration."""
-        return self._submit(hypothesis, theory_update_md, self.wb.code)
+    def submit_candidate_for_holdout(self, hypothesis: str, theory_update_md: str, hypothesis_family: str = "",
+                                     novelty: str = "", builds_on_iteration: int = -1) -> str:
+        """Evaluate the current candidate: pre-Holdout screen on Discovery, then the 4 Holdout gates; promote or revert.
+        Allowed once per iteration. hypothesis_family is one of the lab's families (see inspect_current_state),
+        novelty is incremental or bold, builds_on_iteration is the archived candidate you started from (-1 = the
+        champion). The candidate is archived whatever the verdict."""
+        return self._submit(hypothesis, theory_update_md, self.wb.code, hypothesis_family, novelty, builds_on_iteration)
 
-    def propose_and_test_forecaster(self, hypothesis: str, theory_update_md: str, new_forecaster_code: str) -> str:
+    def propose_and_test_forecaster(self, hypothesis: str, theory_update_md: str, new_forecaster_code: str,
+                                    hypothesis_family: str = "", novelty: str = "", builds_on_iteration: int = -1) -> str:
         """Legacy one-shot tool: replace the whole candidate with new_forecaster_code and submit it for Holdout.
         Counts as this iteration's single submission."""
         self.wb.write(new_forecaster_code)
-        return self._submit(hypothesis, theory_update_md, new_forecaster_code)
+        return self._submit(hypothesis, theory_update_md, new_forecaster_code, hypothesis_family, novelty,
+                            builds_on_iteration)
 
-    def _submit(self, hypothesis: str, theory_update_md: str, code: str) -> str:
+    def _submit(self, hypothesis: str, theory_update_md: str, code: str, hypothesis_family: str = "",
+                novelty: str = "", builds_on_iteration: int | None = -1) -> str:
         if len(self.results) >= self.max_submissions:
             return json.dumps({"status": "SUBMISSION_BUDGET_EXHAUSTED",
                                "error": "this iteration's Holdout submission was already used; call update_scientist_prompt"})
         if code == self.wb.base_code:
             return json.dumps({"status": "SUBMISSION_REJECTED", "error": "candidate is identical to the champion"})
-        r = self.ctrl.propose_and_test_forecaster(hypothesis, theory_update_md, code)
+        if builds_on_iteration is None or int(builds_on_iteration) < 0:
+            builds_on_iteration = self.builds_on
+        r = self.ctrl.propose_and_test_forecaster(hypothesis, theory_update_md, code, hypothesis_family, novelty,
+                                                  builds_on_iteration)
         self.results.append(r)
-        return clip_json(r, 30000)
+        return fit_json(r, 30000, [("discovery_diagnostics", "head"), ("champion_holdout_before", "head")])
 
     def update_scientist_prompt(self, new_playbook_md: str, rationale: str) -> str:
         """Replace workspace/scientist_prompt.md (your research playbook) with a revised version."""
@@ -947,7 +1133,8 @@ def write_ablation_summary(cfg: LabConfig) -> Path:
         d, h, b = r.get("discovery") or {}, r.get("holdout") or {}, r.get("benchmark_2026_10_24") or {}
         rows.append({
             "stage": r["stage"], "iteration": r.get("iteration"), "status": r["status"], "driver": r.get("driver"),
-            "hypothesis": (r.get("hypothesis") or "")[:160], "discovery_pooled_skill": d.get("pooled_skill"),
+            "hypothesis": (r.get("hypothesis") or "")[:160], "hypothesis_family": r.get("hypothesis_family"),
+            "novelty": r.get("novelty"), "no_op": bool(r.get("no_op")), "discovery_pooled_skill": d.get("pooled_skill"),
             "discovery_coverage_80": d.get("coverage_80"), "holdout_pooled_skill": h.get("pooled_skill"),
             "holdout_median_skill": h.get("median_skill"), "holdout_coverage_80": h.get("coverage_80"),
             **{f"holdout_skill_h{k}": v for k, v in (h.get("skill_by_horizon") or {}).items()},
@@ -1006,7 +1193,9 @@ def main() -> int:
     driver = make_driver(a.driver, a.candidates)
     ctrl = RSIController(cfg, driver_name=driver.name)
     ctrl.bootstrap()
+    ctrl._ensure_protected_playbook()
     n = len(a.candidates) if a.driver == "scripted" and a.candidates else a.iterations
+    ctrl.iteration_budget = {"planned": n, "first_iteration": ctrl.next_iteration()}
     n_errors = run_iterations(ctrl, driver, n)
     ctrl.checkpoint_notes(f"notebook checkpoint after {n} iteration(s)")
     write_ablation_summary(cfg)

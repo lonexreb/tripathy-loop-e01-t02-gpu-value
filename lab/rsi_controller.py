@@ -87,7 +87,7 @@ from lab.procedure import (
     validate_revision,
     write_lock,
 )
-from lab.sandbox import audit_forecaster_source, import_policy_text
+from lab.sandbox import audit_benchmark_specific, audit_forecaster_source, import_policy_text
 from lab.workbench import CandidateWorkbench, audit_analysis_source, clip_json
 
 WORKSPACE_FILES = ("workspace/forecaster.py", "workspace/scientist_prompt.md", "workspace/theory_of_market.md")
@@ -174,8 +174,12 @@ def paired_origin_stats(cand_by_origin: dict | None, ref_by_origin: dict | None,
     return {k: (_r(v, 6) if isinstance(v, float) else v) for k, v in st.items()}
 
 
-def evaluate_gates(holdout: dict, champion_holdout: dict | None, cfg: LabConfig, paired: dict | None = None) -> dict:
-    """The four promotion gates, evaluated strictly on Holdout aggregates (missing / non-finite values fail).
+def evaluate_gates(holdout: dict, champion_holdout: dict | None, cfg: LabConfig, paired: dict | None = None,
+                   cost: dict | None = None) -> dict:
+    """The promotion gates, evaluated strictly on Holdout aggregates (missing / non-finite values fail).
+
+    `cost` = {"candidate": seconds/origin, "champion": seconds/origin} adds the complexity-aware gate 5: extra compute
+    must be paid for by measured gain (cost_ratio - 1 <= cost_beta0 + cost_beta1 * pooled gain). Missing cost = pass.
 
     `paired` (paired_origin_stats of candidate vs champion on Holdout) only matters when gates.pooled_gain_z is set:
     the required gain is then pooled_gain_z paired standard errors instead of the fixed pooled_min_gain."""
@@ -207,6 +211,13 @@ def evaluate_gates(holdout: dict, champion_holdout: dict | None, cfg: LabConfig,
                                 "pass": all(by_h.get(str(h)) is not None and by_h[str(h)] >= g.horizon_floor
                                             for h in cfg.horizons)},
     }
+    cc, cm = _num((cost or {}).get("candidate")), _num((cost or {}).get("champion"))
+    gain = (pooled - champ_pooled) if pooled is not None and champ_pooled is not None else 0.0
+    ratio = (cc / cm) if cc is not None and cm not in (None, 0) else None
+    allowed = 1.0 + g.cost_beta0 + g.cost_beta1 * max(gain, 0.0)
+    out["gate5_cost"] = {"value": _r(ratio), "threshold": _r(allowed), "seconds_per_origin": {"candidate": _r(cc, 3),
+                                                                                              "champion": _r(cm, 3)},
+                         "pass": ratio is None or ratio <= allowed + 1e-9}
     out["all_pass"] = all(v["pass"] for v in out.values())
     return out
 
@@ -404,6 +415,7 @@ class RSIController:
         commit = self.git_commit(f"[{self.cfg.stage}] seed champion")
         state = {"stage": self.cfg.stage, "iteration": 0, "code_sha256": sha256_text(code), "git_commit": commit,
                  "discovery": res["discovery"], "holdout": res["holdout"], "holdout_by_origin": res.get("holdout_by_origin"),
+                 "discovery_seconds_per_origin": res.get("discovery_seconds_per_origin"),
                  "benchmark_2026_10_24": res["benchmark_2026_10_24"], "since": utc_now()}
         self.state_path.write_text(json.dumps(state, indent=2))
         self._ledger({"status": "SEED", "iteration": 0, "hypothesis": "seed champion (current workspace forecaster)",
@@ -526,7 +538,7 @@ class RSIController:
         if hypothesis_card:
             base["hypothesis_card"] = {k: str(hypothesis_card.get(k) or "")[:800] for k in HYPOTHESIS_CARD_FIELDS}
         self._pending_archive = (cand_dir, new_forecaster_code, champion_code)
-        problems = audit_forecaster_source(new_forecaster_code)
+        problems = audit_forecaster_source(new_forecaster_code) + self.leakage_screen(new_forecaster_code)
         if problems:
             status = "RUNTIME_ERROR" if any(p.startswith("SyntaxError") for p in problems) else "REJECTED_FIREWALL"
             return self._finish(base, status, theory_update_md, t0, error="; ".join(problems)[:2000])
@@ -564,7 +576,9 @@ class RSIController:
         # per-origin Holdout losses stay inside the lab (champion state only): the agent sees the paired error, not them
         by_origin = hres.get("holdout_by_origin")
         paired = paired_origin_stats(by_origin, champ.get("holdout_by_origin"), self.cfg)
-        gates = evaluate_gates(res["holdout"], champ["holdout"], self.cfg, paired)
+        cost = {"candidate": (res.get("discovery_seconds_per_origin") or {}).get("mean"),
+                "champion": (champ.get("discovery_seconds_per_origin") or {}).get("mean")}
+        gates = evaluate_gates(res["holdout"], champ["holdout"], self.cfg, paired, cost)
         if not res.get("holdout_sanity_ok", True):
             gates["holdout_sanity"] = {"pass": False}
             gates["all_pass"] = False
@@ -583,6 +597,7 @@ class RSIController:
             commit = self.git_commit(f"[{self.cfg.stage}] iter {it} PROMOTED: {hypothesis[:60]}")
             state = {"stage": self.cfg.stage, "iteration": it, "code_sha256": code_sha, "git_commit": commit,
                      "discovery": res["discovery"], "holdout": res["holdout"], "holdout_by_origin": by_origin,
+                     "discovery_seconds_per_origin": res.get("discovery_seconds_per_origin"),
                      "benchmark_2026_10_24": res["benchmark_2026_10_24"], "since": utc_now()}
             self.state_path.write_text(json.dumps(state, indent=2))
             if self.use_git and commit:
@@ -906,6 +921,12 @@ class RSIController:
                "discovery": r.get("discovery"), "discovery_pooled_delta": delta, "code_file": f"{episode_id}.py"}
         write_lock(self.locks_dir, episode_id, rec)
         return rec
+
+    def leakage_screen(self, code: str) -> list[str]:
+        """Deterministic leakage critic: no evaluation-window date literals or hand-named scored series in a
+        submitted or locked forecaster (RRSI's screen-before-evaluate; Holdout is not the only backstop)."""
+        end = (dt.date.fromisoformat(self.cfg.holdout_origins[-1]) + dt.timedelta(days=max(self.cfg.horizons))).isoformat()
+        return audit_benchmark_specific(code, self.cfg.discovery_origins[0], end)
 
     def record_evidence(self, episode_id: str, query: str, origin_date: str, results, hypothesis_link: str = "") -> dict:
         """Evidence memory: every Exa search with its point-in-time sources and the hypothesis it was meant to inform."""
@@ -1831,7 +1852,7 @@ class AgentToolbox:
                                "characters: drivers, dated evidence, what would change the view) is required"})
         if self.wb.code == self.wb.base_code:
             return json.dumps({"status": "COMMIT_REJECTED", "error": "candidate is identical to the champion"})
-        problems = audit_forecaster_source(self.wb.code)
+        problems = audit_forecaster_source(self.wb.code) + self.ctrl.leakage_screen(self.wb.code)
         if problems:
             return json.dumps({"status": "COMMIT_REJECTED", "error": "; ".join(problems)[:1500]})
         meta = {"hypothesis": hypothesis[:2000], "model_class": normalize_model_class(model_class),

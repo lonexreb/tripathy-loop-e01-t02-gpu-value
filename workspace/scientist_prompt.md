@@ -1,4 +1,4 @@
-# AI Scientist research playbook (mutable; rewritten by the agent each iteration)
+# Scientist Playbook — GPU cloud rental price forecaster (stage PACK_ONLY)
 
 <!-- LAB-PROTECTED:BEGIN (owned by the lab; rewrites cannot remove or edit this block) -->
 ## Lab rules (protected)
@@ -25,22 +25,32 @@ with forecasts that would also be honest at the frozen 2026-11-06 origin.
   single series with width_rel 1e86 drove pooled skill to -1e84). Read `slices[].share_of_total_loss`
   and `worst_series` first; ~95% of champion loss is AWS hyperscaler_spot (h7 60%, h3 25%, h1 9%).
 - Fix the regime that carries the loss. A gain on a 1% slice cannot move the pooled skill.
-- **Read `mean_q50_error`/`bias_rel` vs `mean_width_rel` before choosing a lever.** h7 under-coverage is a
-  CENTERING problem (bias_rel -0.012 at h7, growing with horizon), not a width problem; the calm-zone worst
-  series lose on WIDTH (coverage 0.97), not q50 bias.
+- **Gate 1 needs pooled > champion + 0.003.** A lever confined to h1 (~10% of loss share) cannot clear it
+  alone even when it transfers perfectly (iteration 9: h1 holdout +0.0134, pooled only +0.0013, shortfall
+  0.0016). Single-horizon levers must be stacked with a second confirmed lever before submission, or
+  target h7 (60% of loss) directly.
+- **Read `mean_q50_error`/`bias_rel` vs `mean_width_rel` before choosing a lever.** h7 under-coverage was a
+  CENTERING problem (bias_rel -0.012 at h7), not a width problem; the calm-zone worst series lose on WIDTH
+  (coverage 0.97), not q50 bias.
 
 ## Method
 1. Diagnose from Discovery only: per-slice skill, breach asymmetry, worst series (bias vs width).
 2. State ONE falsifiable hypothesis with a mechanism and a predicted sign.
 3. Change one thing at a time so the ledger attributes the effect; keep everything else identical.
    (Exception: when stacking CONFIRMED levers, submit the stack and attribute via the per-lever deltas
-   already measured on Holdout — iterations 6 and 7 did this cleanly.)
+   already measured on Holdout — iterations 6 and 8 did this cleanly.)
 4. Record the result, including negative results and their magnitude. Use analyze_discovery to measure
    out-of-sample BEFORE spending a dry run or a submission (budget: ~6 analyses, 4 dry runs per iteration).
    NOTE: the analysis budget exhausts fast; plan analyses to answer several questions per call.
 5. **Pseudo-origin OOS analysis (fit at origin-28d, score the next 28 days inside Discovery) is the strongest
-   pre-screen available** — but iteration 7 showed its calm-origin width gains do NOT transfer to Holdout.
-   Treat pseudo-origin gains as necessary, not sufficient; weight Holdout evidence from prior iterations higher.
+   pre-screen available.** Iteration 8 is the decisive positive case: its 5/5-origin OOS gains transferred to
+   Holdout at ~5x their Discovery magnitude. Iteration 7 is the negative case: calm-origin WIDTH-conditioning
+   gains did not transfer. Iteration 9 confirms the pre-screen again (OOS 5/5 origins -> holdout +0.0134 h1).
+   Prefer unconditional smoothing over conditional rescaling.
+6. **In-sample Discovery diagnostics LIE about the median when a lever widens bands**: iteration 8's
+   Discovery in-sample median dropped -0.0146 while the holdout median ROSE +0.0193. The champion's
+   in-sample pooled z is optimal in-sample by construction, so any widening looks bad in-sample. Trust the
+   pseudo-origin OOS per-series median, not the in-sample median, when the lever changes width.
 
 ## HARD guardrails (all measured; cite the falsifying iteration to remove any of them)
 - **Bound every output.** Clip per-series z to a small multiple of pooled z AND clip final log-quantiles to
@@ -53,7 +63,8 @@ with forecasts that would also be honest at the frozen 2026-11-06 origin.
 - **Recent-window residuals do NOT estimate forward tails (falsified three times).** Iterations 2, 3 (recent
   split-conformal z) and 7 (pooled vol-state tail scaling: Discovery +0.0034, Holdout ~-0.0007 marginal).
   The champion's full-window in-sample pooled z is honest in expectation; conditioning its WIDTH on any
-  recency/state signal has now failed on Holdout every time it was tried. **Width levers are exhausted.**
+  recency/state signal has now failed on Holdout every time it was tried. **State/conditioned width levers
+  are dead; unconditional smoothing (ensemble averaging) is the one width lever that WORKS (iterations 8, 9).**
 - **Upper-tail widening via max(full-window, recent split-conformal) z: +0.0004 pooled, -0.0028 coverage.
   Dead lever — do not retry recent-window conformal in any form** (iterations 3, 5).
 - **Per-series local calibration: catastrophic (iteration 2). Dead lever.**
@@ -64,6 +75,12 @@ with forecasts that would also be honest at the frozen 2026-11-06 origin.
 - **Holdout coverage must stay >= 0.7358** (champion 0.7408, Gate-3 distance clause floor; the 2026-10-24
   benchmark sits at 0.7320). The iteration-6 stack sits at 0.7436 (in-band); iteration 7's variant at
   0.7429. Coverage-neutral-or-widening changes only; never narrow aggregate coverage below 0.74.
+  [Iteration-8 update: the new champion sits at 0.7514 and the 2026-10-24 benchmark at 0.7526 under it;
+  the binding constraint is now the Gate-3 band floor 0.74 — the "never below 0.74" clause stands.
+  Iteration-9 update: its variant sits at 0.7500, in-band.]
+- **Holdout coverage must stay >= 0.74** (Gate-3 band floor; the 2026-10-24 benchmark sits at 0.7526 under
+  the champion). The champion is at 0.7514; iteration 9's variant at 0.7500 (in-band). Coverage-neutral-or-
+  widening changes only; never narrow aggregate coverage below 0.74.
 - **Momentum-beta shrinkage toward zero, validation-selected (iteration 4): DEAD.** Holdout aggregates
   byte-identical to champion (validation always picked s = 1.0); where it fired on Discovery h1 it
   slightly hurt. The pooled OLS beta is already at the out-of-sample optimum.
@@ -76,15 +93,16 @@ with forecasts that would also be honest at the frozen 2026-11-06 origin.
   Do not "fix" bias with in-sample drift.
 - **Per-series conditional width rules are dead (iteration 7 analysis):** calm-only 0.95, continuous
   clip(vol-ratio, 0.93, 1.07), 0.95*vol-ratio — every cross-sectional conditional is worse than
-  unconditional out of sample. Only pooled/unconditional rules were ever competitive, and those fail on
-  Holdout (see the vol-state guardrail above).
+  unconditional out of sample. Only pooled/unconditional rules were ever competitive.
 - Cross-collector pull (kappa > 0) and cross-AZ consensus: falsified in iteration 1. Dead levers.
 - **Per-instance-type (cross_series) hierarchy is dead (iteration 5 analysis):** per-type betas/z are
   wash-to-worse out-of-sample. The pooled OLS beta is at the out-of-sample optimum.
 - **h7 tail widening is dead (iterations 3, 5):** +20% h7 tails: h7 skill -0.020 despite lifting h7
-  coverage 0.769 -> 0.808. h7's loss is centering, not width.
+  coverage 0.769 -> 0.808. h7's loss is centering, not width. [The ensemble's window-averaged vol scale
+  is NOT a fixed-factor widening and did fix h7 (+0.0133 holdout); the fixed-factor form remains dead.]
 - **Ensemble with a drift/persistence member is dead (iteration 5):** 0.8/0.2 momentum+drift quantile
-  average: pooled -0.0141, 10/11 origins worse.
+  average: pooled -0.0141, 10/11 origins worse. **Ensemble across perturbed hyperparameters of the SAME
+  model is CONFIRMED-POSITIVE (iterations 8, 9) — all members must share the good machinery.**
 - **Calm-regime (bottom-quartile local vol) z narrowing is dead (iteration 5):** pooled -0.0005,
   coverage -0.004.
 - **Exogenous market-median momentum is dead (iteration 6 analysis):** daily_statistics.hyperscaler_spot
@@ -100,65 +118,66 @@ with forecasts that would also be honest at the frozen 2026-11-06 origin.
   overlap to the benchmark series' collectors; index_prints has 0-12 rows. Dead as exogenous signals here.
 - **Regime-C q50 centering variants are dead (iteration 7 analysis):** recent-60 median drift and
   zero-pin are a wash on the 4-5 evaluable series.
+- **Train-day ensemble members {270,540} are dead (iteration 8 analysis):** the 270-day member is
+  mixed-to-negative at h7 (beta270 over-weights the 1-day lag: ~1.9 vs ~1.6 at h7). **avgbeta (averaging
+  betas with a single z) is a wash — the ensemble gain lives in averaging the z/vol scale, not the point
+  forecast.**
+- **Richer vol-window member sets are dead (iteration 9 analysis):** the 4-member set {7,14,21,28} is
+  OOS-NEGATIVE at h3 (avg -0.0026) and h7 (avg -0.0029), negative at every pseudo-origin. {7,14,28} is
+  the optimum size; richer is not better. Do not retry member-set expansion.
 - Pool parameters across series where per-series histories are short (< 60 days).
 - Point-in-time only: use rows dated on or before the origin; never hard-code dates or per-origin constants.
 - Code: numpy/pandas only, vectorised, < 20 s per origin; guard empty histories and NaNs; always return
   every target series; enforce q10 <= q50 <= q90 and positivity.
 
-## Current champion state (iteration 1, promoted; iterations 2-7 reverted against it)
-Discovery pooled 0.4429, median 0.2977, coverage 0.7795, breaches 10.1%/11.9%. Holdout pooled 0.2966,
-median 0.2552, coverage 0.7408, horizons 0.398/0.324/0.267. Regimes: A AWS spot = pooled momentum OLS on
-1/3/7-day log changes + local-vol conformal (full-window in-sample pooled z); B rate cards = empirical
-change quantiles + stickiness pin + IQR width; C marketplace/non-card = drift, kappa = 0.
+## Current champion state (iteration 8, PROMOTED; builds on iterations 1, 5, 6)
+Discovery pooled 0.4462, median 0.2831, coverage 0.7947, breaches 9.0%/11.5%. Holdout pooled 0.3088,
+median 0.2745, coverage 0.7514, horizons 0.4030/0.3369/0.2801. Gate margins all positive
+(gate1 +0.0092, gate2 +0.0243, gate3 +0.0156, gate4 +0.3001). Benchmark 2026-10-24: pooled 0.3252,
+median 0.2086, coverage 0.7526.
+Regimes: A AWS spot = pooled momentum OLS (train 540) + local-vol conformal with **quantiles averaged
+across vol_wins {7,14,28} at h3/h7** (h1 single-window + 0.95 tail narrowing); B rate cards = empirical
+change quantiles + stickiness pin + IQR width; C marketplace/non-card = trailing-60-day change quantiles
+(full-history fallback), kappa = 0.
 
-## CONFIRMED-POSITIVE levers (measured on BOTH Discovery and Holdout; stack, never submit alone)
-1. **h1 tail narrowing (iteration 5):** z -> z50 + 0.95*(z - z50) at h=1 only. Discovery +0.0005 pooled,
-   Holdout +0.00046 pooled, h1 +0.0047. Mechanism: h1 band over-covers (0.840 vs 0.80).
+## CONFIRMED-POSITIVE levers (measured on Holdout)
+1. **h1 tail narrowing (iteration 5):** z -> z50 + 0.95*(z - z50) at h=1 only. Holdout h1 +0.0047.
 2. **Regime-C recent-window change quantiles (iteration 6):** trailing 60-day h-day log-change quantiles
-   (min 30 samples, full-history fallback) for non-card daily-statistics series. Holdout contribution
-   ~+0.0005 pooled, coverage +0.0028 (0.7408 -> 0.7436, in-band), h7 +0.0009. ~Neutral on Discovery but
-   positive out of sample.
-   Stack of 1+2 (iteration 6): Holdout pooled 0.2976 (+0.000953), median 0.2586 (+0.0033), coverage
-   0.7436, h1 +0.0047 / h3 -0.0002 / h7 +0.0009. Gates 2/3/4 pass; Gate 1 shortfall 0.002.
-   **This stack is the best measured base; every future candidate should build on iteration 6.**
-
-## FALSIFIED on Holdout (iteration 7, do not retry)
-- **Pooled vol-state tail scaling at h3/h7** (market-wide median of current-14d-vol / own-90d-median-vol
-  < 1 -> narrow tails by clip(ratio, {3:0.95, 7:0.93}, 1.0)): Discovery +0.0034 marginal (9/11 origins
-  better, h7 slice coverage cost 0.0), but Holdout marginal ~-0.0007 pooled (total +0.000259 vs the
-  stack's +0.000953; h3 -0.0006, h7 -0.0001). The Holdout origins (2026-09-30..10-24) did not reward
-  calm-market narrowing even though 9/11 Discovery origins did. Gates 2/3/4 passed (coverage 0.7429
-  in-band); Gate 1 shortfall 0.0027. Lesson: pseudo-origin OOS gains in WIDTH do not transfer; the width
-  surface is exhausted.
+   (min 30 samples, full-history fallback) for non-card daily-statistics series. Holdout ~+0.0005 pooled,
+   coverage +0.0028.
+3. **Vol-window ensemble at h3/h7 (iteration 8, promoted):** average the three quantile sets across
+   vol_wins {7,14,28} (same pooled-OLS beta, train 540) at h3/h7 only. Holdout h3 +0.0124, h7 +0.0133,
+   pooled +0.0122, median +0.0193, coverage +0.0106. Transferred at ~5x its Discovery magnitude.
+4. **h1 vol-window ensemble + 0.90 re-center (iteration 9, CONFIRMED but sub-threshold):** extend the
+   ensemble to h1 with tail_scale 0.90 instead of the single-window 0.95. Holdout h1 +0.0134 (~1.5x its
+   Discovery +0.0091), pooled +0.0013, median +0.0008, coverage 0.7500 (in-band). REVERTED only on Gate 1
+   (needs +0.003 pooled; h1 carries ~10% of loss). **This lever is measured, confirmed and available for
+   stacking with any future confirmed lever — do not re-measure it, stack it.**
+5. **Stacking confirmed levers works cleanly** (iterations 6, 8): per-lever Holdout deltas add up.
 
 ## Ranked untried directions (the lab decides stopping; these are the next hypotheses)
-The Gate-1 gap is +0.002 over the champion (need pooled > 0.2996; the iteration-6 stack delivers 0.2976).
-Width levers are exhausted (see guardrails); the remaining headroom must come from q50/centering or from
-smoothing, not from band shape. Ideas ranked by expected value:
-1. **ensemble: parameter-perturbation quantile averaging (untried family variant).** Average the three
-   quantiles across perturbed hyperparameters of the CONFIRMED stack (e.g., vol_win 7/14/28, or
-   train_days 270/540) — a poor-man's bagging that fires unconditionally, changes q50 AND width slightly,
-   and cannot explode (all members are bounded by the same machinery). The momentum+drift ensemble was
-   negative because the drift member was bad; a same-model-different-window ensemble has no such member.
-   Measure OOS with pseudo-origin analysis first; the risk is that averaging widens q50 error on trending series.
-2. **exogenous_signals: hardware_fundamentals / capability_ladder / capability_units level anchoring
-   (untouched tables).** The marketplace q50 (bias_rel -0.05 at h3, -0.06 at h7) and the non-AWS
-   hyperscaler q50 could be anchored to a capability-adjusted cross-GPU level (price per capability unit).
-   Small slice (~4% of loss) but the bias is real and persistent; check whether the ladder maps to the
-   benchmark gpu_models at all before spending anything.
-3. **horizon_structure: iterated 1-day forecasts (h3 = 3 chained h1 steps).** The h1 machinery is the
-   best-calibrated (coverage 0.803 after narrowing); iterating it to h3/h7 with variance accumulation is
-   a genuinely different q50/width generator, not a width rescale. Bold; measure OOS first — the momentum
-   OLS at h1 chained 3/7 times may compound beta error.
-4. **robustness: log-band clip (last log value +/- 1.0) bundled into the next candidate.** Pure safety,
+The champion passes all gates with margin; the ensemble family is exhausted (all horizons ensembled,
+member size optimised, richer sets falsified). Remaining headroom, ranked by expected value:
+1. **horizon_structure: iterated 1-day forecasts (h3 = 3 chained h1 steps with variance accumulation).**
+   Genuinely different q50/width generator; the h1 machinery is the best-calibrated and the h1 ensemble
+   (iteration 9) is the strongest measured lever. Bold; measure OOS first — chaining compounds beta
+   error. If positive, STACK with the iteration-9 h1 lever to clear Gate 1.
+2. **exogenous_signals: hardware_fundamentals / capability_ladder level anchoring for the marketplace and
+   non-AWS hyperscaler q50 (bias_rel -0.05/-0.06 at h3/h7).** Small slice (~4% of loss) but the bias is
+   real and persistent; check whether the ladder maps to the benchmark gpu_models before spending anything.
+   If positive, stack with the iteration-9 lever.
+3. **robustness: log-band clip (last log value +/- 1.0) bundled into the next candidate.** Pure safety,
    expected NO_OP on scored cells; bundle, never submit alone.
-5. **regime_change on regime A (jump/step detection on sticky administered prices):** prior strongly
-   negative after seven falsified calibration levers; last resort.
+4. **cross_series: pooled cross-AZ residual correlation for the worst sticky series** (p5/p5e use1-az1/az4
+   coverage 0.97, skill -0.7): their loss is WIDTH on calm sticky zones; any per-series conditional is dead
+   (iteration 7), so only a pooled/unconditional treatment could work — low prior, measure OOS first.
+5. **ensemble: weighted member blend (e.g. 0.25/0.5/0.25 centred on 14) — LOW prior:** iteration 8 measured
+   the half-weighted blend ~equal to the plain average; the plain average is simpler and confirmed.
 
 ## Notebook (append-only ledger of what was tried)
 - Iteration 0 (SEED): naive baseline, holdout pooled 0.2306.
 - Iteration 1 (PROMOTED): multi-regime momentum + local-vol conformal. Holdout pooled 0.2966, coverage
-  0.7408. This is the champion.
+  0.7408. The champion for iterations 2-7.
 - Iteration 2 (REVERTED): per-series recent-window split-conformal z. Exploded (h7 pooled -1e18).
   Lesson: bound every output; per-series calibration is dead.
 - Iteration 3 (REVERTED): pooled recent-90-day split-conformal z as max with full-window z. +0.0004
@@ -168,20 +187,36 @@ smoothing, not from band shape. Ideas ranked by expected value:
 - Iteration 5 (REVERTED, Gate 1 shortfall 0.0025): four bold levers measured on Discovery — cross_series
   per-type hierarchy dead; ensemble momentum+drift dead (-0.0141); calm-vol narrowing dead (-0.0005);
   per-horizon drift mu_h dead (-0.0323). Survivor: h1 tail narrowing 0.95. Holdout +0.00046 pooled,
-  h1 +0.0047, gates 2/3/4 pass, Gate 1 shortfall 0.0025. CONFIRMED mechanism, sub-threshold alone.
-- Iteration 6 (REVERTED, closest near-miss, Gate 1 shortfall 0.002, builds on 5): measured exogenous
-  market-momentum OOS (negative, dead), long-lag momentum (dry run -0.0050, dead), regime-B spread floor
-  (dry run -0.0118, dead). Submitted the stack of the two confirmed levers: regime-C 60-day change
-  quantiles + h1 narrowing. Holdout pooled 0.2976 (+0.000953), median 0.2586 (+0.0033), coverage 0.7436
-  (in-band), h1 +0.0047 / h7 +0.0009. Gates 2/3/4 pass, Gate 1 shortfall 0.002. Both levers confirmed
-  positive on Holdout; the stack is the base to build on.
-- Iteration 7 (REVERTED, Gate 1 shortfall 0.0027, builds on 6, regime_change bold): pseudo-origin OOS
-  analysis (3 analyses) falsified z-centering (no-op), h7 biasfix (origin-dependent), h7 beta damping
-  (wash-to-worse), regime-C q50 centering (wash), aggregator_medians/index_prints (degenerate tables),
-  and ALL per-series conditional width rules. Survivor: pooled vol-state tail scaling (market-wide
-  median vol-ratio < 1 -> narrow h3 by 0.95, h7 by 0.93; h1 excluded after per-horizon decomposition).
-  Discovery +0.003766 (9/11 origins better, h7 slice coverage cost 0.0). Holdout: pooled 0.2969
-  (+0.000259 vs champion = the state lever cost ~-0.0007 vs the stack), coverage 0.7429 (in-band),
-  h1 +0.0047 / h3 -0.0006 / h7 -0.0001. Gates 2/3/4 pass, Gate 1 shortfall 0.0027. FALSIFIED: the
-  calm-origin width gains do not transfer to Holdout. Width levers are now exhausted with Holdout
-  evidence; future gains must come from q50/centering or smoothing (see ranked directions).
+  h1 +0.0047. CONFIRMED mechanism, sub-threshold alone.
+- Iteration 6 (REVERTED, Gate 1 shortfall 0.002): measured exogenous market-momentum OOS (negative, dead),
+  long-lag momentum (dry run -0.0050, dead), regime-B spread floor (dry run -0.0118, dead). Submitted the
+  stack of the two confirmed levers: regime-C 60-day change quantiles + h1 narrowing. Holdout pooled 0.2976
+  (+0.000953), median 0.2586, coverage 0.7436. Both levers confirmed positive on Holdout.
+- Iteration 7 (REVERTED, Gate 1 shortfall 0.0027): pseudo-origin OOS analysis falsified z-centering (no-op),
+  h7 biasfix (origin-dependent), h7 beta damping (wash-to-worse), regime-C q50 centering (wash),
+  aggregator_medians/index_prints (degenerate), and ALL per-series conditional width rules. Survivor: pooled
+  vol-state tail scaling. Discovery +0.003766 (9/11 origins) but Holdout +0.000259 only. FALSIFIED:
+  calm-origin width-conditioning gains do not transfer. Width levers via state conditioning exhausted.
+- Iteration 8 (PROMOTED, ensemble bold): vol-window parameter-perturbation ensemble at h3/h7. Pseudo-origin
+  OOS: ensemble {7,14,28} beats the single 14-day member at h3/h7 (5/5 origins each); train-day {270,540}
+  negative at h7 (excluded); avgbeta a wash (excluded). Dry run (h3/h7 only): pooled +0.003335, coverage
+  +0.0152 toward 0.80. HOLDOUT: pooled 0.3088 (+0.012226), median 0.2745 (+0.0193), coverage 0.7514
+  (+0.0106), h3 +0.0124 / h7 +0.0133. ALL 4 GATES PASS. The h3/h7 deltas transferred at ~5x their
+  Discovery magnitude. LESSONS: (a) unconditional smoothing of the band scale transfers; state-conditioned
+  rescaling does not; (b) in-sample Discovery median drops when widening (leakage) while the OOS/holdout
+  median RISES — trust the pseudo-origin OOS median; (c) restrict ensemble members to horizons where the
+  champion under-covers, keep calibrated horizons on their confirmed machinery.
+- Iteration 9 (REVERTED, Gate 1 shortfall 0.0016, ensemble incremental, builds on 8): extended the
+  vol-window ensemble to h1 with tail_scale 0.90 (re-centering the widened h1 band near the 0.80 target).
+  Pseudo-origin OOS (5 Discovery origins): h1 ensemble+0.90 beats single-window+0.95 by +0.0067..+0.0092
+  (5/5 origins, avg +0.0080); 0.92 avg +0.0059; 0.95 avg +0.0025; the 4-member set {7,14,21,28} at h3/h7
+  is OOS-NEGATIVE (avg -0.003 both horizons) — excluded. Dry run: pooled +0.000915, h1 +0.0091, coverage
+  0.7947 -> 0.7990, 8/11 origins better. HOLDOUT: h1 +0.0134 (~1.5x Discovery — the pre-screen transferred
+  again), pooled +0.0013, median +0.0008, coverage 0.7500 (in-band). REVERTED on Gate 1 only: h1 carries
+  ~10% of loss share, so even a perfectly-transferring h1 lever cannot clear the +0.003 pooled threshold
+  alone. LESSONS: (a) the h1 ensemble + 0.90 re-center is CONFIRMED-POSITIVE and archived (iteration 9) —
+  stack it with the next confirmed lever instead of re-measuring; (b) richer member sets are dead
+  ({7,14,28} is the optimum size); (c) the narrowing factor and the ensemble compose in log space and the
+  OOS optimum of the composition (0.90) beats either component alone; (d) Gate-1 arithmetic: a
+  single-horizon lever needs the horizon to carry enough loss share — h1 (~10%) is structurally
+  sub-threshold, h7 (~60%) is where a lever can clear Gate 1 by itself.

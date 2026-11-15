@@ -270,7 +270,7 @@ def test_exploding_quantile_is_caught_and_result_is_json_safe(mini_eval):
     assert d["sanity"]["ok"] is False and d["sanity"]["n_extreme_rows"] == 2
     assert d["pooled_skill"] < -1e70                      # the official scoring definition is unchanged
     inf = fc.assign(q90=np.where(fc["horizon_days"] == 7, np.inf, fc["q90"]))
-    assert ev.sanity(inf)["n_nonfinite_rows"] == 8
+    assert ev.sanity(inf, ORIGINS_D)["n_nonfinite_rows"] == 8
     json.dumps(finite_or_none(d), allow_nan=False, default=str)
 
 
@@ -360,3 +360,44 @@ def test_discovery_dry_run_is_budgeted_and_side_effect_free(ctrl):
     assert ctrl.next_iteration() == 1                                  # dry runs are not experiments
     assert ctrl.propose_and_test_forecaster("submit", "", CODE)["status"] == "PROMOTED"
     assert ctrl.dry_run_discovery("import os\nclass Forecaster: pass\n")["status"] == "DRY_RUN_REJECTED"
+
+
+# ---------------------------------------------------------------------------- review fixes ----
+def test_sanity_never_reads_truth_at_candidate_chosen_origins(mini_eval):
+    ev, series = mini_eval
+    fc = _forecaster(ev, _Band(series, explode=True), ORIGINS_D)
+    leaky = fc.assign(origin_date=ORIGINS_H[-1])                     # candidate claims a Holdout origin
+    rep = ev.sanity(leaky, ORIGINS_D)
+    assert rep["examples"] == [] or all(not np.isfinite(float(e["last_value"])) for e in rep["examples"])
+    assert rep["n_extreme_rows"] == 0                                 # no reference value -> nothing to compare
+
+
+def test_full_phase_scores_holdout_with_a_fresh_instance(mini_eval, tmp_path, monkeypatch):
+    ev, series = mini_eval
+    made = []
+
+    def load(p):
+        made.append(_Band(series))
+        return made[-1]
+    monkeypatch.setattr("lab.evaluator.load_forecaster", load)
+    ev.sandbox.get_pack_slice = lambda o, ids=None: {}
+    ev.full_run(tmp_path / "x.py", phase="full")
+    assert len(made) == 2 and set(made[1].seen) <= set(ORIGINS_H) | {"2026-10-24"}
+
+
+def test_invalid_rows_counted_once():
+    disc = {"pooled_skill": 0.5, "scoring": {"n_cells": 100, "n_cells_filled_from_baseline": 0},
+            "sanity": {"ok": True, "n_rows": 100, "n_crossing_rows": 3, "n_nonpositive_rows": 3, "n_invalid_rows": 3}}
+    sc = screen_candidate(disc, {"pooled_skill": 0.4}, LabConfig())
+    assert sc["checks"]["invalid_share"]["value"] == pytest.approx(0.03) and sc["pass"]
+
+
+def test_gate3_margin_follows_the_relative_rule():
+    from lab.memory import gate_margins
+    champ = {"pooled_skill": 0.2966, "median_skill": 0.2552, "coverage_80": 0.740819,
+             "skill_by_horizon": {"1": 0.4, "3": 0.3, "7": 0.25}}
+    cand = {**champ, "coverage_80": 0.737994}
+    g = evaluate_gates(cand, champ, LabConfig())
+    assert g["gate3_calibration"]["pass"] and gate_margins(g)["gate3"] >= 0
+    g = evaluate_gates({**champ, "coverage_80": 0.70}, champ, LabConfig())
+    assert not g["gate3_calibration"]["pass"] and gate_margins(g)["gate3"] < 0

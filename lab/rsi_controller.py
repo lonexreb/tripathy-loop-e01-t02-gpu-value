@@ -101,7 +101,7 @@ def evaluate_gates(holdout: dict, champion_holdout: dict | None, cfg: LabConfig)
         "gate2_breadth": {"value": _r(median), "threshold": _r(med_need), "pass": median is not None and median >= med_need},
         "gate3_calibration": {"value": _r(cov), "band": [g.coverage_low, g.coverage_high],
                               "hard_band": [g.coverage_hard_low, g.coverage_hard_high],
-                              "max_distance_to_target": _r(allowed_dist), "in_band": in_band,
+                              "target": g.coverage_target, "max_distance_to_target": _r(allowed_dist), "in_band": in_band,
                               "no_worse_than_champion": rel_ok, "pass": in_hard and (in_band or rel_ok)},
         "gate4_horizon_floor": {"value": {h: _r(v) for h, v in by_h.items()}, "threshold": g.horizon_floor,
                                 "pass": all(by_h.get(str(h)) is not None and by_h[str(h)] >= g.horizon_floor
@@ -118,8 +118,10 @@ def screen_candidate(discovery: dict, champion_discovery: dict | None, cfg: LabC
     sc = discovery.get("scoring") or {}
     n_cells = max(int(sc.get("n_cells") or 0), 1)
     n_rows = max(int(san.get("n_rows") or 0), 1)
-    invalid = max(int(sc.get("n_cells_filled_from_baseline") or 0) / n_cells,
-                  (int(san.get("n_crossing_rows") or 0) + int(san.get("n_nonpositive_rows") or 0)) / n_rows)
+    n_bad_rows = san.get("n_invalid_rows")
+    if n_bad_rows is None:
+        n_bad_rows = max(int(san.get("n_crossing_rows") or 0), int(san.get("n_nonpositive_rows") or 0))
+    invalid = max(int(sc.get("n_cells_filled_from_baseline") or 0) / n_cells, int(n_bad_rows) / n_rows)
     cand, champ = _num(discovery.get("pooled_skill")), _num((champion_discovery or {}).get("pooled_skill"))
     need = (champ if champ is not None else -1e9) + g.discovery_min_gain
     checks = {
@@ -1196,10 +1198,11 @@ def main() -> int:
     ctrl._ensure_protected_playbook()
     n = len(a.candidates) if a.driver == "scripted" and a.candidates else a.iterations
     ctrl.iteration_budget = {"planned": n, "first_iteration": ctrl.next_iteration()}
+    first = ctrl.next_iteration()
     n_errors = run_iterations(ctrl, driver, n)
     ctrl.checkpoint_notes(f"notebook checkpoint after {n} iteration(s)")
     write_ablation_summary(cfg)
-    return 1 if n and n_errors >= n else 0
+    return 1 if n and n_errors and ctrl.next_iteration() == first else 0
 
 
 def run_iterations(ctrl: RSIController, driver, n: int, max_consecutive_errors: int | None = None) -> int:

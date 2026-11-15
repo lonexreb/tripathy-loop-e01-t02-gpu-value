@@ -59,7 +59,8 @@ def sanity_report(fc: pd.DataFrame, last_value: pd.Series, max_abs_log_ratio: fl
     ex = ex.assign(last_value=lv[((~row_finite) | extreme)][:len(ex)])
     out = {
         "n_rows": int(n), "n_nonfinite_rows": int((~row_finite).sum()), "n_crossing_rows": int(crossing.sum()),
-        "n_nonpositive_rows": int(nonpos.sum()), "n_extreme_rows": int(extreme.sum()), "n_duplicate_rows": dup,
+        "n_nonpositive_rows": int(nonpos.sum()), "n_invalid_rows": int((crossing | nonpos).sum()),
+        "n_extreme_rows": int(extreme.sum()), "n_duplicate_rows": dup,
         "max_abs_log_ratio_vs_last": (round(float(np.nanmax(ratio)), 4) if np.isfinite(ratio).any() else None),
         "limit_abs_log_ratio": round(float(max_abs_log_ratio), 4),
         "examples": [{k: (v if not isinstance(v, float) or math.isfinite(v) else str(v)) for k, v in r.items()}
@@ -131,11 +132,17 @@ class Evaluator:
             timing[o] = round(time.time() - t0, 3)
         return pd.concat(frames, ignore_index=True), {"seconds_by_origin": timing}
 
-    def sanity(self, fc: pd.DataFrame) -> dict:
+    def sanity(self, fc: pd.DataFrame, origins) -> dict:
+        """Sanity report; last values are only looked up for the evaluated origins (rows claiming any other origin
+        get no reference value), so candidate-chosen dates can never read truth beyond the evaluated origins."""
         c = self._c
+        allowed = {str(o)[:10] for o in origins}
         pairs = fc[["series_id", "origin_date"]].astype(str).drop_duplicates()
         vals = {}
         for sid, o in pairs.itertuples(index=False):
+            if o[:10] not in allowed:
+                vals[(sid, o[:10])] = np.nan
+                continue
             lv = self.truth.last_value(sid, c.day_of(c.parse_date(o[:10])))
             vals[(sid, o[:10])] = np.nan if lv is None else float(lv[0])
         lvs = pd.Series(vals, dtype=float)
@@ -243,7 +250,7 @@ class Evaluator:
     # ---------------------------------------------------------------------------- top level ----
     def evaluate(self, forecaster, origins, expose_diagnostics: bool, with_sanity: bool = False):
         fc, info = self.forecast(forecaster, origins)
-        sanity = self.sanity(fc) if with_sanity or expose_diagnostics else None
+        sanity = self.sanity(fc, origins) if with_sanity or expose_diagnostics else None
         cells, sinfo = self.score(fc, origins)
         if not expose_diagnostics:
             agg = self.aggregates(cells)
@@ -273,6 +280,8 @@ class Evaluator:
         if phase in ("full", "discovery"):
             out["discovery"] = self.evaluate(f, list(self.cfg.discovery_origins), True)
         if phase in ("full", "holdout"):
+            if phase == "full":
+                f = load_forecaster(forecaster_path)  # fresh instance: same Holdout numbers as the two-stage path
             hold, hs = self.evaluate(f, list(self.cfg.holdout_origins), False, with_sanity=True)
             bench = self.benchmark_skill(f)
             out.update(holdout=hold, holdout_sanity_ok=bool(hs["ok"]),

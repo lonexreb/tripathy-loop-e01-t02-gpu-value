@@ -108,8 +108,14 @@ def gate_margins(gates: dict | None) -> dict | None:
     if num(g2.get("value")) is not None and num(g2.get("threshold")) is not None:
         m["gate2"] = num(g2["value"]) - num(g2["threshold"])
     if num(g3.get("value")) is not None and g3.get("band"):
-        lo, hi = g3["band"]
-        m["gate3"] = min(num(g3["value"]) - lo, hi - num(g3["value"]))
+        cov, (lo, hi) = num(g3["value"]), g3["band"]
+        band = min(cov - lo, hi - cov)
+        if g3.get("hard_band") and num(g3.get("max_distance_to_target")) is not None:
+            hlo, hhi = g3["hard_band"]
+            target = num(g3.get("target")) if g3.get("target") is not None else (lo + hi) / 2
+            rel = num(g3["max_distance_to_target"]) - abs(cov - target)
+            band = min(min(cov - hlo, hhi - cov), max(band, rel))   # in hard band and (in band or relative rule)
+        m["gate3"] = band
     hv = g4.get("value") or {}
     if hv and g4.get("threshold") is not None:
         vals = [num(v) for v in hv.values()]

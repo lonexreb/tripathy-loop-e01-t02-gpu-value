@@ -140,3 +140,13 @@ def test_leakage_screen_blocks_evaluation_window_literals_at_lock_time(lab):  # 
     g = evaluate_gates(h, ch, lab.cfg, None, {"candidate": 9.0, "champion": 2.0})
     assert g["gate5_cost"]["pass"] is True
     assert evaluate_gates(h, ch, lab.cfg, None, {"candidate": 9.0, "champion": None})["gate5_cost"]["pass"] is True
+
+
+def test_maintainer_resolution_updates_latest_request_status(lab):  # noqa: F811
+    lab.record_capability_requests([{**REQ, "kind": "tool", "url": None, "as_of": None}], "improver_v000", 1)
+    rec = lab.resolve_capability_request("cr001", "served", "per-series breach rates added to dry-run diagnostics")
+    assert rec["status"] == "served" and rec["resolution_of"] == "cr001"
+    assert [r["status"] for r in lab.memory_digest()["procedural_memory"]["capability_requests"]] == ["served"]
+    lab.write_procedure_report()
+    md = (lab.procedures.root / "lineage.md").read_text()
+    assert md.count("| cr001 |") == 1 and "| served |" in md

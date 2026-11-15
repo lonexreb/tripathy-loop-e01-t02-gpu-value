@@ -856,6 +856,20 @@ class RSIController:
             out.append(rec)
         return out
 
+    def resolve_capability_request(self, request_id: str, status: str, note: str) -> dict:
+        """Maintainer closes the loop on a queued request (status served / declined) with what was done; the
+        resolution is appended, never edited, and the lineage shows the latest status per request."""
+        if status not in ("served", "declined"):
+            raise ValueError("status must be 'served' or 'declined'")
+        reqs = [r for r in self.capability_requests() if r.get("request_id") == request_id]
+        if not reqs:
+            raise KeyError(f"unknown capability request {request_id}")
+        rec = {**reqs[-1], "status": status, "note": note[:600], "resolved_utc": utc_now(), "resolution_of": request_id}
+        append_jsonl(self.requests_path, rec)
+        self._ledger({"status": "CAPABILITY_REQUEST_RESOLVED", "request": rec})
+        self.write_procedure_report()
+        return rec
+
     def _self_serve_page(self, req: dict) -> dict:
         as_of = str(req.get("as_of") or self.cfg.discovery_origins[-1])
         if as_of > self.cfg.discovery_origins[-1]:
@@ -962,7 +976,8 @@ class RSIController:
                                           eps, lambda e: (e.get("lock") or {}).get("model_class") or "no_lock"),
                                       "invalid_revisions": invalid[-5:],
                                       "diagnoses": [compact_diagnosis(d) for d in self.diagnoses()[-6:]],
-                                      "capability_requests": [compact_request(r) for r in self.capability_requests()[-12:]],
+                                      "capability_requests": [compact_request(r) for r in list(
+                                          {r["request_id"]: r for r in self.capability_requests()}.values())[-12:]],
                                       "external_pages_available": self.external_pages()},
                 "episode_memory": [compact_episode(e) for e in eps[-n_episodes:]],
                 "experiment_registry": self.experiment_registry(),
@@ -988,7 +1003,8 @@ class RSIController:
                     lines.append(f"  - {k}: " + "; ".join(str(x) for x in dg[k])[:400])
         lines += ["", "## Capability requests (model-proposed; lab-served, redirected or queued)", "",
                   "| id | gen | kind | request | status | times | note |", "|---|---|---|---|---|---|---|"]
-        for r in self.capability_requests():
+        latest = {r["request_id"]: r for r in self.capability_requests()}
+        for r in latest.values():
             lines.append(f"| {r['request_id']} | {r.get('generation')} | {r.get('kind')} | "
                          f"{str(r.get('request') or '')[:120].replace('|', '/')} | {r.get('status')} | "
                          f"{r.get('times_requested')} | {str(r.get('note') or r.get('problems') or '')[:120].replace('|', '/')} |")
@@ -2247,12 +2263,21 @@ def main() -> int:
     gen.add_argument("--exa-cache-only", action="store_true")
     sub.add_parser("status")
     sub.add_parser("ablation")
+    sr = sub.add_parser("serve-request", help="maintainer resolves a queued capability request (served / declined)")
+    sr.add_argument("--stage", choices=STAGE_CHOICES, required=True)
+    sr.add_argument("--id", required=True)
+    sr.add_argument("--status", choices=["served", "declined"], required=True)
+    sr.add_argument("--note", required=True)
     a = ap.parse_args()
     load_dotenv(load_config().root / ".env")
 
     if a.cmd == "ablation":
         print(write_ablation_summary(load_config()))
         return 0
+    if a.cmd == "serve-request":
+        ctrl = RSIController(stage_config(a.stage, True), driver_name="lab")
+        print(json.dumps(ctrl.resolve_capability_request(a.id, a.status, a.note), indent=2))
+        return
     if a.cmd == "status":
         for st in (STAGE_PACK_ONLY, STAGE_PACK_PLUS_EXA):
             c = RSIController(load_config(enable_exa=st == STAGE_PACK_PLUS_EXA), use_git=False).champion

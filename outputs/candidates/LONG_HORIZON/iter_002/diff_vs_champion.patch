@@ -1,0 +1,62 @@
+--- champion/forecaster.py
++++ candidate/forecaster.py
+@@ -22,4 +22,9 @@
+     cs_min_group = 3        # need >= 3 series in the family to form a median
+     cs_min_horizon = 90     # apply the shift only at long horizons (h30 measured loss-negative)
++    ps_weight = {90: 0.3, 180: 0.5}   # per-series x family change-quantile blend weight by horizon (0 at h30)
++    ps_min_pairs = 30                 # min own change pairs before per-series quantiles are trusted
++    ft_k = 1.0                        # family-trend q90 widening factor (up-side only, h>=90)
++    ft_clip = 0.4                     # max family 90d trend (log) entering the widening
++    ft_lookback = 90                  # trend lookback in days
+ 
+     def _changes(self, series: dict, od: int, h: int) -> np.ndarray:
+@@ -49,4 +54,23 @@
+             lev = [last[s] for s in sids if s in last]
+             csmed[inst] = float(np.median(lev)) if len(lev) >= self.cs_min_group else None
++        # family recent 90d trend (median of per-series 90d log changes, point-in-time)
++        famtr = {}
++        for inst, sids in groups.items():
++            tr = []
++            for s in sids:
++                if s not in last:
++                    continue
++                d, v = series[s]
++                m = (d <= od) & (d >= od - self.ft_lookback - 30)
++                dd, vv = d[m], v[m]
++                if len(dd) == 0:
++                    continue
++                j = np.searchsorted(dd, od - self.ft_lookback)
++                if j >= len(dd):
++                    j = len(dd) - 1
++                while j > 0 and dd[j] > od - self.ft_lookback:
++                    j -= 1
++                tr.append(vv[-1] - vv[j])
++            famtr[inst] = float(np.median(tr)) if len(tr) >= self.cs_min_group else 0.0
+         cache, rows = {}, []
+         for sid in targets["series_id"]:
+@@ -63,4 +87,12 @@
+                     cache[key] = np.quantile(ch, QS) if len(ch) else np.zeros(3)
+                 q = np.sort(np.asarray(cache[key], dtype=float))
++                # per-series x family blend (h90/h180 only): each AZ's own 730d change
++                # distribution is more informative than the family-pooled one; w=0 at h30
++                w = self.ps_weight.get(h, 0.0)
++                if w > 0.0:
++                    chs = self._changes({sid: series[sid]}, od, h)
++                    if len(chs) >= self.ps_min_pairs:
++                        qps = np.sort(np.quantile(chs, QS))
++                        q = np.sort(w * qps + (1.0 - w) * q)
+                 # cross-sectional mean reversion: UP-only (below-median AZs revert up), long horizons
+                 if h >= self.cs_min_horizon and csmed.get(inst) is not None:
+@@ -69,4 +101,12 @@
+                         w = 0.7 if h >= 180 else 0.5  # reversion completes further out (pseudo-origin scan)
+                         q = q + np.clip(diff, 0.0, self.cs_clip) * w
++                # family-trend q90 widening: rising families breach q90 at h90/h180
++                # (administered repricing continues in the trend direction); up-side only,
++                # q10 byte-identical (down-side measured loss-negative)
++                if h >= 90:
++                    tr = famtr.get(inst, 0.0)
++                    if tr > 0.0:
++                        q = q.copy()
++                        q[2] = q[2] + self.ft_k * np.clip(tr, 0.0, self.ft_clip) * (h / 180.0)
+                 q = np.clip(np.sort(q), -1.5, 1.5)
+                 rows.append((sid, origin_date, h, *np.exp(lv + q)))

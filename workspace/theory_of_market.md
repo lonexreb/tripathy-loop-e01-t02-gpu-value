@@ -318,3 +318,62 @@ is < 0.001.
 **Lessons.** (a) The EXA-EMPTY guardrail was query-phrasing-specific, not domain-specific — 2026 GPU price-index articles exist and are point-in-time usable; the exogenous family via web is reopened with a falsifiable, fallback-safe gate. (b) h7 narrowing is a live skill lever where h7 widening was dead — the sign of the tail-factor dimension flips with the horizon's coverage state (h7 OOS over-covers ~0.85 at late Discovery origins). (c) Slice-level dry-run deltas catch width leaks that aggregate pooled skill hides (marketplace -0.016 invisible in +0.0039 pooled).
 
 *Lab verdict:* holdout pooled 0.3139 (need > 0.3118), median 0.2713 (need >= 0.2695), coverage 0.75 (band [0.74, 0.86], or within 0.0536 of 0.80), horizons {'1': 0.4205, '3': 0.3411, '7': 0.2836}. Gate margins {'gate1': 0.0021, 'gate2': 0.0018, 'gate3': 0.01, 'gate4': 0.3036, 'shortfall': 0}.
+
+## [PACK_PLUS_EXA] iteration 5: REVERTED [exogenous_signals] (2026-11-15T17:20:27Z)
+**Hypothesis.** exogenous_signals (bold, builds on the champion = iter 4): TWO stacked levers on the champion code. (1) NEW exogenous web-gate frontier walk: card_widen 1.5 -> 2.0 — the iter-4 web-gated regime-B rate-card band widening is pushed along its measured frontier. Pseudo-origin OOS (fit at origin-28d, score the next 28 days, 4 late Discovery origins, 2988 card cells): g1.5 -0.68% card loss (iter-4 choice), g1.75 -0.41%, g2.0 +0.30% card loss BUT coverage 0.680 -> 0.762 (+0.082 card cells, ~+0.001 aggregate) and q90 breach 0.159 -> 0.139; g2.5 +2.2% loss (beyond the frontier). Mechanism: the cards are ~2% of pooled loss so the skill cost is ~-0.00003 pooled — g2.0 is a cheap Gate-3 coverage RESERVE bought against the h7 narrowing's coverage spend; the gate stays point-in-time (fires only on a <=45-day-old GPU-pricing article, 1.0 fallback = champion). (2) h7 tail-factor walk 0.95 -> 0.93 (interval_calibration): pseudo-origin OOS (fit at origin-28d, score next 28 days, 9 Discovery origins, full champion machinery: chained center, ensemble members, 540-day z) shows f0.93 cuts h7 loss -0.41% vs f0.95 (f0.95 was -0.80% vs 1.0, monotone toward 0.93); h7 is 63% of pooled loss -> ~+0.0011 pooled at the ~0.9x iter-4 h7 transfer precedent; h7 OOS coverage cost ~-0.005 h7 cells (~-0.0015 aggregate), budgeted at 2x = -0.003 against the card reserve (+0.001) and the champion's 0.010 Gate-3 margin. h3 stays 0.95 (f0.93 at h3 was holdout-measured WORSE, iter-4 stack arithmetic +0.0007 for 0.95 — non-transfer precedent). A third lever was measured and EXCLUDED: pooled cross-sectional calm-zone center damping 0.7 (OOS-positive h3 -0.12%/h7 -0.20% loss, coverage +0.006 — the only conditional form ever OOS-positive) is in-sample-negative -0.004 pooled (dry run 1 screen FAIL with all levers on): the champion's chained center is in-sample-optimal so any centering shift is in-sample-negative by construction, 4x its OOS gain — cannot clear the pre-Holdout screen; kept as disabled machinery (calm_damp=1.0) for a future companion. Also measured dead this iteration: chain step-damping (OOS-positive loss at all d<1), asymmetric tail factors (all loss-positive), h7 z-window averaging {540,360} (loss-positive, coverage-only). Dry run 2 (submitted stack): Discovery pooled 0.451364 (+0.000926 vs champion), median +0.000284, coverage 0.7863 (+0.0013), h7 +0.0014 skill, 9/11 origins improved, screen PASS. Predicted holdout: pooled 0.3145-0.3155 vs the +0.003 Gate-1 threshold 0.31692 (borderline — the h7 walk's ~+0.0011 and the card reserve's ~-0.00003 do not sum to +0.003; this submission is primarily the falsification test of the h7 0.93 walk's transfer and the card g2.0 reserve's Gate-3 insurance); coverage ~0.748-0.752 (in-band); median ~0.271 (Gate-2 buffer 0.005); h1 ~0.4205 unchanged, h3 ~0.3411 unchanged, h7 0.2836 + ~0.002-0.003. FALSIFIED if the h7 holdout skill delta <= 0 (0.93 non-transfer), or Gate 1 fails (expected if the levers sum < +0.003), or coverage leaves [0.74, 0.86], or any horizon < -0.020.
+
+### Theory update — PACK_PLUS_EXA iteration 5
+
+### What was tested
+A bold exogenous_signals stack on the iter-4 champion: (a) the web-gated regime-B card band
+widening walked 1.5 -> 2.0 along its measured OOS frontier (g2.0 = +0.082 card-cell coverage for
++0.3% card loss — a cheap Gate-3 reserve, cards ~2% of pooled loss), and (b) the h7 both-tail
+factor walked 0.95 -> 0.93 (OOS -0.41% h7 loss vs f0.95, monotone; ~+0.0011 pooled expected at the
+~0.9x iter-4 h7 transfer precedent).
+
+### New measurements this iteration (pseudo-origin OOS, 9 Discovery origins, full champion machinery)
+- **Card widening frontier (g in {1.0, 1.25, 1.5, 1.75, 2.0, 2.5}, 2988 cells):** g1.5 -0.68% loss
+  (loss-optimal), g2.0 +0.30% loss / coverage 0.680->0.762 / q90 breach 0.159->0.139, g2.5 +2.2%.
+  The frontier is flat near the optimum: coverage can be bought at ~+0.3% card loss per +0.04
+  coverage up to g2.0; beyond that it steepens.
+- **h7 tail factor:** f0.93 -0.41% h7 loss vs f0.95 (which was -0.80% vs 1.0) — monotone toward
+  0.93, consistent with the iter-4 finding. h3 f0.93 remains excluded: the iter-4 holdout stack
+  arithmetic measured 0.93->0.95 = +0.0007 h3 skill, i.e. 0.93 was holdout-worse at h3.
+- **Pooled cross-sectional calm-zone center damping (NEW, near-miss):** damping the chained
+  center's deviation from the last value by 0.7 for series whose 14-day vol is at/below the
+  pooled cross-sectional median is OOS-POSITIVE at h3 (-0.12% loss) AND h7 (-0.20% loss) with
+  coverage +0.006 both horizons — the FIRST conditional centering rule ever OOS-positive in this
+  lab (per-series conditionals are dead, iter 7; the pooled cross-sectional form is the one that
+  works, consistent with the width-lever history). BUT it is in-sample-negative -0.004 pooled
+  (dry run 1: screen FAIL at -0.003 with all levers on): the champion's chained center is
+  in-sample-optimal, so ANY centering shift is in-sample-negative by construction, and the
+  penalty is ~4x the OOS gain. It cannot clear the pre-Holdout screen even stacked with
+  in-sample-positive levers. Kept as disabled machinery (calm_damp=1.0).
+- **Dead levers measured this iteration:** chain step-damping (d<1 on the chain step: OOS loss
+  positive at every d, h3 +0.01..+0.08%, h7 +0.02..+0.12% — the pure chain is OOS-optimal);
+  asymmetric tail factors (f10 != f90: all loss-positive, e.g. h7 asym 0.90/1.00 +0.59%,
+  0.93/1.00 +0.73%, 1.00/0.93 +0.03% — the symmetric form is optimal at every horizon);
+  h7 z-window averaging {540,360} (+0.45% h7 loss, coverage-only reserve — confirms the
+  playbook entry).
+
+### Gate arithmetic
+Champion holdout 0.3139 pooled, Gate-1 threshold 0.31692 (+0.003). The submitted stack's
+expected holdout delta: h7 0.93 walk ~+0.0011, card g2.0 ~-0.00003 skill / +0.001 coverage
+reserve. Sum ~+0.0011 — SHORT of +0.003: this submission is primarily the falsification test
+of (a) the h7 0.93 walk's transfer (predicted +0.002..+0.003 h7 skill) and (b) the card g2.0
+reserve's Gate-3 insurance. If the h7 walk transfers at the iter-4 precedent (~0.9x), the
+champion's Gate-3 margin (0.010) absorbs the h7 coverage spend with the card reserve as backup.
+
+### Lessons
+1. The pre-Holdout screen is a hard constraint on centering levers: OOS-positive centering
+   shifts are in-sample-negative by construction (the champion center is in-sample-optimal) and
+   the in-sample penalty (~4x the OOS gain here) blocks the screen. A centering lever can only
+   pass bundled with an in-sample-positive lever of at least the same size — none of that size
+   exists in the measured frontier right now.
+2. The card widening frontier is flat near g1.5: coverage reserves are cheap there. The web
+   gate's multiplier is a tunable coverage knob, not just a skill lever.
+3. Asymmetric tails are dead in ALL forms at every horizon — the symmetric tail factor is
+   optimal despite the q10/q90 breach-rate asymmetry (the breach asymmetry is a centering
+   artifact, not a width signal; consistent with the iter-1 finding).
+
+*Lab verdict:* holdout pooled 0.3145 (need > 0.3169), median 0.2709 (need >= 0.2663), coverage 0.7507 (band [0.74, 0.86], or within 0.055 of 0.80), horizons {'1': 0.4215, '3': 0.3421, '7': 0.2839}. Gate margins {'gate1': -0.0024, 'gate2': 0.0046, 'gate3': 0.0107, 'gate4': 0.3039, 'shortfall': 0.0024}.

@@ -2,6 +2,32 @@
 
 Tripathy Loop E01 · Pacific "AI Scientist for GPU Value" · written 2026-11-15
 
+## Bottom line
+
+**We did not build a recursively self-improving forecaster, and we can show why.** This is mainly a negative result, and we report it as one.
+
+| Claim | Status | Evidence |
+|---|---|---|
+| One small forecasting gain over starter drift | **Supported** on checkpoint; unconfirmed on protected and on the scored November window | F_1: −0.000957 pinball [−0.001539, −0.000315], coverage 0.666 → 0.714 (section 4) |
+| A text-space gain that lasts | **Not supported** | Passed checkpoint, then tied drift on protected (section 4) |
+| Gradient weight updates improve the actor | **Not supported** | Two LoRA candidates rejected; one changed no behaviour at all (section 4) |
+| Direct weight edits improve the forecasts | **Not supported** | 13 gated candidates across four runs, 0 admitted (sections 5 and 6) |
+| An improver that improves from its own history | **Not supported** | Common-start test, protected-block difference exactly zero (section 6) |
+| Removing the actor's thinking loop releases forecasting ability | **Not supported** | 0 of 60 items terminate after two stacked edits; the model's own answers are about four times worse than repeating the last price (section 7) |
+
+**What the negative results are worth.**
+
+1. *The methods work mechanically; the forecasting does not follow.* A direct edit of 0.008% of the weights reprograms the actor's choice for one class of series with no spillover, and the looping mechanism found by the original weight-space-programming authors replicates here in the same two layers. Neither produced a better forecast.
+2. *One cause explains every weight-space failure:* this 0.8B model has no forecasting ability for an edit to release. Its choices do not respond to the price data, and its direct forecasts lose to the last price.
+3. *Gains found on September do not hold in October.* Every candidate that reached checkpoint had improved the development block, most with an interval excluding zero. With two to four weeks of history per decision, a rule about which instrument needs which band is noise.
+4. *More iterations do not fix this.* A 20-cycle run produced 36 proposals and no admission, and the editor ran out of distinct ideas by cycle 11.
+
+**What we got wrong along the way, and corrected.**
+- The first LoRA step trained on a label that merely confirmed the model's own answer.
+- Direct edits were first aimed at a forecasting choice instead of a localized failure, and were run before the controlling plan was amended to allow them (now disclosed in that plan).
+- The improver's notebook recorded proposals by wording, so it re-submitted a rejected edit; fixed by identifying proposals by the decisions they produce.
+- The 15 checkpoint origins have been scored for about twenty forecasts. Nothing admitted late in that sequence should be trusted without the protected block, and nothing was admitted.
+
 ## 1. Question
 
 Can a system improve its own short-horizon forecasts of posted GPU rental prices, on origins it had not seen when it changed itself — and does it matter **where** the improvement is written: in the forecasting code, in the model's instructions, or in the model's weights?
@@ -37,7 +63,7 @@ Baseline F_0 is starter `drift`:
 
 Drift beats last value everywhere, but its intervals cover 59–67% of outcomes against a target of 80%. **Interval width, not the median, is the weakness.**
 
-## 4. Results: the same gate, six attempts at self-improvement
+## 4. Results: one frozen gate, every attempt at self-improvement
 
 Each row is one candidate change, scored once on checkpoint against its parent. Negative is better.
 
@@ -49,6 +75,8 @@ Each row is one candidate change, scored once on checkpoint against its parent. 
 | Weights, RL | One GRPO-LoRA step on the 0.8B actor | −0.000307 [−0.000854, +0.000122] | Rejected |
 | Weights, supervised | One LoRA step on a teacher-confirmed example | +0.002892 [+0.001043, +0.005056] | Rejected: behaviour did not change |
 | Weights, programmed | Direct gradient-free edit of 58,293 MLP weights (section 5) | +0.000037 [−0.001051, +0.001053] | Rejected: behaviour changed, ties drift, coverage 0.821 |
+| Weights, programmed, autonomous | LLM editor proposes conditional edits over 3 + 3 + 20 cycles (section 6) | 12 gated candidates, from −0.000143 to +0.000753; no interval below zero | All rejected |
+| Weights, programmed, localized failure | Remove the thinking-loop direction, two stacked rounds (section 7) | Not gated: the failure was not removed | No edit kept |
 
 F_1 lifts checkpoint skill against last value from +0.089 to +0.119 and coverage from 0.666 to 0.714.
 
@@ -199,14 +227,52 @@ cd architecture3_weight_space
 
 **Disclosures.** The 15 checkpoint origins had already been scored for at least seven earlier candidates (the pre-registration file says six; it undercounts the text-and-weight arm); the loop scored five more forecasts on them (the unedited start and four candidates, one of them a duplicate). All edits sit in the last MLP, close to the readout. The actor's decision is read as the highest of three band-token logits, not free-form text.
 
-## 7. What a lessor, lender or capacity buyer can take from this
+## 7. Weight-space programming the author's way: a localized failure, not a forecasting goal
+
+Sections 5 and 6 aimed edits at a forecasting choice. The original work instead removed a narrow, localizable failure (a thinking loop) and let existing ability through. This section repeats that procedure on our task, as a separate arm ("Architecture 3B" in `architecture3_weight_space/IMPLEMENTATION_PLAN.md`; rules in `config/arch3b_author_style_preregistration_2026-11-15.json`).
+
+**Setup.** The actor forecasts the quantiles itself from a series' last 30 daily prices, with thinking on. Practice data: 37 headline series, origins July to September (914 items); October never enters. Predefined failure: no parseable answer within 1,024 new tokens under greedy decoding. Budget: 60 forward passes; 23 were used.
+
+**The failure is real and total.**
+
+| Model and settings | Items hitting the token limit while thinking |
+|---|---:|
+| Unedited, greedy, 1,200 tokens | 60 of 60 |
+| Unedited, greedy, 4,096 tokens | 20 of 20 |
+| Unedited, the released checkpoint's sampling settings, 2,048 tokens | 58 of 60 |
+| Released third-party edit, greedy, 1,200 tokens | 60 of 60 |
+| Released third-party edit, its own sampling settings, 2,048 tokens | 56 of 60 |
+
+The model restates the inputs in a bullet loop ("The input data is a list of prices.") and never starts computing. The released edit, built for math problems and evaluated by its authors at 32,768 tokens, does not transfer to this task at these caps.
+
+**The mechanism replicates.** Reading activations on 50 looping texts, the MLPs that write the "looping versus productive" direction are layers 15 and 19, the same two the original authors found. Their released edit is exactly one direction per layer; its cosine with our independently read direction is 0.60–0.71, and 26–31 of its 64 neurons per layer are in our top 64.
+
+**Removing the direction does not remove the failure.**
+
+| Edit (direction removed from 64 neurons per layer) | Terminated | Verbatim repeated lines | Distinct lines |
+|---|---:|---:|---:|
+| None | 0 of 60 | 27% | 25.3 |
+| Round 1: layers 15 and 19, strength 4 | 0 of 60 | 19% | 20.6 |
+| Round 2, stacked: layers 16 and 17, strength 8 | 0 of 60 | 12% | 26.4 |
+| Round 3, stacked: layers 15 and 19 again | 0 of 60 | text collapses to 4–9 distinct lines; not kept |
+| Rounds 1 and 2 at 4,096 tokens | 0 of 20 | — | — |
+
+Each round re-read the looping direction on the current edited model's own outputs and edited the two MLPs writing it most. Exact repetition fell by more than half, but the model replaced it with paraphrased dithering ("Wait, I need to check the data provided") and still never answered. A third round degraded the text, so the recursion stopped there, as pre-registered.
+
+**Why: there is no ability behind the obstacle.** In the edited runs the model writes "Since I cannot generate the actual forecast without a model…". With thinking off it does answer, and the answers are worse than repeating the last price: pinball 0.056 against 0.015 on the same items, 40% of forecasts copy the last price with zero width, and 11% are off by more than 20%. This is the original authors' own boundary: on a model without a single blocking failure, their procedure "could not add an ability the model lacked".
+
+**Consequences.** Failure removal, the first of the four pre-registered evaluation steps, did not pass, so capability retention, the forecasting gate and the protected block were not run for this arm, and the random-direction and activation-steering comparisons were not needed. No edit from this section is kept. Note the asymmetry: a model that never answers is scored with the last-value fallback, so on this task finishing would probably have raised the loss.
+
+Kernel scripts and results: `architecture3_weight_space/artifacts/wsp_author/` (`work/read1.py`, `step2.py`–`step5.py`, `forward_passes.json`).
+
+## 8. What a lessor, lender or capacity buyer can take from this
 
 - **Rate cards move in steps.** In the 60 days to 30 September, five of the six neocloud and hyperscaler-spot medians were unchanged on 75–93% of days. The sixth, the H100 80GB rate card, moved on 68% of days but by under one cent at the 80th percentile, on a $3.25 price. For a one-day horizon the best point forecast is today's price; the forecasting value is entirely in how wide a band to hold around it.
 - **Marketplace asks are a different instrument.** The H100 marketplace ask changed on 88% of days, with an 80th-percentile daily move of $0.27 on a $1.57 price. Its official 7-day band is $1.47–$2.39 around $1.875, against $3.26–$3.87 around $3.55 for the H100 SXM rate card. Anyone marking collateral or pricing short leases off marketplace asks needs roughly three times the relative margin.
 - **Uncertainty grows faster than the starter baseline assumes.** On the development block, drift's seven-day intervals cover 44% of outcomes. A reserve or haircut sized from full-history volatility is too thin; size it from the last six weeks.
 - **Stale intervals are the cheap fix.** The accepted improvement changed nothing about the median and came entirely from recalibrating width on recent data.
 
-## 8. Limits
+## 9. Limits
 
 - Seven series, 45 development and checkpoint origins, daily origins that overlap: intervals are block-bootstrapped over origins and are wide.
 - All prices are posted, not paid.
@@ -214,7 +280,7 @@ cd architecture3_weight_space
 - Official truth for 7–13 November is withheld, so nothing here is a claim about the scored window.
 - The 2–3 year resale and rental view is not addressed.
 
-## 9. Reproduce
+## 10. Reproduce
 
 ```bash
 bash research/reproduce.sh
@@ -222,4 +288,4 @@ bash research/reproduce.sh
 
 Rebuilds the baseline and Cycle 1 from the unchanged pack, validates the submission with the official scorer, runs the leakage refusal check, and prints SHA-256 hashes. The submission file is `submission/submission_head_2026-11-06.csv` (111 rows: 37 headline series × 3 horizons; the 7 adapted series from F_1, the rest from drift). The pack's `ATTRIBUTION.md` travels with this repository.
 
-The weight-space arms live in `architecture3_weight_space/` and replay locally with no remote calls: see sections 5 and 6 for commands.
+The weight-space arms live in `architecture3_weight_space/` and replay locally with no remote calls: see sections 5 to 7 for commands.

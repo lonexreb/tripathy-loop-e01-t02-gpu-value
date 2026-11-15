@@ -1,0 +1,117 @@
+[
+ {
+  "n": 1,
+  "kind": "generate",
+  "note": "6-item trial, thinking off"
+ },
+ {
+  "n": 2,
+  "kind": "generate",
+  "note": "6-item trial, thinking on, 600 tokens"
+ },
+ {
+  "n": 3,
+  "kind": "generate",
+  "note": "diagnose base, thinking off, 60 items"
+ },
+ {
+  "n": 4,
+  "kind": "generate",
+  "note": "diagnose base, thinking on greedy 1200, 60 items"
+ },
+ {
+  "n": 5,
+  "kind": "generate",
+  "note": "diagnose released edit, thinking off, 60 items"
+ },
+ {
+  "n": 6,
+  "kind": "generate",
+  "note": "diagnose released edit, thinking on greedy 1200, 60 items"
+ },
+ {
+  "n": 7,
+  "kind": "generate",
+  "note": "base, author sampling 2048, 60 items"
+ },
+ {
+  "n": 8,
+  "kind": "generate",
+  "note": "released edit, author sampling 2048, 60 items"
+ },
+ {
+  "kind": "teacher_forced",
+  "note": "read1: 50 looping texts, activations at all layers (charged retroactively)",
+  "n": 9
+ },
+ {
+  "n": 10,
+  "kind": "generate",
+  "note": "sample B (60 fresh choose items), greedy 1024, our edit strength 0"
+ },
+ {
+  "n": 11,
+  "kind": "generate",
+  "note": "sample B (60 fresh choose items), greedy 1024, our edit strength 1"
+ },
+ {
+  "n": 12,
+  "kind": "generate",
+  "note": "sample B (60 fresh choose items), greedy 1024, our edit strength 2"
+ },
+ {
+  "n": 13,
+  "kind": "generate",
+  "note": "sample B (60 fresh choose items), greedy 1024, our edit strength 4"
+ },
+ {
+  "n": 14,
+  "kind": "teacher_forced",
+  "note": "round 2: read looping vs productive on the current model's own outputs"
+ },
+ {
+  "n": 15,
+  "kind": "generate",
+  "note": "round 2: stacked edit on layers [16, 17], strength 2"
+ },
+ {
+  "n": 16,
+  "kind": "generate",
+  "note": "round 2: stacked edit on layers [16, 17], strength 4"
+ },
+ {
+  "n": 17,
+  "kind": "generate",
+  "note": "round 2: stacked edit on layers [16, 17], strength 8"
+ },
+ {
+  "n": 18,
+  "kind": "teacher_forced",
+  "note": "round 3: read looping vs productive on the current model's own outputs"
+ },
+ {
+  "n": 19,
+  "kind": "generate",
+  "note": "round 3: stacked edit on layers [15, 19], strength 2"
+ },
+ {
+  "n": 20,
+  "kind": "generate",
+  "note": "round 3: stacked edit on layers [15, 19], strength 4"
+ },
+ {
+  "n": 21,
+  "kind": "generate",
+  "note": "round 3: stacked edit on layers [15, 19], strength 8"
+ },
+ {
+  "n": 22,
+  "kind": "generate",
+  "note": "untouched: 20 choose items, greedy, 4096 tokens"
+ },
+ {
+  "n": 23,
+  "kind": "generate",
+  "note": "stacked_rounds_1_2: 20 choose items, greedy, 4096 tokens"
+ }
+]

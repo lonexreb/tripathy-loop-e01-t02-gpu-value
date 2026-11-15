@@ -1,0 +1,95 @@
+{
+ "practice_items": 914,
+ "choose_items": 616,
+ "sample": 60,
+ "max_new_tokens": 1200,
+ "arms": {
+  "base_no_thinking": {
+   "n": 60,
+   "classes": {
+    "ok": 54,
+    "bad_quantiles": 5,
+    "partial_quantiles": 1
+   },
+   "mean_tokens": 77.783333,
+   "hit_limit_share": 0.0,
+   "pinball": {
+    "actor": 0.056227,
+    "last_value": 0.01469,
+    "drift": 0.012857,
+    "actor_valid_cells": 0.059604,
+    "drift_same_cells": 0.012557
+   },
+   "valid_cells": 164,
+   "median_abs_q50_move_vs_last": 0.00767,
+   "median_relative_width": 0.0,
+   "coverage_on_valid_cells": 0.353659
+  },
+  "base_thinking": {
+   "n": 60,
+   "classes": {
+    "token_limit_in_thinking": 60
+   },
+   "mean_tokens": 1200.0,
+   "hit_limit_share": 1.0,
+   "pinball": {
+    "actor": 0.01469,
+    "last_value": 0.01469,
+    "drift": 0.012857
+   },
+   "valid_cells": 0,
+   "median_abs_q50_move_vs_last": null,
+   "median_relative_width": null,
+   "coverage_on_valid_cells": null
+  },
+  "author_no_thinking": {
+   "n": 60,
+   "classes": {
+    "ok": 59,
+    "bad_quantiles": 1
+   },
+   "mean_tokens": 77.166667,
+   "hit_limit_share": 0.0,
+   "pinball": {
+    "actor": 0.072421,
+    "last_value": 0.01469,
+    "drift": 0.012857,
+    "actor_valid_cells": 0.072714,
+    "drift_same_cells": 0.01255
+   },
+   "valid_cells": 177,
+   "median_abs_q50_move_vs_last": 0.01129,
+   "median_relative_width": 0.00775,
+   "coverage_on_valid_cells": 0.412429
+  },
+  "author_thinking": {
+   "n": 60,
+   "classes": {
+    "token_limit_in_thinking": 60
+   },
+   "mean_tokens": 1200.0,
+   "hit_limit_share": 1.0,
+   "pinball": {
+    "actor": 0.01469,
+    "last_value": 0.01469,
+    "drift": 0.012857
+   },
+   "valid_cells": 0,
+   "median_abs_q50_move_vs_last": null,
+   "median_relative_width": null,
+   "coverage_on_valid_cells": null
+  }
+ },
+ "author_edit": {
+  "layer15": {
+   "changed_columns": 64,
+   "changed_weights": 65260,
+   "relative_change": 0.1064
+  },
+  "layer19": {
+   "changed_columns": 64,
+   "changed_weights": 64928,
+   "relative_change": 0.0811
+  }
+ }
+}

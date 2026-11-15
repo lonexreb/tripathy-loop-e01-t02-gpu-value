@@ -64,5 +64,5 @@ packages = ["tripathy_arch3"]
 
 [[tool.mypy.overrides]]
 # wsp.py runs in the separate local torch environment (.venv-wsp), not this one.
-module = ["torch", "transformers", "numpy"]
+module = ["torch", "transformers", "numpy", "huggingface_hub", "safetensors"]
 ignore_missing_imports = true

@@ -1,0 +1,24 @@
+{
+ "untouched": {
+  "classes": {
+   "token_limit_in_thinking": 20
+  },
+  "mean_tokens": 4096.0,
+  "pinball": {
+   "actor": 0.015003,
+   "last_value": 0.015003,
+   "drift": 0.011275
+  }
+ },
+ "stacked_rounds_1_2": {
+  "classes": {
+   "token_limit_in_thinking": 20
+  },
+  "mean_tokens": 4096.0,
+  "pinball": {
+   "actor": 0.015003,
+   "last_value": 0.015003,
+   "drift": 0.011275
+  }
+ }
+}

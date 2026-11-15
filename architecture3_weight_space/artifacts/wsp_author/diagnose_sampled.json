@@ -1,0 +1,42 @@
+{
+ "base_thinking_sampled": {
+  "n": 60,
+  "classes": {
+   "token_limit_in_thinking": 58,
+   "bad_quantiles": 2
+  },
+  "mean_tokens": 2024.283333,
+  "hit_limit_share": 0.966667,
+  "pinball": {
+   "actor": 0.01469,
+   "last_value": 0.01469,
+   "drift": 0.012857
+  },
+  "valid_cells": 0,
+  "median_abs_q50_move_vs_last": null,
+  "median_relative_width": null,
+  "coverage_on_valid_cells": null
+ },
+ "author_thinking_sampled": {
+  "n": 60,
+  "classes": {
+   "token_limit_in_thinking": 56,
+   "bad_quantiles": 2,
+   "invalid_json": 1,
+   "partial_quantiles": 1
+  },
+  "mean_tokens": 2007.2,
+  "hit_limit_share": 0.933333,
+  "pinball": {
+   "actor": 0.014591,
+   "last_value": 0.01469,
+   "drift": 0.012857,
+   "actor_valid_cells": 0.00545,
+   "drift_same_cells": 0.012099
+  },
+  "valid_cells": 1,
+  "median_abs_q50_move_vs_last": 0.01367,
+  "median_relative_width": 0.03216,
+  "coverage_on_valid_cells": 1.0
+ }
+}

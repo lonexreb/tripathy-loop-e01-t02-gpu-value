@@ -1,0 +1,185 @@
+{
+ "log": [
+  {
+   "round": 2,
+   "texts_read": 36,
+   "writer_layers": [
+    16,
+    17
+   ],
+   "writes": [
+    0.013,
+    0.015,
+    0.0,
+    0.02,
+    -0.0,
+    0.013,
+    -0.031,
+    -0.002,
+    -0.005,
+    0.012,
+    -0.048,
+    0.001,
+    -0.016,
+    0.009,
+    -0.024,
+    -0.167,
+    0.055,
+    0.034,
+    -0.054,
+    -0.144,
+    -0.013,
+    0.012,
+    -0.041,
+    -0.247
+   ],
+   "cos_with_round1_u": 0.477,
+   "trials": {
+    "2": {
+     "pass": 15,
+     "terminated": 0,
+     "ok": 0,
+     "duplicate_share": 0.169,
+     "distinct_lines": 21.4,
+     "classes": {
+      "token_limit_in_thinking": 60
+     },
+     "pinball": {
+      "actor": 0.010148,
+      "last_value": 0.010148,
+      "drift": 0.007735
+     }
+    },
+    "4": {
+     "pass": 16,
+     "terminated": 0,
+     "ok": 0,
+     "duplicate_share": 0.147,
+     "distinct_lines": 21.6,
+     "classes": {
+      "token_limit_in_thinking": 60
+     },
+     "pinball": {
+      "actor": 0.010148,
+      "last_value": 0.010148,
+      "drift": 0.007735
+     }
+    },
+    "8": {
+     "pass": 17,
+     "terminated": 0,
+     "ok": 0,
+     "duplicate_share": 0.116,
+     "distinct_lines": 26.4,
+     "classes": {
+      "token_limit_in_thinking": 60
+     },
+     "pinball": {
+      "actor": 0.010148,
+      "last_value": 0.010148,
+      "drift": 0.007735
+     }
+    }
+   },
+   "kept": 8
+  },
+  {
+   "round": 3,
+   "texts_read": 33,
+   "writer_layers": [
+    15,
+    19
+   ],
+   "writes": [
+    0.003,
+    0.003,
+    0.0,
+    -0.003,
+    0.002,
+    0.0,
+    0.002,
+    -0.008,
+    -0.001,
+    0.003,
+    -0.003,
+    -0.006,
+    0.001,
+    -0.011,
+    0.001,
+    0.071,
+    0.046,
+    0.039,
+    0.032,
+    0.095,
+    -0.007,
+    0.008,
+    -0.007,
+    -0.026
+   ],
+   "cos_with_round1_u": -0.17,
+   "trials": {
+    "2": {
+     "pass": 19,
+     "terminated": 0,
+     "ok": 0,
+     "duplicate_share": 0.07,
+     "distinct_lines": 8.9,
+     "classes": {
+      "token_limit_in_thinking": 60
+     },
+     "pinball": {
+      "actor": 0.010148,
+      "last_value": 0.010148,
+      "drift": 0.007735
+     }
+    },
+    "4": {
+     "pass": 20,
+     "terminated": 0,
+     "ok": 0,
+     "duplicate_share": 0.094,
+     "distinct_lines": 4.0,
+     "classes": {
+      "token_limit_in_thinking": 60
+     },
+     "pinball": {
+      "actor": 0.010148,
+      "last_value": 0.010148,
+      "drift": 0.007735
+     }
+    },
+    "8": {
+     "pass": 21,
+     "terminated": 0,
+     "ok": 0,
+     "duplicate_share": 0.216,
+     "distinct_lines": 6.0,
+     "classes": {
+      "token_limit_in_thinking": 60
+     },
+     "pinball": {
+      "actor": 0.010148,
+      "last_value": 0.010148,
+      "drift": 0.007735
+     }
+    }
+   },
+   "kept": null
+  }
+ ],
+ "current": {
+  "pass": 17,
+  "terminated": 0,
+  "ok": 0,
+  "duplicate_share": 0.116,
+  "distinct_lines": 26.4,
+  "classes": {
+   "token_limit_in_thinking": 60
+  },
+  "pinball": {
+   "actor": 0.010148,
+   "last_value": 0.010148,
+   "drift": 0.007735
+  }
+ }
+}

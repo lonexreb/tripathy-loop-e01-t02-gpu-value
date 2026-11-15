@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "preregistration_id": "arch3b-author-style-2026-11-15",
+  "controlling_plan": "IMPLEMENTATION_PLAN.md, amendment 2026-11-15 (Architecture 3B)",
+  "written": "after the diagnostic reads below, before any weight edit of this phase",
+  "base_model": "Qwen/Qwen3.5-0.8B@2fc06364715b967f1860aea9cf38778875588b17",
+  "editor": "Claude (claude-fable-5-2) in Claude Code with a local Python kernel over the weights; no human steering between steps",
+  "actor_task": "forecast q10/q50/q90 at 1, 3 and 7 days for one series from its last 30 daily prices, thinking on (wsp_practice.prompt)",
+  "narrow_failure": "non-termination: no parseable answer within 1,024 new tokens under greedy decoding with thinking on",
+  "diagnostic_set": {
+    "source": "37 headline posted-rental series, origins 2026-07-01..2026-09-30, truth inside the same period (914 items)",
+    "choose_split": "origins <= 2026-09-15 (616 items): all exploration and edit selection",
+    "confirm_split": "origins 2026-09-16..2026-09-30 (298 items): one confirmation per kept edit",
+    "never_used": "checkpoint and protected origins (October)"
+  },
+  "diagnostic_reads_before_this_file": {
+    "forward_passes_used": 8,
+    "greedy_1200_tokens": {
+      "base": "60/60 hit the limit in thinking",
+      "released_third_party_edit": "60/60"
+    },
+    "author_sampling_2048_tokens": {
+      "base": "58/60",
+      "released_third_party_edit": "56/60"
+    },
+    "thinking_off": {
+      "base": "54/60 valid answers; pinball 0.0562 vs last value 0.0147 and drift 0.0129; median interval width 0",
+      "released_third_party_edit": "59/60 valid; pinball 0.0724"
+    }
+  },
+  "forward_pass_budget": {
+    "total": 60,
+    "definition": "one generation request of up to 512 generations, or one teacher-forced read of up to 1,024 texts",
+    "ledger": "artifacts/wsp_author/forward_passes.json"
+  },
+  "edit_rules": {
+    "allowed_tensors": "model.layers.*.mlp.down_proj.weight",
+    "form": "remove a read direction u from the output of chosen MLP neurons: W[:, J] -= s * u (u^T W[:, J])",
+    "limits": "at most 64 columns per tensor and 4 tensors per edit",
+    "forbidden": [
+      "embeddings / output layer",
+      "final norm",
+      "whole-tensor scaling",
+      "any optimizer or backward pass",
+      "making the model skip or close thinking regardless of the problem"
+    ]
+  },
+  "keep_rule": "an edit is kept only if, on items not used to choose it, the paired gain in termination rate exceeds twice its standard error and the share of finished-but-invalid answers does not rise by more than 5 points",
+  "recursion": "after a kept edit, the edited model becomes the base; the editor re-reads its dominant remaining failure and repeats, until the budget is spent or no failure is localizable",
+  "evaluation_order": [
+    "1 failure removal: termination rate on a fresh confirm sample, paired with the untouched model",
+    "2 capability retention: next-token agreement on unrelated prompts; thinking-off answers on the same items",
+    "3 forecasting: practice pinball on confirm items vs last value and drift, then the frozen gate on the 7 adapted series (development and checkpoint, scored once) against F_0",
+    "4 protected block once, only if admitted"
+  ],
+  "comparisons": [
+    "untouched model",
+    "random direction, same columns and strength",
+    "same direction as activation steering without a weight change",
+    "released third-party edit of the same base",
+    "Architecture 3A LoRA result"
+  ],
+  "claim_limits": [
+    "removing non-termination is not the same as forecasting better; a model that never answers scores the last-value fallback, so finishing can raise pinball loss",
+    "no recursive-self-improvement claim: the editor is an external LLM",
+    "greedy decoding and a 1,024-token cap differ from the released checkpoint's evaluation (sampling, 32,768 tokens)"
+  ],
+  "amendments": [
+    {
+      "written": "after passes 10-13 (first edit: 60/60 still hit the limit at strengths 1, 2, 4), before the recursive rounds",
+      "change": "exploratory stacking: because termination stayed at zero, rounds may stack an edit using a softer signal on the choose sample (largest drop in duplicate-line share, provided distinct lines do not fall by more than 20%). Each round re-reads the looping direction on the current model's own outputs and edits the two MLPs that write it most.",
+      "unchanged": "the keep rule for any claim: termination gain on the confirm split, paired, above twice its standard error",
+      "stop": "6 further rounds, or 10% of choose items terminating, or no strength lowering the duplicate share"
+    }
+  ]
+}

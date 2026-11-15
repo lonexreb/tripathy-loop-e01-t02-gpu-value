@@ -1,0 +1,70 @@
+{
+ "0": {
+  "n": 60,
+  "classes": {
+   "token_limit_in_thinking": 60
+  },
+  "mean_tokens": 1024.0,
+  "hit_limit_share": 1.0,
+  "pinball": {
+   "actor": 0.010148,
+   "last_value": 0.010148,
+   "drift": 0.007735
+  },
+  "valid_cells": 0,
+  "median_abs_q50_move_vs_last": null,
+  "median_relative_width": null,
+  "coverage_on_valid_cells": null
+ },
+ "1": {
+  "n": 60,
+  "classes": {
+   "token_limit_in_thinking": 60
+  },
+  "mean_tokens": 1024.0,
+  "hit_limit_share": 1.0,
+  "pinball": {
+   "actor": 0.010148,
+   "last_value": 0.010148,
+   "drift": 0.007735
+  },
+  "valid_cells": 0,
+  "median_abs_q50_move_vs_last": null,
+  "median_relative_width": null,
+  "coverage_on_valid_cells": null
+ },
+ "2": {
+  "n": 60,
+  "classes": {
+   "token_limit_in_thinking": 60
+  },
+  "mean_tokens": 1024.0,
+  "hit_limit_share": 1.0,
+  "pinball": {
+   "actor": 0.010148,
+   "last_value": 0.010148,
+   "drift": 0.007735
+  },
+  "valid_cells": 0,
+  "median_abs_q50_move_vs_last": null,
+  "median_relative_width": null,
+  "coverage_on_valid_cells": null
+ },
+ "4": {
+  "n": 60,
+  "classes": {
+   "token_limit_in_thinking": 60
+  },
+  "mean_tokens": 1024.0,
+  "hit_limit_share": 1.0,
+  "pinball": {
+   "actor": 0.010148,
+   "last_value": 0.010148,
+   "drift": 0.007735
+  },
+  "valid_cells": 0,
+  "median_abs_q50_move_vs_last": null,
+  "median_relative_width": null,
+  "coverage_on_valid_cells": null
+ }
+}

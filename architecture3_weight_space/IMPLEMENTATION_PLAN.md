@@ -69,3 +69,41 @@ run does not establish recursive self-improvement.
 - Secrets never enter manifests, events, prompts, or tracked files.
 - Empty or unexecuted results are reported as `not_run`, never as success.
 - Numerical replay must not require OpenAI, Exa, past.dev, or Modal calls.
+
+## Amendment — 2026-11-15: Architecture 3B, direct weight-space programming (separate arm)
+
+Everything above is **Architecture 3A**: verifier-gated LoRA optimization with frozen base
+weights. It is preserved unchanged, and its artifacts and admission result stand.
+
+**Architecture 3B** is a separate experimental arm in which an editor LLM diagnoses a narrowly
+defined actor failure and writes a deterministic sparse patch to Qwen's base tensors, with no
+optimizer and no backward pass (Takehi et al., "Sparks of Weight-Space Programming", 2026-11-02).
+It deliberately breaks 3A's "only LoRA adapter parameters may be updated" rule, so it never
+replaces 3A and its results are reported separately.
+
+**Disclosure.** Two 3B experiments were run before this amendment was written, each under its own
+pre-registration file but without amending this plan: the hand-run decision edit
+(`config/wsp_preregistration_2026-11-15.json`) and the autonomous band-actor loop
+(`config/wsp_loop_preregistration_2026-11-15.json` and its 20-cycle amendment). Both targeted a
+forecasting choice rather than a localized pathology, both edited only the last MLP, and neither
+was admitted. They are kept as recorded.
+
+### 3B protocol from here on
+
+1. **Pin** the Qwen revision and the SHA-256 of every tensor an edit touches.
+2. **Predefine one narrow failure** and a non-protected diagnostic set before any edit. Broad
+   goals such as "forecast better" are not edit targets.
+3. **Bounded reads.** The editor gets a fixed forward-pass budget and read-only inspection of
+   tensors and activations on the diagnostic set only.
+4. **Sparse patch manifest:** tensor names, indices, the transformation, base and edited hashes.
+5. **Rebuild** the edited model from the manifest and verify the hashes before evaluation.
+6. **Evaluate in order:** failure removal → general capability retention → forecasting admission
+   under the frozen gate → protected block, once, only if admitted.
+7. **Compare against** the untouched model, a random-direction edit of the same size, the same
+   direction applied as activation steering (no weight change), the released third-party edit of
+   the same base model, and 3A's LoRA result.
+
+**Claim limit.** A successful 3B edit is not recursive self-improvement. That needs an edited
+child to take part in producing a later successful edit, shown against the same controlled start.
+In 3B the editor is an external LLM, so no such claim is made.
+

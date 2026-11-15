@@ -30,4 +30,4 @@
 
 | id | gen | kind | request | status | times | note |
 |---|---|---|---|---|---|---|
-| cr001 | 3 | diagnostic | Add per-series q10/q90 breach rates (not just per-slice) to the Discovery dry-run output, so breach attribution to insta | queued_for_maintainer | 1 | needs a lab change (scoring, partitions, network policy or new code): recorded as a spec for the maintainer; the lab nev |
+| cr001 | 3 | diagnostic | Add per-series q10/q90 breach rates (not just per-slice) to the Discovery dry-run output, so breach attribution to insta | served | 1 | Discovery dry-run diagnostics now include series_breach: per-series q10/q90 breach rates, coverage and loss share for al |

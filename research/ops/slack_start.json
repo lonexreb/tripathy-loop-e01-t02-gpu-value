@@ -2,7 +2,8 @@
   "channel": "C0CHNFW0DB7",
   "_workspace": "T0CHM33JRDH",
   "_channel_names": {"displayed": "#tripathy-exp-01", "standard": "#tl-e01-t02-gpu-value"},
-  "_note": "approved migration update payload",
+  "_note": "posted to the existing channel",
+  "_message_url": "https://research-hackathon.slack.com/archives/C0CHNFW0DB7/p1794720630666949",
   "text": "E01 lane update: Kalshi scope superseded; Track 2 Direction A protocol frozen, baseline slice and cycle 1 done",
   "unfurl_links": false,
   "blocks": [
@@ -10,7 +11,7 @@
     {"type": "section", "text": {"type": "mrkdwn", "text": "*Scope change:* the provisional Kalshi replay scope is *superseded* (history kept, ADR 0002). Lane E01 now targets the Pacific Track 2 brief: q10/q50/q90 posted-rental forecasts, origin 2026-11-06, h=1/3/7, pinball loss, scored Sunday 2026-11-15."}},
     {"type": "section", "fields": [
       {"type": "mrkdwn", "text": "*Repo*\n<https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value|lonexreb/tripathy-loop-e01-t02-gpu-value> · branch `e01/track2-direction-a`"},
-      {"type": "mrkdwn", "text": "*Linear*\n<https://linear.app/tripathy/project/tripathy-loop-e01-track-02-kalshi-gpu-forecaster-4a9aac262fa8/overview|E01 project> (reused)"},
+      {"type": "mrkdwn", "text": "*Linear*\n<https://linear.app/tripathy/project/tripathy-loop-e01-track-02-gpu-value-4a9aac262fa8|E01 GPU Value project> · issue `TRI-33`"},
       {"type": "mrkdwn", "text": "*Pack*\n`v0.1.1-handover`, zip SHA-256 + 672/672 manifest OK"},
       {"type": "mrkdwn", "text": "*Adapted series*\n7 headline H100/A100 posted-rental series; drift fallback for the other 30"}
     ]},

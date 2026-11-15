@@ -7,10 +7,10 @@ Status: contract acquired, data pack verified and unpacked, official starter wor
 Reuse the existing E01 lane; do not create a parallel project or rewrite its history:
 
 - GitHub: <https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value>
-- Linear: <https://linear.app/tripathy/project/tripathy-loop-e01-track-02-kalshi-gpu-forecaster-4a9aac262fa8/overview>
+- Linear: <https://linear.app/tripathy/project/tripathy-loop-e01-track-02-gpu-value-4a9aac262fa8>
 - Slack: <https://app.slack.com/client/T0CHM33JRDH/C0CHNFW0DB7> (workspace `T0CHM33JRDH`, channel `C0CHNFW0DB7`)
 
-The four existing Kalshi-scoped commits remain unchanged and readable. Mark that scope as superseded by this Pacific Track 2 Direction A contract through a migration ADR and preserved documentation; do not delete or rewrite it. The paste-ready Linear issue, local Git branch/commit plan, and Slack start payload live in `research/ops/`. They have not been posted or pushed because the current session has no authenticated connectors and remote writes require approval.
+The four existing Kalshi-scoped commits remain unchanged and readable. ADR 0002 marks that scope as superseded by this Pacific Track 2 Direction A contract, and the former documents remain under `docs/superseded/kalshi/`. The GitHub repository was renamed in place, branch `e01/track2-direction-a` is pushed with PR #1, the existing Linear project was updated with issue `TRI-33`, and the migration result was posted to the existing Slack channel.
 
 Current implementation checkpoint:
 
@@ -18,7 +18,7 @@ Current implementation checkpoint:
 - `I_0` proposed exactly two bounded candidates under the frozen evaluator.
 - `repricing_mixture` was rejected: checkpoint paired difference `+0.000124`; the 90% CI crosses zero.
 - `conformal_trailing` with window 45 was accepted as `F_1`: checkpoint paired difference `-0.000957`, 90% CI `[-0.001539, -0.000315]`; pooled skill improved from `+0.089` to `+0.119` versus `last_value`.
-- The protected block remains unopened for the Cycle 2 common-start comparison.
+- Cycle 1 candidate selection did not use the protected block; Cycle 2 must preserve the common-start comparison defined by the protocol.
 
 ## Governing decision
 

@@ -1,9 +1,10 @@
 # Linear issue (paste-ready) — existing project, no new project
 
-**Project (reuse):** https://linear.app/tripathy/project/tripathy-loop-e01-track-02-kalshi-gpu-forecaster-4a9aac262fa8/overview
-Project name stays as is; its description gets one line: "Kalshi scope superseded 2026-11-14 by Track 2 Direction A, see ADR 0002."
+**Project (reused and updated):** https://linear.app/tripathy/project/tripathy-loop-e01-track-02-gpu-value-4a9aac262fa8
 
-**Title:** E01 · Track 2 Direction A — frozen protocol, baseline slice, cycle 1 (I_0 → F_1), cycle 2 common-start test
+**Created issue:** `TRI-33` — https://linear.app/tripathy/issue/TRI-33/e01-track-2-gpu-value-cycle-1-complete-cycle-2-common-start-test
+
+**Title:** E01 · Track 2 GPU Value — Cycle 1 complete; Cycle 2 common-start test
 
 **Priority:** Urgent (P1) · **Estimate:** 5 pts · **Labels:** `track-2`, `direction-a`, `forecasting`, `rsi`, `research`, `supersedes-kalshi`
 **Due:** 2026-11-15 (Sunday scoring) · **Repo:** https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value, branch `e01/track2-direction-a`

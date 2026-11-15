@@ -6,6 +6,8 @@ Canonical remote: `https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value`
 
 Working branch: `e01/track2-direction-a`
 
+Pull request: `https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value/pull/1`
+
 ## Preserved history
 
 The original four E01 commits remain unchanged:
@@ -32,4 +34,4 @@ The immutable pack, source ZIP, virtual environment, starter-demo output, and `r
 - `mypy`
 - secret-pattern scan and ignored-bulk audit
 
-The migration branch is pushed only after every gate passes. The GitHub repository was renamed in place from `tripathy-loop-e01-t02-kalshi` to `tripathy-loop-e01-t02-gpu-value`; GitHub preserves redirects from the former URL.
+The migration branch was pushed after every gate passed. The GitHub repository was renamed in place from `tripathy-loop-e01-t02-kalshi` to `tripathy-loop-e01-t02-gpu-value`; GitHub preserves redirects from the former URL.

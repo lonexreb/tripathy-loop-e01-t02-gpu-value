@@ -5,8 +5,11 @@ status: running
 owner: Claude session 01
 systems:
   github: https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value
-  linear_project: https://linear.app/tripathy/project/tripathy-loop-e01-track-02-kalshi-gpu-forecaster-4a9aac262fa8/overview
+  linear_project: https://linear.app/tripathy/project/tripathy-loop-e01-track-02-gpu-value-4a9aac262fa8
+  linear_issue: https://linear.app/tripathy/issue/TRI-33/e01-track-2-gpu-value-cycle-1-complete-cycle-2-common-start-test
   slack_channel: https://app.slack.com/client/T0CHM33JRDH/C0CHNFW0DB7
+  slack_update: https://research-hackathon.slack.com/archives/C0CHNFW0DB7/p1794720630666949
+  pull_request: https://github.com/lonexreb/tripathy-loop-e01-t02-gpu-value/pull/1
   vercel_project: not-linked
   modal_app: not-required-for-cycle-1
 controls:
